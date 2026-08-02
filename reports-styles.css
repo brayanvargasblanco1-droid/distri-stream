@@ -1,0 +1,980 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   ESTILOS MEJORADOS PARA REPORTES Y SOPORTE
+   Profesional, moderno y responsivo
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── BADGES Y ESTADOS ─── */
+.report-category-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--soft);
+  color: var(--text);
+}
+
+.report-category-badge.producto-no-llego {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.report-category-badge.defectuoso {
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+}
+
+.report-category-badge.cuenta-no-funciona {
+  background: rgba(168, 85, 247, 0.1);
+  color: #9333ea;
+}
+
+.report-category-badge.acceso-denegado {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+}
+
+.report-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.report-priority-badge.normal {
+  background: rgba(18, 164, 84, 0.1);
+  color: var(--ok);
+}
+
+.report-priority-badge.urgente {
+  background: rgba(249, 158, 11, 0.1);
+  color: #d97706;
+  animation: pulse-urgency 2s ease-in-out infinite;
+}
+
+.report-priority-badge.critico {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  animation: pulse-critical 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-urgency {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── TARJETA DE REPORTE MEJORADA ─── */
+.report-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.report-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 8px 24px rgba(8, 119, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.report-card.urgent {
+  border-left: 4px solid #d97706;
+}
+
+.report-card.critical {
+  border-left: 4px solid #dc2626;
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.report-card-header-left {
+  flex: 1;
+}
+
+.report-code {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.report-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.report-product {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.report-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ─── TIMELINE DE PROGRESO ─── */
+.report-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+  padding: 12px;
+  background: var(--soft);
+  border-radius: var(--radius-sm);
+}
+
+.progress-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.progress-step::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+  z-index: -1;
+}
+
+.progress-step:last-child::after {
+  display: none;
+}
+
+.progress-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--line);
+  border: 2px solid var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.progress-dot.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+  box-shadow: 0 0 0 8px rgba(8, 119, 255, 0.1);
+}
+
+.progress-dot.completed {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: white;
+}
+
+.progress-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: var(--muted);
+  width: 70px;
+}
+
+.progress-step.active .progress-label {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+/* ─── INFORMACIÓN DE TIEMPO ─── */
+.report-time-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.time-item strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.time-item svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+/* ─── CONTADORES DE MENSAJES ─── */
+.report-stats {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.stat-item strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.stat-item .badge {
+  background: var(--blue);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ─── DESCRIPCIÓN EXPANDIBLE ─── */
+.report-description {
+  padding: 10px 12px;
+  background: var(--soft);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 10px 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.report-card.expanded .report-description {
+  max-height: 500px;
+}
+
+/* ─── ACCIONES ─── */
+.report-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.report-action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--blue);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.report-action-btn:hover {
+  background: rgba(8, 119, 255, 0.1);
+  border-color: var(--blue);
+}
+
+.report-action-btn.primary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+.report-action-btn.primary:hover {
+  background: var(--blue2);
+  border-color: var(--blue2);
+}
+
+.report-action-btn.danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.report-action-btn.danger:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+/* ─── TIMELINE DE EVENTOS ─── */
+.report-timeline {
+  padding: 12px;
+  background: var(--soft);
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-left: 2px solid var(--line);
+  padding-left: 12px;
+  margin-left: 4px;
+  position: relative;
+}
+
+.timeline-item:first-child {
+  padding-top: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -8px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--panel);
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.timeline-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.timeline-time {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ─── FORMULARIO DE REPORTE MEJORADO ─── */
+.report-form {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  margin: 12px 0;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-label .required {
+  color: #dc2626;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(8, 119, 255, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: 'Inter', ui-sans-serif;
+}
+
+.form-help {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ─── SELECTOR DE CATEGORÍA ─── */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.category-option {
+  padding: 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.category-option:hover {
+  border-color: var(--blue);
+  background: rgba(8, 119, 255, 0.05);
+}
+
+.category-option.selected {
+  background: rgba(8, 119, 255, 0.15);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* ─── CONTADOR DE CARACTERES ─── */
+.char-counter {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.char-counter.warning {
+  color: #f59e0b;
+}
+
+.char-counter.danger {
+  color: #dc2626;
+}
+
+/* ─── SECTION DE ADJUNTOS ─── */
+.attachments-section {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--soft);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line);
+}
+
+.attachment-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attachment-dropzone {
+  padding: 20px;
+  border: 2px dashed var(--line);
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--panel);
+}
+
+.attachment-dropzone:hover {
+  border-color: var(--blue);
+  background: rgba(8, 119, 255, 0.03);
+}
+
+.attachment-dropzone.active {
+  border-color: var(--blue);
+  background: rgba(8, 119, 255, 0.08);
+}
+
+.attachment-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.attachment-text {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.attachment-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.attachment-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: var(--panel);
+  border-radius: 8px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+}
+
+.attachment-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(8, 119, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.attachment-item-info {
+  flex: 1;
+}
+
+.attachment-item-name {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-item-size {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.attachment-item-remove {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: #dc2626;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.attachment-item-remove:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+/* ─── PROGRESS BAR DE REPORTE ─── */
+.report-progress-bar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 12px 0 8px;
+  height: 32px;
+}
+
+.progress-stage {
+  flex: 1;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.progress-stage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.progress-stage.completed {
+  background: var(--ok);
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.progress-stage.completed::before {
+  left: 100%;
+}
+
+.progress-stage.active {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: white;
+  box-shadow: 0 0 0 2px rgba(8,119,255,0.3);
+  animation: pulse-progress 2s ease-in-out infinite;
+}
+
+.progress-stage.pending {
+  background: var(--soft);
+  color: var(--muted);
+}
+
+@keyframes pulse-progress {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(8,119,255,0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(8,119,255,0.1);
+  }
+}
+
+.progress-label-small {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ─── REPORTE MEJORADO CON PROGRESS ─── */
+.report-card-with-progress {
+  border-left-width: 4px !important;
+  position: relative;
+}
+
+.report-card-with-progress::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--cyan), var(--ok));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.report-card-with-progress:hover::after {
+  opacity: 1;
+}
+
+  .report-card-header {
+    flex-direction: column;
+  }
+
+  .report-progress {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .progress-step::after {
+    height: 12px;
+    top: 50%;
+    left: -12px;
+    width: 2px;
+  }
+
+  .progress-step:last-child::after {
+    display: none;
+  }
+
+  .report-time-info {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .report-actions {
+    flex-direction: column;
+  }
+
+  .report-action-btn {
+    width: 100%;
+  }
+}
+
+/* ─── ANIMACIONES ─── */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── ESTADOS ESPECIALES ─── */
+.report-card.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.report-card.resolved {
+  opacity: 0.8;
+  border-left: 4px solid var(--ok);
+}
+
+.report-card.rejected {
+  opacity: 0.7;
+  border-left: 4px solid #dc2626;
+}
+
+/* ─── OVERRIDE: Remover separadores verticales en el cuerpo de tablas ───
+   Mantener las separaciones visuales en los encabezados (th) como en la imagen
+   solicitada. Esto elimina las líneas verticales entre celdas (td) en toda la página.
+*/
+/* Aplicar de forma amplia y con !important para sobreescribir estilos inline en index.html */
+/* Target typical selectors, table cells, rows and pseudo-elements that may draw lines */
+table, table tbody, table thead, table tr, table td,
+.card table, .card table tbody, .card table tr, .card table td,
+.table-purple, .table-purple tbody, .table-purple tr, .table-purple td,
+.expiring-table, .expiring-table tbody, .expiring-table tr, .expiring-table td,
+.movements-card .expiring-table, .movements-card .expiring-table tbody, .movements-card .expiring-table tr, .movements-card .expiring-table td,
+.table-wrap, .table-wrap td,
+td, tr {
+  border: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* Encabezados de TODAS las tablas con fondo morado profesional */
+table thead th,
+table thead tr,
+table thead,
+.table-wrap table thead th,
+.table-wrap table thead tr,
+.card table thead th,
+.card table thead tr,
+.table-purple thead th,
+.table-purple th,
+.expiring-table thead th,
+.expiring-table th,
+table.table-purple thead th,
+table.expiring-table thead th,
+.movements-card table thead th {
+  background: var(--purple, #7c3aed) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+table thead th,
+.table-wrap table thead th,
+.card table thead th,
+.table-purple thead th,
+.expiring-table thead th {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+table thead th *,
+.table-wrap table thead th *,
+.card table thead th * {
+  color: #ffffff !important;
+}
+
+/* Remove any pseudo-element decorations that draw vertical lines */
+td::before, td::after, tr::before, tr::after, td *::before, td *::after {
+  display: none !important;
+  content: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* As a last resort hide 1px wide backgrounds often used to simulate dividers */
+.table-wrap, .card table, table.table-purple, table.expiring-table {
+  background-image: none !important;
+}
+
+/* Keep header (th) visual emphasis but remove explicit borders between header cells */
+table thead th,
+.card table thead th,
+.table-purple thead th,
+.expiring-table thead th {
+  border-right: none !important;
+  box-shadow: none !important;
+}
+
+/* Restaurar borde inferior para encabezados de tarjeta (mantener sin bordes verticales entre celdas) */
+.expiring-card .card-header,
+.card .card-header {
+  border-bottom: 1px solid var(--line) !important;
+  background: var(--panel) !important;
+}
+
+/* ─── MINI ANIMACIÓN DE SEGUIMIENTO EN TABLAS ─── */
+.table-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 190px;
+  max-width: 260px;
+}
+
+.table-tracker-steps {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 5px;
+  border-radius: 4px;
+  background: rgba(124, 58, 237, 0.08);
+  padding: 1px;
+}
+
+.table-tracker-step {
+  flex: 1;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--line);
+  transition: all 0.3s ease;
+}
+
+.table-tracker-step.completed {
+  background: var(--ok, #10b981);
+}
+
+.table-tracker-step.active {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  animation: pulse-step 1.4s infinite ease-in-out;
+}
+
+.table-tracker-step.bad {
+  background: var(--bad, #ef4444);
+}
+
+@keyframes pulse-step {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.55; transform: scaleY(1.3); }
+}
+
+.table-tracker-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.table-tracker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: inline-block;
+  flex-shrink: 0;
+  animation: pulse-dot-glow 1.4s infinite ease-in-out;
+}
+
+.table-tracker-dot.ok {
+  background: var(--ok, #10b981);
+  animation: none;
+}
+
+.table-tracker-dot.warn {
+  background: #f59e0b;
+}
+
+.table-tracker-dot.bad {
+  background: var(--bad, #ef4444);
+  animation: none;
+}
+
+@keyframes pulse-dot-glow {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
+  50% { transform: scale(1.25); box-shadow: 0 0 0 5px rgba(59, 130, 246, 0); }
+}
+
+
+

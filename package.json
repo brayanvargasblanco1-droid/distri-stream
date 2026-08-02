@@ -1,0 +1,10 @@
+{
+  "name": "distrito-streaming",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Distrito Streaming - panel comercial para usuarios y administradores.",
+  "scripts": {
+    "build": "node -e \"console.log('Distrito Streaming listo para Vercel')\"",
+    "start": "npx serve ."
+  }
+}

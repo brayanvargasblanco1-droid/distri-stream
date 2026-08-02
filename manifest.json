@@ -1,0 +1,14 @@
+{
+  "name": "Distrito Streaming",
+  "short_name": "Distrito",
+  "description": "Panel comercial de streaming - compra, vende y gestiona cuentas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#071526",
+  "theme_color": "#0877ff",
+  "orientation": "any",
+  "icons": [
+    { "src": "assets/distrito-angel-blue-v1.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/distrito-angel-blue-v1.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
