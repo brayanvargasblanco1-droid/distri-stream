@@ -60,21 +60,15 @@ function getExpiringOrders() {
 // ═══════════════════════════════════════════════════════════════
 
 function improvedOrdersView() {
-  const expiringOrders = getExpiringOrders();
   const isResellerUser = isReseller();
   
   return `
-    ${renderExpiringSection(expiringOrders)}
-    ${isResellerUser ? renderResellerTools(expiringOrders) : ''}
+    ${isResellerUser ? renderResellerPanel() : ''}
     
     <section class="card">
-      <div class="card-header-custom">
+      <div class="section-header">
         <h2>📦 Mis Compras</h2>
-        <button onclick="toggleFilters()" class="btn-filters">🔍 Filtros</button>
-      </div>
-      
-      <div id="filtersPanel" class="filters-panel" style="display:none">
-        ${renderFilters()}
+        <span class="section-count">${(state.orders || []).length}</span>
       </div>
       
       <div id="ordersList">
@@ -147,41 +141,43 @@ function renderExpiringSection(orders) {
 // 🔧 PANEL DE HERRAMIENTAS DEL REVENDEDOR
 // ═══════════════════════════════════════════════════════════════
 
-function renderResellerTools(expiringOrders) {
+function renderResellerPanel() {
+  const expiringOrders = getExpiringOrders();
+  const badge = expiringOrders.length > 0 ? '<span class="tool-badge">' + expiringOrders.length + '</span>' : '';
+  const renewClass = expiringOrders.length > 0 ? 'tool-renew-active' : '';
+  
   return `
-    <div class="reseller-tools-section">
-      <div class="reseller-tools-header">
+    <div class="reseller-panel">
+      <div class="reseller-panel-header">
         <span class="reseller-badge">🏷️ REVENDEDOR</span>
       </div>
       
-      <div class="reseller-tools-grid">
-        <button onclick="openPricesModal()" class="reseller-tool-btn">
+      <div class="reseller-tools">
+        <button onclick="openPricesModal()" class="reseller-tool">
           <span class="tool-icon">💰</span>
-          <span class="tool-label">Ver Precios</span>
+          <span class="tool-text">Ver Precios</span>
         </button>
         
-        <button onclick="openMyLinkModal()" class="reseller-tool-btn">
+        <button onclick="openMyLinkModal()" class="reseller-tool">
           <span class="tool-icon">🔗</span>
-          <span class="tool-label">Mi Link</span>
+          <span class="tool-text">Mi Link</span>
         </button>
         
-        <button onclick="setView('users')" class="reseller-tool-btn">
+        <button onclick="setView('users')" class="reseller-tool">
           <span class="tool-icon">👥</span>
-          <span class="tool-label">Mis Clientes</span>
+          <span class="tool-text">Mis Clientes</span>
         </button>
         
-        <button onclick="openSalesModal()" class="reseller-tool-btn">
+        <button onclick="openSalesModal()" class="reseller-tool">
           <span class="tool-icon">📊</span>
-          <span class="tool-label">Ventas</span>
+          <span class="tool-text">Ventas</span>
         </button>
         
-        ${expiringOrders.length > 0 ? `
-          <button onclick="showBulkRenewal()" class="reseller-tool-btn warning">
-            <span class="tool-icon">🔄</span>
-            <span class="tool-label">Renovar</span>
-            <span class="tool-badge">${expiringOrders.length}</span>
-          </button>
-        ` : ''}
+        <button onclick="showBulkRenewal()" class="reseller-tool ${renewClass}">
+          <span class="tool-icon">🔄</span>
+          <span class="tool-text">Renovar</span>
+          ${badge}
+        </button>
       </div>
     </div>
   `;
@@ -491,25 +487,23 @@ function injectPurchaseStyles() {
     .expiring-total { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--soft); border-top: 1px solid var(--line); font-weight: 700; font-size: 14px; }
     .expiring-total-price { color: var(--blue); }
     
-    .reseller-tools-section { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(8,119,255,0.05)); border: 1px solid rgba(124,58,237,0.15); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .reseller-tools-header { text-align: center; margin-bottom: 14px; }
-    .reseller-badge { display: inline-block; padding: 4px 12px; background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; border-radius: 20px; font-size: 11px; font-weight: 800; }
-    .reseller-tools-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-    @media (max-width: 600px) { .reseller-tools-grid { grid-template-columns: repeat(3, 1fr); } }
-    .reseller-tool-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; transition: all 0.15s; position: relative; }
-    .reseller-tool-btn:hover { border-color: var(--purple); background: rgba(124,58,237,0.05); transform: translateY(-2px); }
-    .reseller-tool-btn.warning { background: linear-gradient(135deg, #f59e0b, #d97706); border: 0; color: #fff; }
-    .reseller-tool-btn.warning:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
-    .tool-icon { font-size: 24px; }
-    .tool-label { font-size: 11px; font-weight: 600; text-align: center; }
-    .tool-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+    .reseller-panel { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(8,119,255,0.05)); border: 1px solid rgba(124,58,237,0.15); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .reseller-panel-header { text-align: center; margin-bottom: 16px; }
+    .reseller-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 800; }
+    .reseller-tools { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .reseller-tools { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 400px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
+    .reseller-tool { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; border: 2px solid #e5e7eb; border-radius: 14px; background: #fff; cursor: pointer; transition: all 0.2s; position: relative; }
+    .reseller-tool:hover { border-color: #7c3aed; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(124,58,237,0.15); }
+    .reseller-tool.tool-renew-active { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+    .reseller-tool.tool-renew-active:hover { border-color: #d97706; box-shadow: 0 6px 20px rgba(245,158,11,0.25); }
+    .tool-icon { font-size: 36px; }
+    .tool-text { font-size: 14px; font-weight: 700; text-align: center; color: #1f2937; }
+    .tool-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 3px solid #fff; }
     
-    .card-header-custom { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-    .card-header-custom h2 { font-size: 16px; font-weight: 900; margin: 0; }
-    .btn-filters { padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 12px; font-weight: 700; cursor: pointer; }
-    .filters-panel { padding: 12px 20px; background: var(--soft); border-bottom: 1px solid var(--line); }
-    .filters-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-    .filter-select, .filter-input { flex: 1; min-width: 150px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 13px; }
+    .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .section-header h2 { font-size: 18px; font-weight: 900; margin: 0; }
+    .section-count { background: var(--soft); color: var(--muted); padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
     
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
     .modal-header h2 { font-size: 16px; font-weight: 800; margin: 0; }
