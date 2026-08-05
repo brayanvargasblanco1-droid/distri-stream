@@ -1659,6 +1659,7 @@
         }
       }
       closeModal();
+      renderHeader(); // Actualiza el header inmediatamente
       renderApp();
       toast("Avatar actualizado", "ok");
     }
@@ -5810,7 +5811,7 @@
               <span style="font-size:38px">${u.avatarEmoji || initials(u.name)}</span>
             </div>
             <div style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(255,255,255,.3);animation:spin 10s linear infinite"></div>
-            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:0;right:0;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:3px solid #fff;color:#fff;font-size:12px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.4)">
+            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>{openAvatarPicker();renderHeader()},300)" style="position:absolute;bottom:0;right:0;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:3px solid #fff;color:#fff;font-size:12px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.4)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             </button>
           </div>
