@@ -3462,46 +3462,135 @@
      }
     function reportsUser(){
       const my=state.reports;
-      const open=my.filter(r=>r.status!=="Resuelto"&&r.status!=="Rechazado").length;
-      const resolved=my.filter(r=>r.status==="Resuelto").length;
+      const active=my.filter(r=>r.status!=="Resuelto"&&r.status!=="Rechazado").length;
+      const resolved=my.filter(r=>r.status==="Resuelto"||r.status==="Rechazado").length;
+      // Usar el panel mejorado si está disponible, si no usar el original
+      if(typeof reportsUserImproved === 'function'){
+        return reportsUserImproved();
+      }
       return `
       <section class="premium-metrics" style="margin-bottom:16px">
         <div class="premium-card blue" style="cursor:default">
           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${my.length}</span></div></div>
-          <div class="premium-label">Activos vs Resueltos</div>
+          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${active}</span></div></div>
+          <div class="premium-label">Reportes Activos</div>
         </div>
         <div class="premium-card orange" style="cursor:default">
           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
           <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${resolved}</span></div></div>
-          <div class="premium-label">Resueltos</div>
+          <div class="premium-label">Resueltos/Rechazados</div>
         </div>
       </section>
-      <section class="section">
-        <div class="card" style="overflow:hidden">
-          <div style="padding:16px 20px;border-bottom:1px solid var(--line)">
-            <h2 style="margin:0;font-size:16px;font-weight:900;color:var(--purple)">Mis Reportes</h2>
-            <p class="muted" style="margin:2px 0 0;font-size:12px">Seguimiento de tus solicitudes de soporte</p>
-          </div>
-          <div style="overflow-x:auto">
-            <table class="expiring-table table-purple" style="width:100%">
-              <thead>
-                <tr>
-                  <th style="width:120px">CÓDIGO</th>
-                  <th style="width:160px">PRODUCTO</th>
-                  <th style="width:180px">MOTIVO</th>
-                  <th style="width:140px">ESTADO</th>
-                  <th>SEGUIMIENTO / RESPUESTA</th>
-                  <th style="width:100px;text-align:center">DETALLES</th>
-                </tr>
-              </thead>
-              <tbody id="reportList">
-                ${reportRowsUser(my)}
-              </tbody>
-            </table>
-          </div>
+      <!-- Tabs de separación -->
+      <section class="card" style="overflow:hidden;margin-bottom:16px">
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--line)">
+          <button onclick="switchUserReportTab('active')" id="tab_user_active" class="report-tab active" style="flex:1;padding:14px 16px;border:0;border-bottom:2px solid var(--blue);background:transparent;color:var(--blue);font-weight:800;font-size:13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px">
+            🔵 Activos <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(8,119,255,.1)">${active}</span>
+          </button>
+          <button onclick="switchUserReportTab('resolved')" id="tab_user_resolved" class="report-tab" style="flex:1;padding:14px 16px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px">
+            ✅ Resueltos <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,.1)">${resolved}</span>
+          </button>
+        </div>
+        <div id="userReportsContent">
+          ${renderUserReportListTab(my.filter(r=>r.status!=="Resuelto"&&r.status!=="Rechazado"))}
         </div>
       </section>`;
+    }
+    
+    // Función para cambiar tabs de reportes de usuario
+    window.userReportTab = 'active';
+    function switchUserReportTab(tab){
+      window.userReportTab = tab;
+      const my = state.reports;
+      const filtered = tab === 'active' 
+        ? my.filter(r=>r.status!=="Resuelto"&&r.status!=="Rechazado")
+        : my.filter(r=>r.status==="Resuelto"||r.status==="Rechazado");
+      
+      // Actualizar estilos de tabs
+      ['tab_user_active','tab_user_resolved'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        if(id===`tab_user_${tab}`){
+          el.style.borderBottomColor='var(--blue)';
+          el.style.color='var(--blue)';
+        } else {
+          el.style.borderBottomColor='transparent';
+          el.style.color='var(--muted)';
+        }
+      });
+      
+      // Actualizar contenido
+      const content=document.getElementById('userReportsContent');
+      if(content) content.innerHTML=renderUserReportListTab(filtered);
+    }
+    
+    function renderUserReportListTab(reports){
+      if(!reports || reports.length===0){
+        return `<div style="padding:40px;text-align:center;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:12px">📭</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">${window.userReportTab==='active'?'No tienes reportes activos':'No tienes reportes resueltos'}</div>
+          <div style="font-size:12px">${window.userReportTab==='active'?'Los reportes activos aparecerán aquí':'Los reportes resueltos aparecerán aquí'}</div>
+        </div>`;
+      }
+      return `<div style="padding:12px">${reports.map(r=>reportRowsUserCard(r)).join('<div style="height:8px"></div>')}</div>`;
+    }
+    
+    function reportRowsUserCard(r){
+      const statusEmoji = { 'Resuelto':'✅', 'Rechazado':'❌', 'En proceso':'⚙️', 'En revisión':'👁️', 'Abierto':'🔵' }[r.status] || '●';
+      const statusColor = r.status==="Resuelto"?"var(--ok)":r.status==="Rechazado"?"var(--bad)":r.status==="En proceso"?"#8b5cf6":"var(--warn)";
+      const statusBg = r.status==="Resuelto"?"rgba(16,185,129,.1)":r.status==="Rechazado"?"rgba(239,68,68,.1)":"rgba(245,158,11,.1)";
+      const logo = smallLogo(r.product_name);
+      const timeAgo = getTimeAgo(r.created_at);
+      
+      return `<div class="report-card" style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;transition:all .2s" 
+           onmouseover="this.style.borderColor='var(--blue)';this.style.boxShadow='0 4px 12px rgba(8,119,255,.1)'" 
+           onmouseout="this.style.borderColor='var(--line)';this.style.boxShadow='none'">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${logo}
+            <div>
+              <div style="font-weight:700;font-size:14px">${esc(r.product_name||'-')}</div>
+              <div style="font-size:11px;color:var(--muted)">${r.code||'#RP-0000'} · ${timeAgo}</div>
+            </div>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg}">
+            ${statusEmoji} ${r.status||"Abierto"}
+          </span>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Motivo:</div>
+          <div style="font-size:13px;font-weight:600">${esc(r.reason||'-')}</div>
+        </div>
+        ${r.provider_response?`<div style="padding:10px 12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--ok);font-weight:700;margin-bottom:4px">💬 Respuesta del equipo</div>
+          <div style="font-size:12px">${esc(r.provider_response)}</div>
+        </div>`:''}
+        ${r.status==='Rechazado'&&r.rejection_reason?`<div style="padding:10px 12px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:8px;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--bad);font-weight:700;margin-bottom:4px">❌ Motivo del rechazo</div>
+          <div style="font-size:12px">${esc(r.rejection_reason)}</div>
+        </div>`:''}
+        <div style="display:flex;gap:8px">
+          <button onclick="openReportDetail('${r.id}')" class="ghost" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='var(--panel)'">
+            👁️ Ver detalles
+          </button>
+          ${r.status!=="Resuelto"&&r.status!=="Rechazado"?`<button onclick="openReportDetail('${r.id}')" class="ghost" style="padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12px;font-weight:700;cursor:pointer" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='var(--panel)'">💬</button>`:''}
+        </div>
+      </div>`;
+    }
+    
+    function getTimeAgo(dateString){
+      if(!dateString) return 'Sin fecha';
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs/60000);
+      const diffHours = Math.floor(diffMs/3600000);
+      const diffDays = Math.floor(diffMs/86400000);
+      if(diffMins<1) return 'Hace un momento';
+      if(diffMins<60) return `Hace ${diffMins} min`;
+      if(diffHours<24) return `Hace ${diffHours}h`;
+      if(diffDays<7) return `Hace ${diffDays} día${diffDays>1?'s':''}`;
+      return date.toLocaleDateString('es-CO');
     }
     function reportRowsUser(rows){
       if(!rows || !rows.length) return `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin reportes enviados</div><div style="font-size:12px">Tus solicitudes de soporte aparecerán aquí</div></td></tr>`;
@@ -5396,12 +5485,16 @@
   </script>
 <!-- MEJORAS DE REPORTES Y SOPORTE -->
 <link rel="stylesheet" href="reports-styles.css?v=5">
+<!-- Soporte Mejorado para Operadores y Revendedores -->
+<link rel="stylesheet" href="support-operators.css?v=1">
 <!-- Seguridad: Cargar primero para que validadores estén disponibles -->
 <script src="reports-security.js"></script>
 <!-- Luego: Funciones y mejoras visuales -->
 <script src="reports-functions.js?v=3"></script>
 <script src="reports-monkey-patch.js?v=3"></script>
 <script src="reports-bootstrap.js?v=2"></script>
+<!-- Panel de Soporte para Operadores y Revendedores -->
+<script src="support-operators.js?v=1"></script>
 
 
   <script>
