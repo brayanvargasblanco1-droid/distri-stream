@@ -5794,9 +5794,9 @@
       modalHtml+='var nomsEst=["Activo","Bloqueado"];';
       modalHtml+='var colsEst=["#10b981","#8b5cf6"];';
       modalHtml+='function selRol(i){rolSel=nomsRol[i];';
-      modalHtml+='for(var j=0;j<3;j++){var b=document.getElementById("r"+j);if(b){if(j===i){b.style.borderColor=colsRol[j];b.style.background=colsRol[j]+"20";b.querySelector("div:last-child").style.color=colsRol[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.querySelector("div:last-child").style.color="#888";}}}}';
+      modalHtml+='for(var j=0;j<3;j++){var b=document.getElementById("r"+j);if(b){if(j===i){b.style.borderColor=colsRol[j];b.style.background=colsRol[j]+"20";b.style.color=colsRol[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.style.color="#888";}}}}';
       modalHtml+='function selEstado(i){estSel=nomsEst[i];';
-      modalHtml+='for(var j=0;j<2;j++){var b=document.getElementById("e"+j);if(b){if(j===i){b.style.borderColor=colsEst[j];b.style.background=colsEst[j]+"20";b.querySelector("div").style.color=colsEst[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.querySelector("div").style.color="#888";}}}}';
+      modalHtml+='for(var j=0;j<2;j++){var b=document.getElementById("e"+j);if(b){if(j===i){b.style.borderColor=colsEst[j];b.style.background=colsEst[j]+"20";b.style.color=colsEst[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.style.color="#888";}}}}';
       modalHtml+='function setSaldoOp(op){salOp=op;var sa=document.getElementById("sa");var sq=document.getElementById("sq");if(sa)sa.style.background=op===1?"#dcfce7":"#fff";if(sq)sq.style.background=op===-1?"#fee2e2":"#fff";calcSaldo();}';
       modalHtml+='function setMargenOp(op){marOp=op;var ma=document.getElementById("ma");var mq=document.getElementById("mq");if(ma)ma.style.background=op===1?"#f3e8ff":"#fff";if(mq)mq.style.background=op===-1?"#fee2e2":"#fff";calcMargen();}';
       modalHtml+='function calcSaldo(){var amt=Number(document.getElementById("si").value)||0;var nuevo=salOp===1?salOrig+amt:salOrig-amt;if(nuevo<0)nuevo=0;document.getElementById("sr").textContent="$"+nuevo.toLocaleString("es-CO");return nuevo;}';
