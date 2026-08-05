@@ -368,15 +368,15 @@ function improvedHistoryView() {
         </div>
       </div>
       
-      <div class="history-stat-card red">
+      <div class="history-stat-card purple">
         <div class="history-stat-icon">🛒</div>
         <div class="history-stat-info">
-          <div class="history-stat-label">Total Compras</div>
+          <div class="history-stat-label">Total Gastado</div>
           <div class="history-stat-value">${formatMoney(totalDebito)}</div>
         </div>
       </div>
       
-      <div class="history-stat-card purple">
+      <div class="history-stat-card blue">
         <div class="history-stat-icon">💳</div>
         <div class="history-stat-info">
           <div class="history-stat-label">Saldo Actual</div>
@@ -407,14 +407,17 @@ function improvedHistoryView() {
 function improvedMovementCard(m) {
   const isCredit = m.amount > 0;
   const dateStr = formatDate(m.date);
+  const hasOrder = m.orderData && !isCredit;
+  const orderId = hasOrder ? m.orderData.id : '';
   
   return `
-    <div class="movement-card ${isCredit ? 'credit' : 'debit'}">
+    <div class="movement-card ${isCredit ? 'credit' : 'debit'}" onclick="showMovementDetail('${orderId}', '${isCredit}', '${encodeURIComponent(JSON.stringify(m))}')">
       <div class="movement-card-left">
-        <div class="movement-icon ${isCredit ? 'green' : 'red'}">${isCredit ? '💰' : '🛒'}</div>
+        <div class="movement-icon ${isCredit ? 'green' : 'purple'}">${isCredit ? '💰' : '🛒'}</div>
         <div class="movement-info">
           <div class="movement-desc">${m.description || (isCredit ? 'Recarga' : 'Compra')}</div>
           <div class="movement-date">${dateStr}</div>
+          ${hasOrder && m.orderData.product_name ? `<div class="movement-product">📦 ${m.orderData.product_name}</div>` : ''}
         </div>
       </div>
       <div class="movement-card-right">
@@ -422,11 +425,70 @@ function improvedMovementCard(m) {
           ${isCredit ? '+' : '-'}${formatMoney(Math.abs(m.amount))}
         </div>
         <div class="movement-type ${isCredit ? 'credit' : 'debit'}">
-          ${isCredit ? 'Recarga' : 'Débito'}
+          ${isCredit ? 'Recarga' : 'Compra'}
         </div>
       </div>
     </div>
   `;
+}
+
+function showMovementDetail(orderId, isCredit, encodedData) {
+  const m = JSON.parse(decodeURIComponent(encodedData));
+  const isCreditBool = isCredit === 'true';
+  
+  if (isCreditBool) {
+    // Mostrar detalle de recarga
+    openModal(`
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>💰 Detalle de Recarga</h2>
+          <button onclick="closeModal()" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-card">
+            <div class="detail-icon green">💰</div>
+            <div class="detail-amount positive">+${formatMoney(Math.abs(m.amount))}</div>
+            <div class="detail-type credit">Recarga</div>
+          </div>
+          <div class="detail-info">
+            <div class="detail-row"><span>Fecha:</span><span>${formatDate(m.date)}</span></div>
+            <div class="detail-row"><span>Descripción:</span><span>${m.description || 'Recarga de saldo'}</span></div>
+          </div>
+        </div>
+      </div>
+    `);
+  } else if (orderId) {
+    // Mostrar opciones para compra
+    openModal(`
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🛒 Detalle de Compra</h2>
+          <button onclick="closeModal()" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-card">
+            <div class="detail-icon purple">🛒</div>
+            <div class="detail-amount negative">-${formatMoney(Math.abs(m.amount))}</div>
+            <div class="detail-type debit">Compra</div>
+          </div>
+          <div class="detail-info">
+            <div class="detail-row"><span>Fecha:</span><span>${formatDate(m.date)}</span></div>
+            <div class="detail-row"><span>Producto:</span><span>${m.orderData?.product_name || '-'}</span></div>
+            <div class="detail-row"><span>Código:</span><span>${m.orderData?.code || '-'}</span></div>
+            <div class="detail-row"><span>Estado:</span><span>${m.orderData?.status || '-'}</span></div>
+          </div>
+          <div class="detail-actions">
+            <button onclick="closeModal();openAccountModal('${encodeURIComponent(JSON.stringify(m.orderData))}')" class="order-btn datos">
+              🔐 Ver Datos de la Cuenta
+            </button>
+            <button onclick="closeModal();openReport('${orderId}')" class="order-btn reportar">
+              ⚠️ Reportar Problema
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -642,24 +704,45 @@ function injectPurchaseStyles() {
     
     .history-section { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; }
     .history-list { display: flex; flex-direction: column; }
-    .movement-card { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
-    .movement-card:hover { background: #f9fafb; }
+    .movement-card { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f3f4f6; transition: all 0.15s; cursor: pointer; }
+    .movement-card:hover { background: #f9fafb; transform: translateX(4px); }
     .movement-card:last-child { border-bottom: none; }
-    .movement-card.credit { border-left: 3px solid #10b981; }
-    .movement-card.debit { border-left: 3px solid #dc2626; }
-    .movement-card-left { display: flex; align-items: center; gap: 12px; }
-    .movement-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; }
-    .movement-icon.green { background: rgba(16,185,129,0.1); }
-    .movement-icon.red { background: rgba(220,38,38,0.1); }
-    .movement-desc { font-size: 14px; font-weight: 600; color: #1f2937; }
-    .movement-date { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-    .movement-card-right { text-align: right; }
-    .movement-amount { font-size: 15px; font-weight: 800; }
+    .movement-card.credit { border-left: 4px solid #10b981; }
+    .movement-card.debit { border-left: 4px solid #7c3aed; }
+    .movement-card-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+    .movement-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+    .movement-icon.green { background: rgba(16,185,129,0.12); }
+    .movement-icon.purple { background: rgba(124,58,237,0.12); }
+    .movement-info { flex: 1; min-width: 0; }
+    .movement-desc { font-size: 15px; font-weight: 700; color: #1f2937; }
+    .movement-date { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+    .movement-product { font-size: 12px; color: #6b7280; margin-top: 3px; font-weight: 600; }
+    .movement-card-right { text-align: right; flex-shrink: 0; margin-left: 16px; }
+    .movement-amount { font-size: 16px; font-weight: 800; }
     .movement-amount.positive { color: #059669; }
-    .movement-amount.negative { color: #dc2626; }
-    .movement-type { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
-    .movement-type.credit { background: rgba(16,185,129,0.1); color: #059669; }
-    .movement-type.debit { background: rgba(220,38,38,0.1); color: #dc2626; }
+    .movement-amount.negative { color: #7c3aed; }
+    .movement-type { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+    .movement-type.credit { background: rgba(16,185,129,0.12); color: #059669; }
+    .movement-type.debit { background: rgba(124,58,237,0.12); color: #7c3aed; }
+    
+    .history-stat-card.purple .history-stat-value { color: #7c3aed; }
+    
+    .detail-card { text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(139,92,246,0.05)); border-radius: 12px; margin-bottom: 16px; }
+    .detail-icon { width: 64px; height: 64px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 12px; }
+    .detail-icon.green { background: rgba(16,185,129,0.15); }
+    .detail-icon.purple { background: rgba(124,58,237,0.15); }
+    .detail-amount { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+    .detail-amount.positive { color: #059669; }
+    .detail-amount.negative { color: #7c3aed; }
+    .detail-type { font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+    .detail-type.credit { background: rgba(16,185,129,0.12); color: #059669; }
+    .detail-type.debit { background: rgba(124,58,237,0.12); color: #7c3aed; }
+    .detail-info { background: #f9fafb; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row span:first-child { color: #6b7280; }
+    .detail-row span:last-child { font-weight: 600; color: #1f2937; }
+    .detail-actions { display: flex; flex-direction: column; gap: 10px; }
     
     .modal-content { min-width: 320px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
