@@ -6316,15 +6316,14 @@
                   style="padding:6px 10px 6px 28px;border:1px solid var(--line);border-radius:8px;font-size:11px;width:160px;background:var(--soft)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="12" height="12" style="position:absolute;left:8px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               </div>
-              <!-- Filtros de estado -->
-              <button onclick="filterTopups('all')" style="padding:6px 12px;border:1.5px solid ${topupFilter==='all'?'var(--blue)':''}var(--line);border-radius:8px;background:${topupFilter==='all'?'rgba(8,119,255,.1)':'var(--panel)'};color:${topupFilter==='all'?'var(--blue)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">Todas</button>
-              <button onclick="filterTopups('Pendiente')" style="padding:6px 12px;border:1.5px solid ${topupFilter==='Pendiente'?'var(--warn)':''}var(--line);border-radius:8px;background:${topupFilter==='Pendiente'?'rgba(245,158,11,.1)':'var(--panel)'};color:${topupFilter==='Pendiente'?'var(--warn)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">⏳ Pendientes</button>
-              <button onclick="filterTopups('Aprobada')" style="padding:6px 12px;border:1.5px solid ${topupFilter==='Aprobada'?'var(--ok)':''}var(--line);border-radius:8px;background:${topupFilter==='Aprobada'?'rgba(16,185,129,.1)':'var(--panel)'};color:${topupFilter==='Aprobada'?'var(--ok)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✓ Aprobadas</button>
-              <button onclick="filterTopups('Rechazada')" style="padding:6px 12px;border:1.5px solid ${topupFilter==='Rechazada'?'var(--bad)':''}var(--line);border-radius:8px;background:${topupFilter==='Rechazada'?'rgba(239,68,68,.1)':'var(--panel)'};color:${topupFilter==='Rechazada'?'var(--bad)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✕ Rechazadas</button>
-              <button onclick="exportTopupsCsv()" style="padding:6px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                CSV
-              </button>
+              <!-- Tabs de estado mejorados -->
+              <div style="display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:10px">
+                <button onclick="filterTopups('all')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='all'?'#fff':'transparent'};color:${topupFilter==='all'?'var(--text)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;box-shadow:${topupFilter==='all'?'0 2px 4px rgba(0,0,0,0.1)':'none'}">Todas (${state.topups.length})</button>
+                <button onclick="filterTopups('Pendiente')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Pendiente'?'rgba(245,158,11,.2)':'transparent'};color:${topupFilter==='Pendiente'?'#f59e0b':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">⏳ Pendientes (${pending.length})</button>
+                <button onclick="filterTopups('Aprobada')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Aprobada'?'rgba(16,185,129,.2)':'transparent'};color:${topupFilter==='Aprobada'?'#10b981':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✓ Aprobadas (${approved.length})</button>
+                <button onclick="filterTopups('Rechazada')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Rechazada'?'rgba(239,68,68,.2)':'transparent'};color:${topupFilter==='Rechazada'?'#ef4444':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✗ Rechazadas (${rejected.length})</button>
+              </div>
+              
             </div>
           </div>
           <div style="overflow-x:auto">
