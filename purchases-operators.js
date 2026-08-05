@@ -755,6 +755,37 @@ async function submitPaymentReport(topupId) {
   }
 }
 
+async function submitPaymentReportNew(topupId, encodedMovement) {
+  const reasonEl = document.querySelector('input[name="reportReason"]:checked');
+  const reason = reasonEl ? reasonEl.value : '';
+  const description = document.getElementById('reportDescription')?.value || '';
+  
+  if (!reason) {
+    toast('⚠️ Selecciona el tipo de problema', 'warn');
+    return;
+  }
+  
+  try {
+    showLoading('Enviando reporte de pago...');
+    await api('reports', {
+      method: 'POST',
+      body: JSON.stringify({
+        topup_id: topupId,
+        reason: reason,
+        description: description,
+        type: 'payment'
+      })
+    });
+    toast('✅ Reporte de pago enviado', 'ok');
+    closeModal();
+    await boot();
+  } catch (e) {
+    toast('❌ Error: ' + e.message, 'bad');
+  } finally {
+    hideLoading();
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 📊 VISTA MEJORADA DE MOVIMIENTOS
 // ═══════════════════════════════════════════════════════════════
@@ -846,52 +877,131 @@ function showMovementDetail(orderId, isCredit, encodedData) {
   const topupId = isCreditBool && m.orderData?.id ? m.orderData.id : '';
   
   if (isCreditBool) {
-    // Verificar si ya tiene reporte
-    const hasReport = state.reports?.some(r => 
+    // Verificar si ya tiene reporte para este pago
+    const existingReport = state.reports?.find(r => 
       r.topup_id === topupId && 
       r.status !== "Resuelto" && 
       r.status !== "Rechazado"
     );
     
-    openModal(`
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>💰 Detalle de Recarga</h2>
-          <button onclick="closeModal()" class="btn-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-card">
-            <div class="detail-icon green">💰</div>
-            <div class="detail-amount positive">+${formatMoney(Math.abs(m.amount))}</div>
-            <div class="detail-type credit">Recarga</div>
+    const topupData = m.orderData || {};
+    
+    if (existingReport) {
+      // Ya tiene reporte abierto
+      const reasonLabel = getReasonLabel(existingReport.reason);
+      openModal(`
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>⚠️ Reporte de Pago Enviado</h2>
+            <button onclick="closeModal()" class="btn-close">×</button>
           </div>
-          <div class="detail-info">
-            <div class="detail-row"><span>Fecha:</span><span>${formatDate(m.date)}</span></div>
-            <div class="detail-row"><span>Descripción:</span><span>${m.description || 'Recarga de saldo'}</span></div>
-            ${m.orderData?.method ? `<div class="detail-row"><span>Método:</span><span>${m.orderData.method}</span></div>` : ''}
-            ${m.orderData?.reference ? `<div class="detail-row"><span>Referencia:</span><span>${m.orderData.reference}</span></div>` : ''}
-          </div>
-          
-          ${topupId ? `
-          <div class="report-action-section">
-            ${hasReport ? `
-              <div class="report-already-sent">
-                <div class="report-sent-icon">✅</div>
-                <div class="report-sent-text">Reporte ya enviado para este pago</div>
-                <button onclick="closeModal();openPaymentReport('${topupId}')" class="report-btn-view">
-                  👁️ Ver reporte
-                </button>
+          <div class="modal-body">
+            <div class="existing-report-card">
+              <div class="existing-report-icon">⏳</div>
+              <div class="existing-report-title">Reporte de pago enviado</div>
+              <div class="existing-report-subtitle">Fecha: ${formatDate(m.date)}</div>
+            </div>
+            
+            <div class="existing-report-problem">
+              <div class="existing-report-problem-label">📋 Tu reporte:</div>
+              <div class="existing-report-problem-value">${reasonLabel}</div>
+              ${existingReport.description ? `<div class="existing-report-description">"${existingReport.description}"</div>` : ''}
+            </div>
+            
+            <div class="existing-report-status">
+              <div class="status-badge-large ${existingReport.status === 'En proceso' ? 'pending' : existingReport.status === 'Resuelto' ? 'success' : ''}">
+                ${existingReport.status === 'En proceso' ? '🔄 En Proceso' : 
+                  existingReport.status === 'Resuelto' ? '✅ Resuelto' : 
+                  existingReport.status === 'Rechazado' ? '❌ Rechazado' : 
+                  '👁️ ' + existingReport.status}
               </div>
+            </div>
+            
+            ${existingReport.provider_response ? `
+            <div class="support-response-box">
+              <div class="support-response-label">💬 Respuesta del soporte:</div>
+              <div class="support-response-text">${existingReport.provider_response}</div>
+            </div>
             ` : `
-              <button onclick="closeModal();openPaymentReport('${topupId}')" class="report-btn-main">
-                ⚠️ Reportar Problema con el Pago
-              </button>
+            <div class="waiting-response">
+              <div class="waiting-icon">⏰</div>
+              <div class="waiting-text">Estamos revisando tu reporte de pago. Te responderemos pronto.</div>
+            </div>
             `}
+            
+            <div class="only-one-notice">
+              ⚠️ Solo puedes reportar este pago una vez
+            </div>
+            
+            <button onclick="closeModal()" class="btn-close-report">
+              Entendido, esperaré la respuesta
+            </button>
           </div>
-          ` : ''}
         </div>
-      </div>
-    `);
+      `);
+    } else {
+      // No tiene reporte - mostrar formulario
+      const reasons = [
+        { value: 'no_received', label: '💰 El pago no fue reflejado', desc: 'Realicé el pago pero el saldo no aumentó' },
+        { value: 'wrong_amount', label: '🔢 El monto es incorrecto', desc: 'Pagué un monto diferente al aprobado' },
+        { value: 'no_confirmation', label: '⏳ Sin confirmación', desc: 'El pago fue realizado pero no hay respuesta' },
+        { value: 'other', label: '❓ Otro problema', desc: 'Otro tipo de inconveniente' }
+      ];
+      
+      openModal(`
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>⚠️ Reportar Problema de Pago</h2>
+            <button onclick="closeModal()" class="btn-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="report-warning-top">
+              ⚠️ Solo puedes reportar este pago una sola vez
+            </div>
+            
+            <div class="detail-card" style="background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.05));border:2px solid rgba(16,185,129,0.2)">
+              <div style="font-size:12px;color:#047857;text-transform:uppercase;font-weight:700;margin-bottom:8px">Datos del pago</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#6b7280">Monto:</span>
+                <span style="font-weight:800;color:#059669">+${formatMoney(Math.abs(m.amount))}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#6b7280">Fecha:</span>
+                <span style="font-weight:600">${formatDate(m.date)}</span>
+              </div>
+              ${topupData.method ? `
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#6b7280">Método:</span>
+                <span style="font-weight:600">${topupData.method}</span>
+              </div>
+              ` : ''}
+            </div>
+            
+            <div style="margin-bottom:16px">
+              <div style="font-size:14px;font-weight:700;margin-bottom:10px">¿Cuál es el problema?</div>
+              ${reasons.map(r => `
+                <label class="report-reason-option" onclick="selectReportReason(this, '${r.value}')">
+                  <input type="radio" name="reportReason" value="${r.value}" style="display:none">
+                  <div class="reason-radio"></div>
+                  <div class="reason-content">
+                    <div class="reason-label">${r.label}</div>
+                    <div class="reason-desc">${r.desc}</div>
+                  </div>
+                </label>
+              `).join('')}
+            </div>
+            
+            <div style="margin-bottom:16px">
+              <textarea id="reportDescription" placeholder="Describe el problema con más detalle (opcional)" rows="3" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;resize:none;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>
+            
+            <button onclick="submitPaymentReportNew('${topupId}', '${encodeURIComponent(JSON.stringify(m))}')" class="order-btn datos" style="width:100%;padding:16px;font-size:15px">
+              📤 Enviar Reporte de Pago (Una sola vez)
+            </button>
+          </div>
+        </div>
+      `);
+    }
   } else if (orderId) {
     // Verificar si ya tiene reporte
     const hasReport = state.reports?.some(r => 
