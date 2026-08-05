@@ -6230,20 +6230,74 @@
     function openQrCode(){
       const u=state.user;
       const qrData=u.id||u.email||"usuario";
-      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=111111&margin=10`;
-      openModal(`<div class="dialog-head"><div><small class="muted">MI QR</small><h2>Codigo QR personal</h2><p class="muted">Comparte este codigo para que te identifiquen.</p></div><button class="close" onclick="closeModal()">&times;</button></div>
-        <div style="text-align:center;padding:20px">
-          <div style="width:200px;height:200px;margin:0 auto 16px;background:#fff;border-radius:16px;display:grid;place-items:center;border:2px solid var(--line);overflow:hidden">
-            <img src="${qrUrl}" alt="QR Personal" style="width:180px;height:180px" onerror="this.parentElement.innerHTML='<svg viewBox=&quot;0 0 100 100&quot; width=&quot;140&quot; height=&quot;140&quot;><rect x=&quot;5&quot; y=&quot;5&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;4&quot; fill=&quot;#111&quot;/><rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;20&quot; height=&quot;20&quot; rx=&quot;2&quot; fill=&quot;#fff&quot;/><rect x=&quot;14&quot; y=&quot;14&quot; width=&quot;12&quot; height=&quot;12&quot; rx=&quot;1&quot; fill=&quot;#111&quot;/><rect x=&quot;65&quot; y=&quot;5&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;4&quot; fill=&quot;#111&quot;/><rect x=&quot;70&quot; y=&quot;10&quot; width=&quot;20&quot; height=&quot;20&quot; rx=&quot;2&quot; fill=&quot;#fff&quot;/><rect x=&quot;74&quot; y=&quot;14&quot; width=&quot;12&quot; height=&quot;12&quot; rx=&quot;1&quot; fill=&quot;#111&quot;/><rect x=&quot;5&quot; y=&quot;65&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;4&quot; fill=&quot;#111&quot;/><rect x=&quot;10&quot; y=&quot;70&quot; width=&quot;20&quot; height=&quot;20&quot; rx=&quot;2&quot; fill=&quot;#fff&quot;/><rect x=&quot;14&quot; y=&quot;74&quot; width=&quot;12&quot; height=&quot;12&quot; rx=&quot;1&quot; fill=&quot;#111&quot;/></svg>'">
+      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=111111&margin=10`;
+      openModal(`
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px 20px 0 0;padding:24px;text-align:center;margin:-20px -20px 20px -20px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-50%;right:-20%;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;animation:spin 10s linear infinite"></div>
+          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:18px;display:grid;place-items:center;cursor:pointer;z-index:10">&times;</button>
+          
+          <div style="position:relative;width:70px;height:70px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(255,255,255,.3),0 8px 24px rgba(0,0,0,.2)">
+            ${getAvatarDisplay(u.name, 70)}
           </div>
-          <b style="font-size:16px">${esc(u.name)}</b><br>
-          <span class="muted" style="font-size:13px">${esc(u.email)}</span><br>
-          <span class="tag" style="margin-top:8px;display:inline-flex">${publicRole()}</span>
+          <h2 style="margin:0 0 4px;color:#fff;font-size:18px;font-weight:900">${esc(u.name)}</h2>
+          <p style="margin:0;color:rgba(255,255,255,.8);font-size:11px">${esc(u.email)}</p>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.25);color:#fff;margin-top:8px">${publicRole()}</span>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="primary" onclick="downloadUserQR('${qrUrl}','${esc(u.name)}')" style="flex:1">Descargar QR</button>
-          <button class="ghost" onclick="copyText('${u.id||u.email}');toast('ID copiado','ok')" style="flex:1">Copiar ID</button>
-        </div>`);
+        
+        <div style="text-align:center;padding:0 10px 10px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Escanea este codigo para identificarte rapidamente</div>
+          
+          <!-- QR Premium -->
+          <div style="background:linear-gradient(135deg,#fff,#f8fafc);border-radius:20px;padding:20px;display:inline-block;box-shadow:0 8px 32px rgba(102,126,234,.2);border:3px solid rgba(102,126,234,.2)">
+            <div style="width:220px;height:220px;margin:0 auto;position:relative">
+              <img src="${qrUrl}" alt="QR Personal" style="width:100%;height:100%;border-radius:12px" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+              <div style="display:none;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;place-items:center">
+                <span style="font-size:80px">📱</span>
+              </div>
+              <!-- Marco decorativo -->
+              <div style="position:absolute;inset:-8px;border:3px dashed rgba(102,126,234,.3);border-radius:24px;pointer-events:none"></div>
+            </div>
+          </div>
+          
+          <!-- Tu ID -->
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:16px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1;text-align:left">
+              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Tu ID unico</div>
+              <div style="font-size:13px;font-weight:700;font-family:monospace;letter-spacing:1px">${u.id||"-"}-${(u.name||"").toUpperCase().replace(/\s/g,"")}</div>
+            </div>
+            <button onclick="copyText('${u.id||u.email}');toast('ID copiado','ok')" style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar
+            </button>
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 10px 10px">
+          <button onclick="downloadUserQR('${qrUrl}','${esc(u.name)}')" style="padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar
+          </button>
+          <button onclick="shareUserQR()" style="padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(102,126,234,.3);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Compartir
+          </button>
+        </div>
+      `);
+    }
+    
+    function shareUserQR(){
+      const u=state.user;
+      const shareData={
+        title:"Distrito Streaming",
+        text:`Hola! Soy ${u.name}. Mi ID en Distrito Streaming es: ${u.id||u.email}`,
+        url:window.location.href
+      };
+      if(navigator.share){
+        navigator.share(shareData).catch(()=>{});
+      } else {
+        copyText(`Hola! Soy ${u.name}. Mi ID en Distrito Streaming es: ${u.id||u.email}`);
+        toast("Datos copiados para compartir","ok");
+      }
     }
     function downloadUserQR(url,name){
       const a=document.createElement("a");
