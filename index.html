@@ -5523,7 +5523,7 @@
               const statusBg = isBlocked ? "rgba(139,92,246,.15)" : "rgba(16,185,129,.15)";
               const statusText = isBlocked ? "🔒 Bloqueado" : "✅ Activo";
               const balance = u.balance || 0;
-              return '<div class="user-card-item" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:all .2s" onclick="openUserModal(u.id)" onmouseover="this.style.borderColor="#667eea";this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">' +
+              return '<div class="user-card-item" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:all .2s" data-user-id="' + u.id + '" onmouseover="this.style.borderColor="#667eea";this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">' +
                 '<div style="display:flex;align-items:center;gap:14px">' +
                   '<div style="width:48px;height:48px;border-radius:12px;background:' + avatarBg + ';color:#fff;display:grid;place-items:center;font-weight:900;font-size:18px;flex-shrink:0">' + (u.name || "?").charAt(0).toUpperCase() + '</div>' +
                   '<div style="flex:1;min-width:0">' +
@@ -7877,6 +7877,12 @@
     document.addEventListener("click",e=>{
       if(!e.target.closest("#alerts")&&!e.target.closest(".pill"))$("#alerts")?.classList.remove("show");
       if(!e.target.closest(".user-avatar-btn")&&!e.target.closest(".user-dropdown"))$("#userDropdown")?.classList.remove("show");
+      // Abrir modal de usuario al hacer click en tarjeta
+      const card = e.target.closest(".user-card-item");
+      if (card) {
+        const userId = card.getAttribute("data-user-id");
+        if (userId) openUserModal(userId);
+      }
     });
     function openModal(html){$("#alerts").classList.remove("show");$("#modal").innerHTML=`<div class="dialog">${html}</div>`;$("#modal").classList.add("show")}
     function closeModal(){$("#modal").classList.remove("show")}
