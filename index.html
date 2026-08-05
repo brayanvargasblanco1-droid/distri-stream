@@ -1498,6 +1498,153 @@
     .metric-trend{margin-top:8px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;display:inline-block}
     .metric-trend.positive{background:rgba(16,185,129,.15);color:#10b981}
     .metric-trend.negative{background:rgba(239,68,68,.15);color:#ef4444}
+
+    /* ===== RESPONSIVE MOBILE PREMIUM ===== */
+    @media (max-width: 768px) {
+      /* Tarjetas de métricas en grid 2x2 */
+      .topup-metric-card { padding: 14px; border-radius: 16px; }
+      .metric-value { font-size: 28px; }
+      .metric-label { font-size: 11px; }
+      .metric-icon { font-size: 20px; }
+      
+      /* Tabla de actividad como cards */
+      .activity-table-wrap { 
+        overflow: visible !important; 
+        -webkit-overflow-scrolling: touch;
+      }
+      .activity-table-wrap table { 
+        display: none; 
+      }
+      .activity-cards {
+        display: flex !important;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+      }
+      .activity-card-mobile {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: all .2s;
+      }
+      .activity-card-mobile:hover {
+        border-color: var(--blue);
+        box-shadow: 0 4px 16px rgba(8,119,255,.12);
+      }
+      .activity-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .activity-card-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      .activity-card-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .activity-card-title {
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .activity-card-subtitle {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .activity-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .activity-card-user {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .activity-card-amount {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .activity-card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      
+      /* Filtros responsive */
+      .activity-filters {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        margin: 0 -4px;
+        padding: 0 4px 4px;
+      }
+      .activity-filters::-webkit-scrollbar { display: none; }
+      .filter-btn {
+        white-space: nowrap;
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+      }
+      
+      /* Cards de métricas 2x2 */
+      .admin-metrics-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      
+      /* Sidebar en móvil */
+      .app { flex-direction: column !important; }
+      .side { 
+        display: none !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        background: var(--bg);
+      }
+      .side.open { display: flex !important; }
+      .main { margin: 0 !important; padding: 12px !important; }
+      .top { padding: 12px !important; flex-wrap: wrap; }
+      .top h1 { font-size: 18px !important; }
+      
+      /* Header acciones */
+      .top-actions { gap: 8px; }
+      .header-balance { padding: 8px 12px !important; font-size: 12px !important; }
+      .header-icon-btn { width: 36px !important; height: 36px !important; }
+      .user-avatar-btn { width: 36px !important; height: 36px !important; }
+    }
+    
+    /* Scroll horizontal suave */
+    .activity-filters {
+      scrollbar-width: none;
+    }
+    
+    /* Formato cards en móvil */
+    .activity-cards { display: none; }
+
   </style>
 </head>
 <body>
@@ -2682,8 +2829,9 @@
               <button onclick="adminActivityTab='reports';adminActivityPage=1;renderApp()" style="padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;${adminActivityTab==='reports'?'background:#ef4444;color:#fff;border:0':'background:var(--panel);color:var(--muted);border:1px solid var(--line)'}">🚨 Reportes</button>
             </div>
           </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <!-- Desktop: Tabla -->
+          <div class="activity-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px">
               <thead>
                 <tr style="background:var(--soft);border-bottom:1px solid var(--line)">
                   <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Tipo</th>
@@ -2699,6 +2847,10 @@
                 ${renderAdminActivityRows()}
               </tbody>
             </table>
+          </div>
+          <!-- Móvil: Cards -->
+          <div class="activity-cards">
+            ${renderAdminActivityCards()}
           </div>
         </div>
       </section>`;
@@ -2856,6 +3008,159 @@
           '<td style="padding:10px 14px"><span style="font-size:11px;color:var(--muted)">' + timeAgo + '</span></td>' +
           '<td style="padding:10px 14px;text-align:center">' + actionBtn + '</td>' +
           '</tr>';
+      }).join('');
+    }
+    
+    // Función para renderizar cards en móvil
+    function renderAdminActivityCards(){
+      const tab = window.adminActivityTab || 'all';
+      const page = window.adminActivityPage || 1;
+      const perPage = 20;
+      
+      const activities = [];
+      
+      if(tab === 'all' || tab === 'orders'){
+        state.orders.forEach(o => {
+          const user = state.users.find(u => u.id === o.user_id) || {};
+          const left = daysLeft(o.expires_at);
+          const cls = serviceClass(o.product_name);
+          const logos = {netflix:'N',spotify:'♫',max:'M',prime:'PV',disney:'D+',youtube:'▶',other:'?'};
+          activities.push({
+            type: 'venta', id: o.code || o.id, title: o.product_name || 'Producto',
+            subtitle: serviceName(o.product_name), logo: logos[cls] || '?',
+            user: o.client_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente', amount: o.amount || o.total || 0,
+            status: o.status || 'Entregado', date: o.created_at || o.expires_at,
+            daysLeft: left, data: o
+          });
+        });
+      }
+      
+      if(tab === 'all' || tab === 'topups'){
+        state.topups.forEach(t => {
+          const user = state.users.find(u => u.id === t.user_id) || {};
+          activities.push({
+            type: 'recarga', id: t.id, title: 'Recarga ' + (t.method || 'Nequi'),
+            subtitle: t.reference || 'Sin referencia', logo: '💵',
+            user: t.user_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente', amount: t.amount || 0,
+            status: t.status || 'Pendiente', date: t.created_at, data: t
+          });
+        });
+      }
+      
+      if(tab === 'all' || tab === 'reports'){
+        state.reports.forEach(r => {
+          const user = state.users.find(u => u.id === r.user_id) || {};
+          activities.push({
+            type: 'reporte', id: r.id, title: r.subject || 'Reporte',
+            subtitle: r.product_name || 'Sin producto', logo: '⚠️',
+            user: r.user_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente', amount: 0,
+            status: r.status || 'Abierto', date: r.created_at, data: r
+          });
+        });
+      }
+      
+      activities.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      const start = (page - 1) * perPage;
+      const paginated = activities.slice(start, start + perPage);
+      
+      if(paginated.length === 0){
+        return '<div style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">📭</div><div style="font-size:14px;font-weight:600">Sin actividades</div></div>';
+      }
+      
+      return paginated.map(a => {
+        // Colores según tipo
+        const typeColors = {
+          venta: {bg: 'rgba(16,185,129,.1)', color: '#10b981', icon: '🛒'},
+          recarga: {bg: 'rgba(245,158,11,.1)', color: '#f59e0b', icon: '💰'},
+          reporte: {bg: 'rgba(239,68,68,.1)', color: '#ef4444', icon: '🚨'}
+        };
+        const tc = typeColors[a.type] || typeColors.venta;
+        
+        // Logo color
+        const logoBg = a.type === 'recarga' ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 
+                      a.type === 'reporte' ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 
+                      a.logo === 'N' ? '#E50914' :
+                      a.logo === '♫' ? '#1DB954' :
+                      '#7AA6C8';
+        
+        // Estado
+        let statusText = a.status;
+        let statusColor = 'var(--muted)';
+        if(a.type === 'venta'){
+          if(a.daysLeft !== null && a.daysLeft < 0) { statusText = 'Vencida'; statusColor = '#6b21a8'; }
+          else if(a.daysLeft !== null && a.daysLeft <= 3) { statusText = 'Vence ' + a.daysLeft + 'd'; statusColor = '#ef4444'; }
+          else if(a.daysLeft !== null && a.daysLeft <= 7) { statusText = 'Vence ' + a.daysLeft + 'd'; statusColor = '#d97706'; }
+          else if(a.status.includes('Entregado')) { statusText = 'Activa'; statusColor = '#10b981'; }
+        } else if(a.type === 'recarga'){
+          if(a.status === 'Aprobada') { statusText = 'Aprobada'; statusColor = '#10b981'; }
+          else if(a.status === 'Rechazada') { statusText = 'Rechazada'; statusColor = '#ef4444'; }
+          else { statusText = 'Pendiente'; statusColor = '#f59e0b'; }
+        } else {
+          if(a.status === 'Resuelto') { statusText = 'Resuelto'; statusColor = '#10b981'; }
+          else if(a.status === 'Rechazado') { statusText = 'Rechazado'; statusColor = '#ef4444'; }
+          else { statusText = a.status; statusColor = '#ef4444'; }
+        }
+        
+        // Tiempo relativo
+        const date = a.date ? new Date(a.date) : new Date();
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        let timeAgo = '';
+        if(diffMins < 1) timeAgo = 'Ahora';
+        else if(diffMins < 60) timeAgo = diffMins + 'min';
+        else if(diffHours < 24) timeAgo = diffHours + 'h';
+        else if(diffDays < 7) timeAgo = diffDays + 'd';
+        else timeAgo = date.toLocaleDateString('es-CO', {day:'2-digit',month:'short'});
+        
+        // Monto
+        const amountColor = a.amount > 0 ? (a.type === 'venta' ? '#ef4444' : '#10b981') : 'var(--muted)';
+        const amountPrefix = a.amount > 0 ? (a.type === 'venta' ? '-' : '+') : '';
+        
+        // Botón
+        let actionBtn = '';
+        if(a.type === 'venta'){
+          actionBtn = '<button onclick="openAccountModal(\'' + safeOrder(a.data) + '\')" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">📋 Ver datos</button>';
+        } else if(a.type === 'recarga' && a.status === 'Pendiente'){
+          actionBtn = '<button onclick="confirmApproveTopup(\'' + a.id + '\')" style="flex:1;padding:10px;border:0;border-radius:10px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">✓ Aprobar</button>';
+        } else {
+          const viewName = a.type === 'reporte' ? 'reports' : 'payments';
+          actionBtn = '<button onclick="setView(\'' + viewName + '\')" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">👁️ Ver</button>';
+        }
+        
+        return '<div class="activity-card-mobile">' +
+          '<div class="activity-card-header">' +
+            '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + tc.bg + ';color:' + tc.color + '">' + tc.icon + ' ' + (a.type === 'venta' ? 'Venta' : a.type === 'recarga' ? 'Recarga' : 'Reporte') + '</span>' +
+            '<span style="font-size:11px;color:var(--muted)">' + timeAgo + '</span>' +
+          '</div>' +
+          '<div class="activity-card-info">' +
+            '<div style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:' + logoBg + '">' + a.logo + '</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(a.title) + '</div>' +
+              '<div style="font-size:12px;color:var(--muted)">' + esc(a.subtitle) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="activity-card-row">' +
+            '<div>' +
+              '<div style="font-size:11px;color:var(--muted)">Usuario</div>' +
+              '<div style="font-size:13px;font-weight:700">' + esc(a.user) + '</div>' +
+              '<div style="font-size:10px;color:var(--muted)">' + a.userRole + '</div>' +
+            '</div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:11px;color:var(--muted)">Monto</div>' +
+              '<div style="font-size:18px;font-weight:900;color:' + amountColor + '">' + amountPrefix + money(a.amount) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--line)">' +
+            '<span style="font-size:12px;font-weight:700;color:' + statusColor + '">' + statusText + '</span>' +
+            actionBtn +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
