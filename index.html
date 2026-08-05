@@ -4339,7 +4339,9 @@
       try{
         showLoading("Enviando reporte...");
         const order_id=$("#rpOrder").value, o=state.orders.find(x=>x.id===order_id)||{};
-        await api("reports",{method:"POST",body:JSON.stringify({order_id,product_name:o.product_name,account_data:o.delivered_data,reason:$("#rpReason").value,description:$("#rpDesc").value})});
+        // Asegurar que product_name siempre tenga un valor
+        const productName = o.product_name || o.service || "Producto sin nombre";
+        await api("reports",{method:"POST",body:JSON.stringify({order_id,product_name:productName,account_data:o.delivered_data||"",reason:$("#rpReason").value,description:$("#rpDesc").value})});
         closeModal();
         // Mostrar mensaje de confirmacion con tiempo estimado
         openModal(`<div style="text-align:center;padding:24px">
