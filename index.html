@@ -1935,7 +1935,7 @@
             <div class="hero-center"><img src="${ASSETS}${angelImg}" alt="Distrito" class="hero-logo" onerror="this.style.display='none'"></div>
           </div>
           <!-- LOGIN FORM -->
-          <div id="loginForm" class="${isRegister?'hidden':''}">
+          <div id="loginForm" style="display:${isRegister?'none':'block'}">
             <div class="login-brand"><img class="brand-logo" src="${ASSETS}${angelImg}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div class="brand-title">DISTRITO<em>Streaming</em></div></div>
             <h1 style="animation:fadeIn .5s ease .1s both">Bienvenido <span>de nuevo</span></h1>
             
@@ -1961,7 +1961,7 @@
           </div>
 
           <!-- REGISTER FORM -->
-          <div id="registerForm" class="register-panel ${isRegister?'show':''}">
+          <div id="registerForm" style="display:${isRegister?'block':'none'}">
             <div class="login-brand"><img class="brand-logo" src="${ASSETS}${angelImg}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div class="brand-title">DISTRITO<em>Streaming</em></div></div>
             ${refBanner}
             <h1 style="animation:fadeIn .5s ease .1s both">Crear <span>cuenta</span></h1>
@@ -1990,10 +1990,10 @@
 
     function showRegister(){
       document.getElementById("loginForm").style.display="none";
-      document.getElementById("registerForm").classList.add("show");
+      document.getElementById("registerForm").style.display="block";
     }
     function showLogin(){
-      document.getElementById("registerForm").classList.remove("show");
+      document.getElementById("registerForm").style.display="none";
       document.getElementById("loginForm").style.display="block";
     }
 
