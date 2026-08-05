@@ -6145,21 +6145,47 @@
       html += '</div>';
       
       if (isAdmin()) {
+        // Tarjeta Pendientes con animacion
+        const pendAnim = pending.length > 0 ? 'animation:pulse 2s infinite' : '';
         html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">';
-        html += '<div onclick="topupFilter=\'Pendiente\';renderApp()" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;cursor:pointer">';
-        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">⏳</span><span style="background:#f59e0b;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + pending.length + '</span></div>';
-        html += '<div style="font-size:14px;font-weight:700;color:#f59e0b;margin-top:8px">Pendientes</div>';
-        html += '<div style="font-size:12px;color:var(--muted)">$' + totalPending.toLocaleString('es-CO') + '</div></div>';
+        html += '<div onclick="topupFilter=\'Pendiente\';renderApp()" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.4);border-radius:12px;padding:16px;cursor:pointer;position:relative;overflow:hidden;' + pendAnim + '">';
+        html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#f59e0b,transparent);animation:shimmer 2s infinite"></div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+        html += '<span style="font-size:32px">⏳</span>';
+        html += '<span style="background:#f59e0b;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(245,158,11,.4)">' + pending.length + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:15px;font-weight:700;color:#f59e0b;margin-top:10px">Pendientes</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">$' + totalPending.toLocaleString('es-CO') + '</div>';
+        html += '</div>';
         
-        html += '<div onclick="topupFilter=\'Aprobada\';renderApp()" style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.3);border-radius:12px;padding:16px;cursor:pointer">';
-        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">✅</span><span style="background:#10b981;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + approved.length + '</span></div>';
-        html += '<div style="font-size:14px;font-weight:700;color:#10b981;margin-top:8px">Aprobadas</div>';
-        html += '<div style="font-size:12px;color:var(--muted)">$' + totalApproved.toLocaleString('es-CO') + '</div></div>';
+        // Tarjeta Aprobadas
+        html += '<div onclick="topupFilter=\'Aprobada\';renderApp()" style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;cursor:pointer;position:relative;overflow:hidden">';
+        html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#10b981,transparent)"></div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+        html += '<span style="font-size:32px">✅</span>';
+        html += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,.4)">' + approved.length + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:15px;font-weight:700;color:#10b981;margin-top:10px">Aprobadas</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">$' + totalApproved.toLocaleString('es-CO') + '</div>';
+        html += '</div>';
         
-        html += '<div onclick="topupFilter=\'Rechazada\';renderApp()" style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:12px;padding:16px;cursor:pointer">';
-        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">❌</span><span style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + rejected.length + '</span></div>';
-        html += '<div style="font-size:14px;font-weight:700;color:#ef4444;margin-top:8px">Rechazadas</div>';
-        html += '<div style="font-size:12px;color:var(--muted)">' + rejected.length + ' rechazadas</div></div>';
+        // Tarjeta Rechazadas
+        html += '<div onclick="topupFilter=\'Rechazada\';renderApp()" style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.4);border-radius:12px;padding:16px;cursor:pointer;position:relative;overflow:hidden">';
+        html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ef4444,transparent)"></div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+        html += '<span style="font-size:32px">❌</span>';
+        html += '<span style="background:#ef4444;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(239,68,68,.4)">' + rejected.length + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:15px;font-weight:700;color:#ef4444;margin-top:10px">Rechazadas</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">' + rejected.length + ' rechazadas</div>';
+        html += '</div>';
+        html += '</div>';
+      }
+      
+      // Boton eliminar para aprobadas/rechazadas
+      if (isAdmin() && (topupFilter === 'Aprobada' || topupFilter === 'Rechazada') && filtered.length > 0) {
+        html += '<div style="margin-bottom:12px;text-align:right">';
+        html += '<button onclick="confirmDeleteAllTopups(\'' + topupFilter + '\')" style="padding:8px 16px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">🗑️ Eliminar todas las ' + topupFilter + 's</button>';
         html += '</div>';
       }
       
@@ -6194,7 +6220,7 @@
           
           html += '<div style="padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">';
           html += '<div style="display:flex;align-items:center;gap:12px">';
-          html += '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff">' + (name[0] || 'U').toUpperCase() + '</div>';
+          html += '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;box-shadow:0 2px 8px rgba(102,126,234,.3)">' + (name[0] || 'U').toUpperCase() + '</div>';
           html += '<div><div style="font-weight:700;font-size:14px">' + esc(name) + '</div>';
           html += '<div style="font-size:11px;color:var(--muted)">' + (t.method || 'Nequi') + ' · Ref: ' + (t.reference || '-') + '</div></div></div>';
           html += '<div style="display:flex;align-items:center;gap:12px">';
@@ -6203,10 +6229,13 @@
           if (isAdmin() && t.status === 'Pendiente') {
             html += '<div style="display:flex;gap:6px">';
             html += '<button onclick="confirmRejectTopup(\'' + t.id + '\')" style="padding:8px 14px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">❌ Rechazar</button>';
-            html += '<button onclick="confirmApproveTopup(\'' + t.id + '\')" style="padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer">✅ Aprobar</button>';
+            html += '<button onclick="confirmApproveTopup(\'' + t.id + '\')" style="padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.3)">✅ Aprobar</button>';
             html += '</div>';
+          } else if (isAdmin() && (t.status === 'Aprobada' || t.status === 'Rechazada')) {
+            html += '<button onclick="deleteTopup(\'' + t.id + '\')" style="padding:8px 14px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+            html += '<span style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '>' + t.status + '</span>';
           } else {
-            html += '<span style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '">' + t.status + '</span>';
+            html += '<span style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '>' + t.status + '</span>';
           }
           html += '</div></div>';
         });
@@ -6214,6 +6243,50 @@
       
       html += '</div></section>';
       return html;
+    }
+    
+    function confirmDeleteAllTopups(status) {
+      const count = status === 'Aprobada' ? state.topups.filter(t => t.status === 'Aprobada').length : state.topups.filter(t => t.status === 'Rechazada').length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' recargas ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllTopups(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllTopups(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.topups.filter(t => t.status === status);
+        for (const t of toDelete) {
+          await api('topups/' + t.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(count + " recargas eliminadas", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteTopup(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('topups/' + id, {method: 'DELETE'});
+        toast("Recarga eliminada", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
     }
 
     function sortTopups(column) {
