@@ -89,6 +89,9 @@ function renderResellerPanel() {
   
   return `
     <div class="reseller-panel">
+      <div class="reseller-panel-header">
+        <span class="reseller-badge">🏷️ REVENDEDOR</span>
+      </div>
       <div class="reseller-tools">
         <button onclick="openPricesModal()" class="reseller-tool-btn purple">
           <span class="tool-icon">💰</span>
@@ -405,6 +408,8 @@ function injectPurchaseStyles() {
   const styles = document.createElement('style');
   styles.textContent = `
     .reseller-panel { background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(139,92,246,0.05)); border: 2px solid rgba(124,58,237,0.2); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .reseller-panel-header { text-align: center; margin-bottom: 14px; }
+    .reseller-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
     .reseller-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     @media (max-width: 700px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 400px) { .reseller-tools { grid-template-columns: 1fr; } }
