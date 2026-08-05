@@ -6121,235 +6121,101 @@
     };
     
     function payments(){
-      // Calcular estadísticas
       const pending = state.topups.filter(t => t.status === "Pendiente");
       const approved = state.topups.filter(t => t.status === "Aprobada");
       const rejected = state.topups.filter(t => t.status === "Rechazada");
+      const totalPending = pending.reduce((s, t) => s + Number(t.amount || 0), 0);
       const totalApproved = approved.reduce((s, t) => s + Number(t.amount || 0), 0);
-      const totalProfit = approved.reduce((s, t) => s + profitFromRecharge(Number(t.amount || 0)), 0);
-      const totalRejected = rejected.reduce((s, t) => s + Number(t.amount || 0), 0);
-      const avgTopup = approved.length > 0 ? totalApproved / approved.length : 0;
       
-      // Calcular estadísticas de tendencia (últimos 7 días vs anteriores)
-      const now = new Date();
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-      const thisWeekApproved = approved.filter(t => new Date(t.created_at) >= sevenDaysAgo);
-      const lastWeekApproved = approved.filter(t => new Date(t.created_at) >= fourteenDaysAgo && new Date(t.created_at) < sevenDaysAgo);
-      const thisWeekTotal = thisWeekApproved.reduce((s, t) => s + Number(t.amount || 0), 0);
-      const lastWeekTotal = lastWeekApproved.reduce((s, t) => s + Number(t.amount || 0), 0);
-      const trendPercent = lastWeekTotal > 0 ? Math.round(((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100) : 0;
-      const trendIcon = trendPercent > 0 ? '📈' : trendPercent < 0 ? '📉' : '➡️';
+      if (!topupRefreshInterval) startTopupAutoRefresh();
       
-      // Iniciar auto-refresh si no existe
-      if (!topupRefreshInterval) {
-        startTopupAutoRefresh();
-        lastPendingCount = pending.length;
+      let filtered = state.topups;
+      if (!isAdmin()) filtered = filtered.filter(t => t.user_id === state.user?.id);
+      else if (topupFilter === "Pendiente") filtered = pending;
+      else if (topupFilter === "Aprobada") filtered = approved;
+      else if (topupFilter === "Rechazada") filtered = rejected;
+      else filtered = pending;
+      
+      filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      
+      let html = '<section style="margin-bottom:20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+      html += '<div><h1 style="margin:0;font-size:22px;font-weight:800">💰 Recargas</h1>';
+      html += '<p style="margin:4px 0 0;color:var(--muted);font-size:13px">' + (isAdmin() ? pending.length + ' pendientes · ' + approved.length + ' aprobadas' : 'Tus recargas') + '</p></div>';
+      html += '</div>';
+      
+      if (isAdmin()) {
+        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">';
+        html += '<div onclick="topupFilter=\'Pendiente\';renderApp()" style="background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;cursor:pointer">';
+        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">⏳</span><span style="background:#f59e0b;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + pending.length + '</span></div>';
+        html += '<div style="font-size:14px;font-weight:700;color:#f59e0b;margin-top:8px">Pendientes</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">$' + totalPending.toLocaleString('es-CO') + '</div></div>';
+        
+        html += '<div onclick="topupFilter=\'Aprobada\';renderApp()" style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.3);border-radius:12px;padding:16px;cursor:pointer">';
+        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">✅</span><span style="background:#10b981;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + approved.length + '</span></div>';
+        html += '<div style="font-size:14px;font-weight:700;color:#10b981;margin-top:8px">Aprobadas</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">$' + totalApproved.toLocaleString('es-CO') + '</div></div>';
+        
+        html += '<div onclick="topupFilter=\'Rechazada\';renderApp()" style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:12px;padding:16px;cursor:pointer">';
+        html += '<div style="display:flex;justify-content:space-between"><span style="font-size:28px">❌</span><span style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">' + rejected.length + '</span></div>';
+        html += '<div style="font-size:14px;font-weight:700;color:#ef4444;margin-top:8px">Rechazadas</div>';
+        html += '<div style="font-size:12px;color:var(--muted)">' + rejected.length + ' rechazadas</div></div>';
+        html += '</div>';
       }
       
-      // Filtrar y buscar
-      let filteredTopups = state.topups.filter(t => {
-        if (topupFilter !== 'all' && t.status !== topupFilter) return false;
-        if (topupSearch) {
-          const search = topupSearch.toLowerCase();
-          const user = state.users.find(u => u.id === t.user_id);
-          const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "");
-          const matchesUser = userName.toLowerCase().includes(search);
-          const matchesRef = (t.reference || "").toLowerCase().includes(search);
-          const matchesMethod = (t.method || "").toLowerCase().includes(search);
-          if (!matchesUser && !matchesRef && !matchesMethod) return false;
-        }
-        // Filtro por fecha
-        if (topupDateFrom && t.created_at) {
-          const date = new Date(t.created_at);
-          const from = new Date(topupDateFrom);
-          from.setHours(0, 0, 0, 0);
-          if (date < from) return false;
-        }
-        if (topupDateTo && t.created_at) {
-          const date = new Date(t.created_at);
-          const to = new Date(topupDateTo);
-          to.setHours(23, 59, 59, 999);
-          if (date > to) return false;
-        }
-        return true;
-      });
+      html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden">';
+      html += '<div style="padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-weight:700">' + filtered.length + ' recarga(s)</span>';
+      html += '<div style="display:flex;gap:6px">';
+      html += '<button onclick="topupFilter=\'Pendiente\';renderApp()" style="padding:6px 12px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:' + (topupFilter==='Pendiente' ? "'rgba(245,158,11,.2)'" : "var(--soft)") + ';color:' + (topupFilter==='Pendiente' ? "'#f59e0b'" : "var(--muted)") + '">⏳ Pendientes</button>';
+      html += '<button onclick="topupFilter=\'Aprobada\';renderApp()" style="padding:6px 12px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:' + (topupFilter==='Aprobada' ? "'rgba(16,185,129,.2)'" : "var(--soft)") + ';color:' + (topupFilter==='Aprobada' ? "'#10b981'" : "var(--muted)") + '">✅ Aprobadas</button>';
+      html += '<button onclick="topupFilter=\'Rechazada\';renderApp()" style="padding:6px 12px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:' + (topupFilter==='Rechazada' ? "'rgba(239,68,68,.2)'" : "var(--soft)") + ';color:' + (topupFilter==='Rechazada' ? "'#ef4444'" : "var(--muted)") + '">❌ Rechazadas</button>';
+      html += '</div></div>';
       
-      // Ordenar
-      filteredTopups.sort((a, b) => {
-        let valA, valB;
-        switch (topupSortBy) {
-          case 'amount': valA = Number(a.amount || 0); valB = Number(b.amount || 0); break;
-          case 'user': 
-            const userA = state.users.find(u => u.id === a.user_id);
-            const userB = state.users.find(u => u.id === b.user_id);
-            valA = (userA ? (userA.name || userA.email) : (a.user_name || "")).toLowerCase();
-            valB = (userB ? (userB.name || userB.email) : (b.user_name || "")).toLowerCase();
-            break;
-          case 'status': valA = a.status; valB = b.status; break;
-          case 'method': valA = a.method || ""; valB = b.method || ""; break;
-          default: valA = new Date(a.created_at || 0).getTime(); valB = new Date(b.created_at || 0).getTime();
-        }
-        if (topupSortOrder === 'asc') {
-          return valA > valB ? 1 : -1;
-        } else {
-          return valA < valB ? 1 : -1;
-        }
-      });
+      if (filtered.length === 0) {
+        html += '<div style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px;font-weight:600">Sin recargas</div></div>';
+      } else {
+        filtered.forEach(t => {
+          const u = state.users.find(x => x.id === t.user_id);
+          const name = u ? (u.name || u.email) : (t.user_name || "Usuario");
+          const statusColor = t.status === 'Aprobada' ? '#10b981' : t.status === 'Rechazada' ? '#ef4444' : '#f59e0b';
+          const statusBg = t.status === 'Aprobada' ? 'rgba(16,185,129,.1)' : t.status === 'Rechazada' ? 'rgba(239,68,68,.1)' : 'rgba(245,158,11,.1)';
+          const date = t.created_at ? new Date(t.created_at) : new Date();
+          const now = new Date();
+          const diffMs = now - date;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMins / 60);
+          const diffDays = Math.floor(diffHours / 24);
+          let timeAgo = '';
+          if (diffMins < 1) timeAgo = 'Ahora';
+          else if (diffMins < 60) timeAgo = diffMins + 'min';
+          else if (diffHours < 24) timeAgo = diffHours + 'h';
+          else timeAgo = diffDays + 'd';
+          
+          html += '<div style="padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">';
+          html += '<div style="display:flex;align-items:center;gap:12px">';
+          html += '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff">' + (name[0] || 'U').toUpperCase() + '</div>';
+          html += '<div><div style="font-weight:700;font-size:14px">' + esc(name) + '</div>';
+          html += '<div style="font-size:11px;color:var(--muted)">' + (t.method || 'Nequi') + ' · Ref: ' + (t.reference || '-') + '</div></div></div>';
+          html += '<div style="display:flex;align-items:center;gap:12px">';
+          html += '<div style="text-align:right"><div style="font-size:16px;font-weight:800">$' + Number(t.amount || 0).toLocaleString('es-CO') + '</div>';
+          html += '<div style="font-size:10px;color:var(--muted)">' + timeAgo + '</div></div>';
+          if (isAdmin() && t.status === 'Pendiente') {
+            html += '<div style="display:flex;gap:6px">';
+            html += '<button onclick="confirmRejectTopup(\'' + t.id + '\')" style="padding:8px 14px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">❌ Rechazar</button>';
+            html += '<button onclick="confirmApproveTopup(\'' + t.id + '\')" style="padding:8px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer">✅ Aprobar</button>';
+            html += '</div>';
+          } else {
+            html += '<span style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '">' + t.status + '</span>';
+          }
+          html += '</div></div>';
+        });
+      }
       
-      const paginatedTopups = paginate(filteredTopups, topupPage, 15);
-      const sortIcon = (col) => topupSortBy === col ? (topupSortOrder === 'asc' ? ' ↑' : ' ↓') : '';
-      const selectedCount = topupSelected.length;
-      const selectedAmount = filteredTopups.filter(t => topupSelected.includes(t.id)).reduce((s, t) => s + Number(t.amount || 0), 0);
-      
-      // Calcular totales de montos por estado
-      const totalPendingAmount = pending.reduce((s, t) => s + Number(t.amount || 0), 0);
-      
-      return `<section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
-        <!-- TARJETA PENDIENTES -->
-        <div class="topup-metric-card pending" onclick="filterTopups('Pendiente')" style="cursor:pointer">
-          <div class="metric-glow"></div>
-          <div class="metric-header">
-            <div class="metric-icon">⏳</div>
-            <div class="metric-badge ${pending.length > 0 ? 'active' : ''}">${pending.length > 0 ? '⚡' : '✓'}</div>
-          </div>
-          <div class="metric-value">${pending.length}</div>
-          <div class="metric-label">Pendientes</div>
-          <div class="metric-detail">${pending.length > 0 ? money(totalPendingAmount) + ' en espera' : 'Sin solicitudes'}</div>
-          ${pending.length > 0 ? `<div class="metric-progress"><div class="progress-bar" style="width:${Math.min(pending.length * 10, 100)}%"></div></div>` : ''}
-          <div class="metric-action">Ver →</div>
-        </div>
-        
-        <!-- TARJETA APROBADAS -->
-        <div class="topup-metric-card approved" onclick="filterTopups('Aprobada')" style="cursor:pointer">
-          <div class="metric-glow"></div>
-          <div class="metric-header">
-            <div class="metric-icon">✅</div>
-            <div class="metric-badge approved-badge">${approved.length > 0 ? '💰' : '✓'}</div>
-          </div>
-          <div class="metric-value success">${approved.length}</div>
-          <div class="metric-label">Aprobadas</div>
-          <div class="metric-detail">${money(totalApproved)} total</div>
-          ${approved.length > 0 ? `<div class="metric-progress success"><div class="progress-bar" style="width:${Math.min(approved.length * 5, 100)}%"></div></div>` : ''}
-          <div class="metric-action">Ver →</div>
-        </div>
-        
-        <!-- TARJETA RECHAZADAS -->
-        <div class="topup-metric-card rejected" style="cursor:default">
-          <div class="metric-glow"></div>
-          <div class="metric-header">
-            <div class="metric-icon">❌</div>
-            <div class="metric-badge rejected-badge">📊</div>
-          </div>
-          <div class="metric-value danger">${rejected.length}</div>
-          <div class="metric-label">Rechazadas</div>
-          <div class="metric-detail">${money(totalRejected)} rechazados</div>
-          <div class="metric-sub">${rejected.length > 0 ? ((rejected.length / state.topups.length) * 100).toFixed(1) + '% del total' : 'Sin rechazos'}</div>
-        </div>
-        
-        <!-- TARJETA GANANCIA -->
-        <div class="topup-metric-card profit" style="cursor:default">
-          <div class="metric-glow"></div>
-          <div class="metric-header">
-            <div class="metric-icon">💎</div>
-            <div class="metric-badge profit-badge">${trendIcon}</div>
-          </div>
-          <div class="metric-value profit-value">${money(totalProfit)}</div>
-          <div class="metric-label">Ganancia 20%</div>
-          <div class="metric-detail">Promedio: ${money(avgTopup)} por recarga</div>
-          <div class="metric-trend ${trendPercent >= 0 ? 'positive' : 'negative'}">
-            ${trendIcon} ${Math.abs(trendPercent)}% vs semana anterior
-          </div>
-        </div>
-      </section>
-      
-      
-      <!-- Acciones Bulk -->
-      ${pending.length > 0 && topupFilter === 'Pendiente' ? `
-      <div style="background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(8,119,255,.1));border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="selectAllTopups" onchange="toggleSelectAllTopups(this.checked)" style="width:18px;height:18px;cursor:pointer">
-            <span style="font-size:12px;font-weight:600">Seleccionar todo (${pending.length})</span>
-          </label>
-          ${selectedCount > 0 ? `<span style="font-size:12px;color:var(--muted)">| ${selectedCount} seleccionadas (${money(selectedAmount)})</span>` : ''}
-        </div>
-        ${selectedCount > 0 ? `
-        <div style="display:flex;gap:8px">
-          <button onclick="bulkApproveTopups()" style="padding:8px 16px;border:0;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
-            Aprobar ${selectedCount}
-          </button>
-          <button onclick="bulkRejectTopups()" style="padding:8px 16px;border:1px solid var(--bad);border-radius:8px;background:rgba(239,68,68,.1);color:var(--bad);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Rechazar ${selectedCount}
-          </button>
-          <button onclick="topupSelected=[];renderApp()" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer">Limpiar</button>
-        </div>
-        ` : ''}
-      </div>
-      ` : ''}
-      
-      <section class="section">
-        <div class="card" style="overflow:hidden">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px">
-            <div>
-              <h2 style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px">
-                Historial de recargas
-                <span id="topupRefreshBadge" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.5s infinite"></span>
-                <button onclick="topupSoundEnabled=!topupSoundEnabled;this.innerHTML=topupSoundEnabled?'🔔':'🔕'" style="background:none;border:none;cursor:pointer;font-size:14px" title="Activar/Desactivar sonido">${topupSoundEnabled ? '🔔' : '🔕'}</button>
-              </h2>
-              <p class="muted" style="margin:4px 0 0;font-size:12px">${pending.length} pendientes · ${approved.length} aprobadas · ${rejected.length} rechazadas · Mostrando ${filteredTopups.length}</p>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <!-- Filtro de fechas -->
-              <div style="display:flex;align-items:center;gap:6px">
-                <input type="date" id="topupDateFrom" value="${topupDateFrom}" onchange="topupDateFrom=this.value;topupPage=1;renderApp()" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:11px;background:var(--soft)" title="Desde">
-                <span style="color:var(--muted);font-size:11px">-</span>
-                <input type="date" id="topupDateTo" value="${topupDateTo}" onchange="topupDateTo=this.value;topupPage=1;renderApp()" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:11px;background:var(--soft)" title="Hasta">
-                ${topupDateFrom || topupDateTo ? `<button onclick="topupDateFrom='';topupDateTo='';renderApp()" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--muted);font-size:10px;cursor:pointer">✕</button>` : ''}
-              </div>
-              <!-- Búsqueda -->
-              <div style="position:relative">
-                <input type="text" id="topupSearchInput" placeholder="Buscar..." value="${esc(topupSearch)}" 
-                  oninput="topupSearch=this.value;topupPage=1;renderApp()" 
-                  style="padding:6px 10px 6px 28px;border:1px solid var(--line);border-radius:8px;font-size:11px;width:160px;background:var(--soft)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="12" height="12" style="position:absolute;left:8px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-              </div>
-              <!-- Tabs de estado mejorados -->
-              <div style="display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:10px">
-                <button onclick="filterTopups('all')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='all'?'#fff':'transparent'};color:${topupFilter==='all'?'var(--text)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;box-shadow:${topupFilter==='all'?'0 2px 4px rgba(0,0,0,0.1)':'none'}">Todas (${state.topups.length})</button>
-                <button onclick="filterTopups('Pendiente')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Pendiente'?'rgba(245,158,11,.2)':'transparent'};color:${topupFilter==='Pendiente'?'#f59e0b':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">⏳ Pendientes (${pending.length})</button>
-                <button onclick="filterTopups('Aprobada')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Aprobada'?'rgba(16,185,129,.2)':'transparent'};color:${topupFilter==='Aprobada'?'#10b981':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✓ Aprobadas (${approved.length})</button>
-                <button onclick="filterTopups('Rechazada')" style="padding:8px 14px;border:none;border-radius:8px;background:${topupFilter==='Rechazada'?'rgba(239,68,68,.2)':'transparent'};color:${topupFilter==='Rechazada'?'#ef4444':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer">✗ Rechazadas (${rejected.length})</button>
-              </div>
-              
-            </div>
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
-              <thead>
-                <tr style="background:var(--soft);border-bottom:1px solid var(--line)">
-                  ${pending.length > 0 && topupFilter === 'Pendiente' ? `<th style="padding:10px 12px;width:40px"><input type="checkbox" disabled style="width:16px;height:16px;opacity:.3"></th>` : ''}
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;cursor:pointer" onclick="sortTopups('user')">Usuario${sortIcon('user')}</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;cursor:pointer" onclick="sortTopups('amount')">Monto${sortIcon('amount')}</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Método</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Referencia</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;cursor:pointer" onclick="sortTopups('created_at')">Hace${sortIcon('created_at')}</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;cursor:pointer" onclick="sortTopups('status')">Estado${sortIcon('status')}</th>
-                  <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="topupsBody">
-                ${paginatedTopups.items.length ? paginatedTopups.items.map(t => topupRow(t)).join("") : `<tr><td colspan="${pending.length > 0 && topupFilter === 'Pendiente' ? 8 : 7}" style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin recargas</div><div style="font-size:12px">Las recargas aparecerán aquí</div></td></tr>`}
-              </tbody>
-            </table>
-          </div>
-          ${filteredTopups.length > 15 ? paginationHTML(filteredTopups, topupPage, 15, "renderTopupsPage") : ''}
-        </div>
-      </section>`;
+      html += '</div></section>';
+      return html;
     }
-    
+
     function sortTopups(column) {
       if (topupSortBy === column) {
         topupSortOrder = topupSortOrder === 'asc' ? 'desc' : 'asc';
