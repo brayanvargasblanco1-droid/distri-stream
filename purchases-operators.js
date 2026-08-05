@@ -89,22 +89,23 @@ function renderResellerPanel() {
   
   return `
     <div class="reseller-panel">
-      <div class="reseller-panel-header">
-        <span class="reseller-badge">🏷️ REVENDEDOR</span>
-      </div>
-      
       <div class="reseller-tools">
-        <button onclick="openMyLinkModal()" class="reseller-tool">
+        <button onclick="openPricesModal()" class="reseller-tool-btn purple">
+          <span class="tool-icon">💰</span>
+          <span class="tool-text">Ver Precios</span>
+        </button>
+        
+        <button onclick="openMyLinkModal()" class="reseller-tool-btn blue">
           <span class="tool-icon">🔗</span>
           <span class="tool-text">Mi Link</span>
         </button>
         
-        <button onclick="openSalesModal()" class="reseller-tool">
+        <button onclick="openSalesModal()" class="reseller-tool-btn green">
           <span class="tool-icon">📊</span>
           <span class="tool-text">Ventas</span>
         </button>
         
-        <button onclick="showBulkRenewal()" class="reseller-tool ${renewClass}">
+        <button onclick="showBulkRenewal()" class="reseller-tool-btn orange ${renewClass}">
           <span class="tool-icon">🔄</span>
           <span class="tool-text">Renovar</span>
           ${badge}
@@ -403,19 +404,24 @@ function applyOrderFilters() {
 function injectPurchaseStyles() {
   const styles = document.createElement('style');
   styles.textContent = `
-    .reseller-panel { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(8,119,255,0.05)); border: 1px solid rgba(124,58,237,0.15); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-    .reseller-panel-header { text-align: center; margin-bottom: 16px; }
-    .reseller-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 800; }
-    .reseller-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    @media (max-width: 600px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
+    .reseller-panel { background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(139,92,246,0.05)); border: 2px solid rgba(124,58,237,0.2); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .reseller-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 700px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 400px) { .reseller-tools { grid-template-columns: 1fr; } }
-    .reseller-tool { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; border: 2px solid #e5e7eb; border-radius: 14px; background: #fff; cursor: pointer; transition: all 0.2s; position: relative; }
-    .reseller-tool:hover { border-color: #7c3aed; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(124,58,237,0.15); }
-    .reseller-tool.tool-renew-active { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
-    .reseller-tool.tool-renew-active:hover { border-color: #d97706; box-shadow: 0 6px 20px rgba(245,158,11,0.25); }
-    .tool-icon { font-size: 36px; }
-    .tool-text { font-size: 14px; font-weight: 700; text-align: center; color: #1f2937; }
-    .tool-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 3px solid #fff; }
+    .reseller-tool-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border: 2px solid; border-radius: 14px; background: #fff; cursor: pointer; transition: all 0.2s; position: relative; }
+    .reseller-tool-btn.purple { border-color: rgba(124,58,237,0.2); }
+    .reseller-tool-btn.purple:hover { border-color: #7c3aed; background: rgba(124,58,237,0.08); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(124,58,237,0.2); }
+    .reseller-tool-btn.blue { border-color: rgba(8,119,255,0.2); }
+    .reseller-tool-btn.blue:hover { border-color: #0877ff; background: rgba(8,119,255,0.08); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(8,119,255,0.2); }
+    .reseller-tool-btn.green { border-color: rgba(16,185,129,0.2); }
+    .reseller-tool-btn.green:hover { border-color: #10b981; background: rgba(16,185,129,0.08); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(16,185,129,0.2); }
+    .reseller-tool-btn.orange { border-color: rgba(245,158,11,0.2); }
+    .reseller-tool-btn.orange:hover { border-color: #f59e0b; background: rgba(245,158,11,0.08); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(245,158,11,0.2); }
+    .reseller-tool-btn.tool-renew-active { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+    .reseller-tool-btn.tool-renew-active:hover { border-color: #d97706; box-shadow: 0 6px 20px rgba(245,158,11,0.3); }
+    .tool-icon { font-size: 32px; }
+    .tool-text { font-size: 13px; font-weight: 700; text-align: center; color: #1f2937; }
+    .tool-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; border: 3px solid #fff; }
     
     .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
     .section-header h2 { font-size: 18px; font-weight: 900; margin: 0; }
