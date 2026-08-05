@@ -348,6 +348,126 @@ function improvedOrderRows(rows) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// ⚠️ REPORTAR PROBLEMA CON PAGO
+// ═══════════════════════════════════════════════════════════════
+
+function openPaymentReport(topupId) {
+  const topup = state.topups.find(t => t.id === topupId) || state.topups[0];
+  if (!topup) {
+    openModal(`
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚠️ Reportar Problema</h2>
+          <button onclick="closeModal()" class="btn-close">×</button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:40px 20px">
+          <div style="font-size:48px;margin-bottom:12px">❌</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px">No se encontró la recarga</div>
+          <div style="font-size:13px;color:#6b7280">Contacta a soporte directamente</div>
+        </div>
+      </div>
+    `);
+    return;
+  }
+  
+  const reasons = [
+    { value: 'no_received', label: '💰 El pago no fue reflejado', desc: 'Realicé el pago pero el saldo no aumentó' },
+    { value: 'wrong_amount', label: '🔢 El monto es incorrecto', desc: 'Pagué un monto diferente al aprobado' },
+    { value: 'no_confirmation', label: '⏳ Sin confirmación', desc: 'El pago fue realizado pero no hay respuesta' },
+    { value: 'other', label: '❓ Otro problema', desc: ' Otro tipo de inconveniente' }
+  ];
+  
+  openModal(`
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚠️ Reportar Problema de Pago</h2>
+        <button onclick="closeModal()" class="btn-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-card" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.05));border:2px solid rgba(245,158,11,0.2)">
+          <div style="font-size:12px;color:#92400e;text-transform:uppercase;font-weight:700;margin-bottom:8px">Detalles del pago</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:#6b7280">Monto:</span>
+            <span style="font-weight:800;color:#d97706">${formatMoney(topup.amount || 0)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:#6b7280">Método:</span>
+            <span style="font-weight:600">${topup.method || 'Nequi/Wompi'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:#6b7280">Fecha:</span>
+            <span style="font-weight:600">${formatDate(topup.created_at || topup.approved_at || new Date())}</span>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">¿Cuál es el problema?</div>
+          ${reasons.map(r => `
+            <label class="report-reason-option" onclick="selectReportReason(this, '${r.value}')">
+              <input type="radio" name="reportReason" value="${r.value}" style="display:none">
+              <div class="reason-radio"></div>
+              <div class="reason-content">
+                <div class="reason-label">${r.label}</div>
+                <div class="reason-desc">${r.desc}</div>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        
+        <div style="margin-bottom:16px">
+          <textarea id="reportDescription" placeholder="Describe el problema con más detalle (opcional)" rows="3" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;resize:none;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+        </div>
+        
+        <button onclick="submitPaymentReport('${topupId}')" class="order-btn datos" style="width:100%;padding:14px;font-size:15px">
+          📤 Enviar Reporte
+        </button>
+      </div>
+    </div>
+  `);
+}
+
+function selectReportReason(element, value) {
+  document.querySelectorAll('.report-reason-option').forEach(el => {
+    el.classList.remove('selected');
+    el.querySelector('.reason-radio').classList.remove('active');
+  });
+  element.classList.add('selected');
+  element.querySelector('.reason-radio').classList.add('active');
+  element.querySelector('input').checked = true;
+}
+
+async function submitPaymentReport(topupId) {
+  const reasonEl = document.querySelector('input[name="reportReason"]:checked');
+  const reason = reasonEl ? reasonEl.value : '';
+  const description = document.getElementById('reportDescription')?.value || '';
+  
+  if (!reason) {
+    toast('⚠️ Selecciona el tipo de problema', 'warn');
+    return;
+  }
+  
+  try {
+    showLoading('Enviando reporte...');
+    await api('reports', {
+      method: 'POST',
+      body: JSON.stringify({
+        topup_id: topupId,
+        reason: reason,
+        description: description,
+        type: 'payment'
+      })
+    });
+    toast('✅ Reporte enviado correctamente', 'ok');
+    closeModal();
+    await boot();
+  } catch (e) {
+    toast('❌ Error: ' + e.message, 'bad');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // 📊 VISTA MEJORADA DE MOVIMIENTOS
 // ═══════════════════════════════════════════════════════════════
 
@@ -435,9 +555,10 @@ function improvedMovementCard(m) {
 function showMovementDetail(orderId, isCredit, encodedData) {
   const m = JSON.parse(decodeURIComponent(encodedData));
   const isCreditBool = isCredit === 'true';
+  const topupId = isCreditBool && m.orderData?.id ? m.orderData.id : '';
   
   if (isCreditBool) {
-    // Mostrar detalle de recarga
+    // Mostrar detalle de recarga con opción de reportar
     openModal(`
       <div class="modal-content">
         <div class="modal-header">
@@ -453,7 +574,16 @@ function showMovementDetail(orderId, isCredit, encodedData) {
           <div class="detail-info">
             <div class="detail-row"><span>Fecha:</span><span>${formatDate(m.date)}</span></div>
             <div class="detail-row"><span>Descripción:</span><span>${m.description || 'Recarga de saldo'}</span></div>
+            ${m.orderData?.method ? `<div class="detail-row"><span>Método:</span><span>${m.orderData.method}</span></div>` : ''}
+            ${m.orderData?.reference ? `<div class="detail-row"><span>Referencia:</span><span>${m.orderData.reference}</span></div>` : ''}
           </div>
+          ${topupId ? `
+          <div class="detail-actions">
+            <button onclick="closeModal();openPaymentReport('${topupId}')" class="order-btn reportar">
+              ⚠️ Reportar Problema con el Pago
+            </button>
+          </div>
+          ` : ''}
         </div>
       </div>
     `);
@@ -482,7 +612,7 @@ function showMovementDetail(orderId, isCredit, encodedData) {
               🔐 Ver Datos de la Cuenta
             </button>
             <button onclick="closeModal();openReport('${orderId}')" class="order-btn reportar">
-              ⚠️ Reportar Problema
+              ⚠️ Reportar Problema con la Cuenta
             </button>
           </div>
         </div>
@@ -743,6 +873,16 @@ function injectPurchaseStyles() {
     .detail-row span:first-child { color: #6b7280; }
     .detail-row span:last-child { font-weight: 600; color: #1f2937; }
     .detail-actions { display: flex; flex-direction: column; gap: 10px; }
+    
+    .report-reason-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 2px solid #e5e7eb; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+    .report-reason-option:hover { border-color: #7c3aed; background: rgba(124,58,237,0.04); }
+    .report-reason-option.selected { border-color: #7c3aed; background: rgba(124,58,237,0.08); }
+    .reason-radio { width: 22px; height: 22px; border: 2px solid #d1d5db; border-radius: 50%; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; position: relative; }
+    .reason-radio.active { border-color: #7c3aed; background: #7c3aed; }
+    .reason-radio.active::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #fff; border-radius: 50%; }
+    .reason-content { flex: 1; }
+    .reason-label { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 3px; }
+    .reason-desc { font-size: 12px; color: #6b7280; }
     
     .modal-content { min-width: 320px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
