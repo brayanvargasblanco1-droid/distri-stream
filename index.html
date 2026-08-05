@@ -1911,11 +1911,18 @@
       const angelImg = localStorage.dsDark==='1' ? 'distrito-angel-blue-v1.png' : 'distrito-angel-white.png';
       const refParam=new URLSearchParams(window.location.search).get("ref")||"";
       const isRegister=refParam.startsWith("admin_")||refParam.startsWith("reseller_")||refParam.startsWith("client_");
-      const refRole=refParam.startsWith("admin_")?"Administrador":refParam.startsWith("reseller_")?"Revendedor":"Cliente";
-      const roleColor=refRole==="Administrador"?"#f59e0b":refRole==="Revendedor"?"#0877ff":"#10b981";
-      const refBanner=isRegister?`<div style="background:linear-gradient(135deg,${roleColor},${roleColor}dd);border-radius:12px;padding:14px;margin-bottom:20px;text-align:center;color:#fff">
-        <div style="font-size:11px;font-weight:700;opacity:.8;margin-bottom:4px">REGISTRO INVITADO</div>
-        <div style="font-size:16px;font-weight:900">Te registran como <span style="text-decoration:underline">${refRole}</span></div>
+      const refRole=refParam.startsWith("admin_")?"Administrador":refParam.startsWith("reseller_")?"Revendedor":refParam.startsWith("client_")?"Cliente":"Cliente";
+      const roleColor=refRole==="Administrador"?"#f59e0b":refRole==="Revendedor"?"#667eea":"#10b981";
+      const roleIcon=refRole==="Administrador"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>':refRole==="Revendedor"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+      const refBanner=isRegister?`<div style="background:linear-gradient(135deg,${roleColor},${roleColor}dd);border-radius:16px;padding:16px 20px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:50%"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center">${roleIcon}</div>
+          <div>
+            <div style="font-size:10px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Registro invitado</div>
+            <div style="font-size:15px;font-weight:900">Serás registrado como <span style="font-weight:1000;text-decoration:underline;text-decoration-style:wavy">${refRole}</span></div>
+          </div>
+        </div>
       </div>`:"";
       $("#root").innerHTML = `<main class="login app-bg">
         <section class="login-visual"><div class="hero-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div><div class="hero-sphere s1"></div><div class="hero-sphere s2"></div><div class="hero-sphere s3"></div><div class="hero-sphere s4"></div><img src="${ASSETS}distrito-login-brand.png" alt="Distrito Streaming"></section>
