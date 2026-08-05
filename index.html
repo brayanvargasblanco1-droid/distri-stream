@@ -1922,7 +1922,7 @@
           <div id="loginForm" ${isRegister?'style="display:none"':''}>
             <div class="login-brand"><img class="brand-logo" src="${ASSETS}${angelImg}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div class="brand-title">DISTRITO<em>Streaming</em></div></div>
             <h1 style="animation:fadeIn .5s ease .1s both">Bienvenido <span>de nuevo</span></h1>
-            <p style="animation:fadeIn .5s ease .2s both">Accede a tu panel de ventas y gestiona tus cuentas con total control.</p>
+            
             <label class="field" style="animation:fadeIn .5s ease .3s both">${icons.mail}<input id="email" placeholder="Usuario o Email" autocomplete="username" value="${localStorage.dsRememberEmail || ""}"></label>
             <label class="field" style="animation:fadeIn .5s ease .4s both">${icons.lock}<input id="password" placeholder="Contraseña" type="password" autocomplete="current-password"></label>
             <div class="login-options" style="animation:fadeIn .5s ease .5s both"><label class="check"><input type="checkbox" id="rememberMe" ${localStorage.dsRememberEmail?"checked":""}> Recordarme</label><a href="#">Olvidaste tu contraseña?</a></div>
@@ -2218,8 +2218,8 @@
       return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
     }
     function pageSubtitle(){
-      if(isAdmin()) return "Control administrativo completo de usuarios, saldos, pagos, inventario e ingresos.";
-      return "Compra, gestiona tus cuentas, reporta y recarga saldo desde un solo lugar.";
+      if(isAdmin()) return "";
+      return "";
     }
     function renderApp(){
       document.body.className = localStorage.dsDark === "1" ? "dark" : "";
