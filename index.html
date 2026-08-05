@@ -4701,27 +4701,6 @@
       const registered=state.users.filter(u=>(u.status||"Activo")==="Activo").length;
       const blocked=state.users.filter(u=>u.status==="Inactivo").length;
       return `
-      <section style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px">
-        <div class="premium-card red" style="min-height:auto;padding:20px 16px;cursor:default">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap" style="width:72px;height:72px">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-center"><span class="premium-num" style="font-size:26px">${blocked}</span></div>
-          </div>
-          <div class="premium-label">Acceso detenido</div>
-        </div>
-        <div class="premium-card orange" style="min-height:auto;padding:20px 16px;cursor:default">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap" style="width:72px;height:72px">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-center"><span class="premium-num" style="font-size:26px">${resellers+clients-admins}</span></div>
-          </div>
-          <div class="premium-label">Revendedores + Clientes</div>
-        </div>
-      </section>
-      
       <!-- Stats de Usuarios -->
       <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px">
         <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:16px;padding:16px;position:relative;overflow:hidden">
