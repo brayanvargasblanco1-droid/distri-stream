@@ -61,18 +61,19 @@ function getExpiringOrders() {
 
 function improvedOrdersView() {
   const isResellerUser = isReseller();
+  const orders = state.orders || [];
   
   return `
     ${isResellerUser ? renderResellerPanel() : ''}
     
-    <section class="card">
+    <section class="orders-section">
       <div class="section-header">
         <h2>📦 Mis Compras</h2>
-        <span class="section-count">${(state.orders || []).length}</span>
+        <span class="section-count">${orders.length}</span>
       </div>
       
       <div id="ordersList">
-        ${orderRows(state.orders || [], false)}
+        ${improvedOrderRows(orders)}
       </div>
     </section>
   `;
@@ -262,6 +263,91 @@ async function doBulkRenewal() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 📋 TABLA DE ÓRDENES MEJORADA
+// ═══════════════════════════════════════════════════════════════
+
+function improvedOrderRows(rows) {
+  if (!rows || rows.length === 0) {
+    return `
+      <div class="orders-empty">
+        <div class="orders-empty-icon">📦</div>
+        <div class="orders-empty-title">Sin compras</div>
+        <div class="orders-empty-text">Aún no tienes compras registradas</div>
+      </div>
+    `;
+  }
+  
+  const serviceColors = {
+    netflix: '#E50914', prime: '#00A8E1', max: '#0877ff', disney: '#0a74ff',
+    spotify: '#1DB954', youtube: '#FF0000', other: '#7AA6C8'
+  };
+  
+  function getServiceColor(name) {
+    if (!name) return serviceColors.other;
+    const lower = name.toLowerCase();
+    if (lower.includes('netflix')) return serviceColors.netflix;
+    if (lower.includes('prime')) return serviceColors.prime;
+    if (lower.includes('max')) return serviceColors.max;
+    if (lower.includes('disney')) return serviceColors.disney;
+    if (lower.includes('spotify')) return serviceColors.spotify;
+    if (lower.includes('youtube')) return serviceColors.youtube;
+    return serviceColors.other;
+  }
+  
+  function getServiceIcon(name) {
+    if (!name) return '?';
+    const lower = name.toLowerCase();
+    if (lower.includes('netflix')) return 'N';
+    if (lower.includes('prime')) return 'P';
+    if (lower.includes('max')) return 'M';
+    if (lower.includes('disney')) return 'D+';
+    if (lower.includes('spotify')) return '♫';
+    if (lower.includes('youtube')) return '▶';
+    return 'O';
+  }
+  
+  return `
+    <div class="orders-grid">
+      ${rows.map(o => {
+        const days = getDaysLeft(o.expires_at);
+        const isExpired = days !== null && days < 0;
+        const isWarning = days !== null && days >= 0 && days <= 5;
+        const color = getServiceColor(o.product_name);
+        const icon = getServiceIcon(o.product_name);
+        const statusClass = (o.status || '').includes('Pend') ? 'pending' : (o.status || '').includes('Fall') ? 'failed' : 'completed';
+        
+        return `
+          <div class="order-card ${isExpired ? 'expired' : ''}">
+            <div class="order-card-header">
+              <div class="order-product-icon" style="background:${color}">${icon}</div>
+              <div class="order-product-info">
+                <div class="order-product-name">${o.product_name || 'Producto'}</div>
+                <div class="order-product-code">${o.code || '#DS-0000'}</div>
+              </div>
+              <div class="order-status ${statusClass}">${o.status || 'Activo'}</div>
+            </div>
+            <div class="order-card-body">
+              <div class="order-info-row"><span>💰 Precio</span><span>${formatMoney(o.amount || o.total || 0)}</span></div>
+              <div class="order-info-row">
+                <span>📅 Vence</span>
+                <span class="${isExpired ? 'text-expired' : isWarning ? 'text-warning' : ''}">
+                  ${o.expires_at || 'Sin fecha'}
+                  ${days !== null ? ` (${isExpired ? `Hace ${Math.abs(days)}d` : `${days}d`})` : ''}
+                </span>
+              </div>
+            </div>
+            <div class="order-card-actions">
+              <button onclick="openAccountModal('${encodeURIComponent(JSON.stringify(o))}')" class="order-btn datos">🔐 Datos</button>
+              <button onclick="openReport('${o.id}')" class="order-btn reportar">⚠️ Reportar</button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // 💰 MODAL DE PRECIOS
 // ═══════════════════════════════════════════════════════════════
 
@@ -428,9 +514,39 @@ function injectPurchaseStyles() {
     .tool-text { font-size: 13px; font-weight: 700; text-align: center; color: #1f2937; }
     .tool-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; border: 3px solid #fff; }
     
-    .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
-    .section-header h2 { font-size: 18px; font-weight: 900; margin: 0; }
-    .section-count { background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+    .orders-section { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; }
+    .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; background: #fafafa; }
+    .section-header h2 { font-size: 16px; font-weight: 900; margin: 0; }
+    .section-count { background: #7c3aed; color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; }
+    
+    .orders-grid { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+    .order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+    .order-card:hover { border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.1); }
+    .order-card.expired { opacity: 0.7; border-color: rgba(124,58,237,0.2); }
+    .order-card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+    .order-product-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+    .order-product-info { flex: 1; min-width: 0; }
+    .order-product-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-product-code { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .order-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.1); color: #059669; }
+    .order-status.pending { background: rgba(245,158,11,0.1); color: #d97706; }
+    .order-status.failed { background: rgba(239,68,68,0.1); color: #dc2626; }
+    .order-card-body { padding: 12px 16px; }
+    .order-info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #6b7280; }
+    .order-info-row span:last-child { font-weight: 600; color: #374151; }
+    .text-warning { color: #d97706 !important; }
+    .text-expired { color: #dc2626 !important; }
+    .order-card-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #f3f4f6; background: #fafafa; }
+    .order-btn { flex: 1; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .order-btn.datos { background: #7c3aed; color: #fff; border: none; }
+    .order-btn.datos:hover { background: #6d28d9; }
+    .order-btn.reportar { background: #fff; color: #dc2626; border: 1px solid #fecaca; }
+    .order-btn.reportar:hover { background: #fef2f2; }
+    
+    .orders-empty { text-align: center; padding: 48px 20px; }
+    .orders-empty-icon { font-size: 56px; margin-bottom: 12px; opacity: 0.5; }
+    .orders-empty-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .orders-empty-text { font-size: 13px; color: #9ca3af; }
     
     .modal-content { min-width: 320px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
