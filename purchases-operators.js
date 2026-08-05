@@ -599,29 +599,54 @@ function openPaymentReport(topupId) {
   );
   
   if (existingReport) {
-    // Ya tiene reporte abierto - mostrar mensaje
+    // Ya tiene reporte abierto - mostrar mensaje con el problema reportado
+    const reasonLabel = getReasonLabel(existingReport.reason);
     openModal(`
       <div class="modal-content">
         <div class="modal-header">
-          <h2>⚠️ Reporte Ya Enviado</h2>
+          <h2>⚠️ Reporte Enviado</h2>
           <button onclick="closeModal()" class="btn-close">×</button>
         </div>
         <div class="modal-body">
-          <div class="already-reported">
-            <div class="already-reported-icon">⏳</div>
-            <div class="already-reported-title">Ya tienes un reporte activo</div>
-            <div class="already-reported-text">Este pago ya fue reportado y está siendo atendido por nuestro equipo.</div>
+          <div class="existing-report-card">
+            <div class="existing-report-icon">⏳</div>
+            <div class="existing-report-title">Tu reporte está siendo atendido</div>
+            <div class="existing-report-subtitle">Reportaste el ${formatDate(existingReport.created_at)}</div>
           </div>
-          <div class="detail-info">
-            <div class="detail-row"><span>Reporte:</span><span>#${(existingReport.code || existingReport.id || '').slice(-6)}</span></div>
-            <div class="detail-row"><span>Estado:</span><span class="status-pending">⏳ En revisión</span></div>
-            <div class="detail-row"><span>Fecha:</span><span>${formatDate(existingReport.created_at)}</span></div>
+          
+          <div class="existing-report-problem">
+            <div class="existing-report-problem-label">📋 Tu reporte:</div>
+            <div class="existing-report-problem-value">${reasonLabel}</div>
+            ${existingReport.description ? `<div class="existing-report-description">"${existingReport.description}"</div>` : ''}
           </div>
-          <div class="report-warning">
-            ⚠️ Solo se permite un reporte por pago. Espera la respuesta del soporte.
+          
+          <div class="existing-report-status">
+            <div class="status-badge-large ${existingReport.status === 'En proceso' ? 'pending' : existingReport.status === 'Resuelto' ? 'success' : ''}">
+              ${existingReport.status === 'En proceso' ? '🔄 En Proceso' : 
+                existingReport.status === 'Resuelto' ? '✅ Resuelto' : 
+                existingReport.status === 'Rechazado' ? '❌ Rechazado' : 
+                '👁️ ' + existingReport.status}
+            </div>
           </div>
-          <button onclick="closeModal()" class="order-btn datos" style="width:100%">
-            Entendido
+          
+          ${existingReport.provider_response ? `
+          <div class="support-response-box">
+            <div class="support-response-label">💬 Respuesta del soporte:</div>
+            <div class="support-response-text">${existingReport.provider_response}</div>
+          </div>
+          ` : `
+          <div class="waiting-response">
+            <div class="waiting-icon">⏰</div>
+            <div class="waiting-text">Estamos revisando tu caso. Te responderemos pronto.</div>
+          </div>
+          `}
+          
+          <div class="only-one-notice">
+            ⚠️ Solo puedes reportar cada pago una vez
+          </div>
+          
+          <button onclick="closeModal()" class="btn-close-report">
+            Entendido, esperaré la respuesta
           </button>
         </div>
       </div>
@@ -1216,57 +1241,81 @@ function injectPurchaseStyles() {
     .reports-container { padding: 0; }
     .reports-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
     @media (max-width: 500px) { .reports-stats { grid-template-columns: 1fr; } }
-    .report-stat-card { display: flex; align-items: center; gap: 10px; padding: 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
-    .report-stat-icon { font-size: 24px; }
-    .report-stat-num { font-size: 20px; font-weight: 800; }
-    .report-stat-label { font-size: 11px; color: #6b7280; }
-    .report-stat-card.active .report-stat-num { color: #3b82f6; }
-    .report-stat-card.resolved .report-stat-num { color: #10b981; }
+    .report-stat-card { display: flex; align-items: center; gap: 12px; padding: 16px; background: #fff; border: 2px solid #e5e7eb; border-radius: 14px; }
+    .report-stat-icon { font-size: 28px; }
+    .report-stat-num { font-size: 24px; font-weight: 900; }
+    .report-stat-label { font-size: 12px; color: #4b5563; font-weight: 600; }
+    .report-stat-card.active .report-stat-num { color: #2563eb; }
+    .report-stat-card.resolved .report-stat-num { color: #059669; }
     .report-stat-card.total .report-stat-num { color: #7c3aed; }
     
-    .reports-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .reports-tab { flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .reports-tab.active { border-color: #7c3aed; background: rgba(124,58,237,0.08); color: #7c3aed; }
-    .reports-tab .tab-count { background: #f3f4f6; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    .reports-tab.active .tab-count { background: rgba(124,58,237,0.15); color: #7c3aed; }
+    .reports-tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+    .reports-tab { flex: 1; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: #4b5563; }
+    .reports-tab.active { border-color: #7c3aed; background: #7c3aed; color: #fff; }
+    .reports-tab:not(.active):hover { border-color: #7c3aed; background: rgba(124,58,237,0.05); color: #7c3aed; }
+    .reports-tab .tab-count { background: rgba(0,0,0,0.1); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+    .reports-tab.active .tab-count { background: rgba(255,255,255,0.2); }
     
-    .reports-empty { text-align: center; padding: 48px 20px; background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; }
-    .reports-empty-icon { font-size: 56px; margin-bottom: 12px; }
-    .reports-empty-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .reports-empty-text { font-size: 13px; color: #9ca3af; }
+    .reports-empty { text-align: center; padding: 48px 20px; background: #fff; border-radius: 16px; border: 2px solid #e5e7eb; }
+    .reports-empty-icon { font-size: 64px; margin-bottom: 16px; }
+    .reports-empty-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #1f2937; }
+    .reports-empty-text { font-size: 14px; color: #6b7280; }
     
-    .report-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
-    .report-item:hover { border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.1); transform: translateY(-2px); }
-    .report-item-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .report-item-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+    .report-item { background: #fff; border: 2px solid #e5e7eb; border-radius: 14px; padding: 18px; cursor: pointer; transition: all 0.2s; }
+    .report-item:hover { border-color: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,0.15); transform: translateY(-3px); }
+    .report-item-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .report-item-icon { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-size: 24px; flex-shrink: 0; }
     .report-item-info { flex: 1; min-width: 0; }
-    .report-item-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .report-item-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-    .report-item-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .report-item-footer { display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+    .report-item-title { font-size: 16px; font-weight: 800; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-item-sub { font-size: 13px; color: #6b7280; margin-top: 4px; font-weight: 500; }
+    .report-item-status { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .report-item-footer { display: flex; justify-content: space-between; font-size: 13px; color: #6b7280; padding-top: 14px; border-top: 1px solid #f3f4f6; font-weight: 500; }
     
-    .report-detail-status { text-align: center; padding: 12px; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 800; margin-bottom: 16px; }
-    .report-reason-box { background: #f9fafb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .report-reason-label { font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-    .report-reason-value { font-size: 14px; font-weight: 700; }
-    .report-description-box { background: #fef3c7; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .report-description-label { font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-    .report-description-text { font-size: 13px; color: #78350f; }
-    .report-response-box { background: #ecfdf5; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .report-response-label { font-size: 11px; color: #065f46; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-    .report-response-text { font-size: 13px; color: #064e3b; }
+    .report-detail-status { text-align: center; padding: 16px; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    .report-reason-box { background: #f3f4f6; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #7c3aed; }
+    .report-reason-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .report-reason-value { font-size: 16px; font-weight: 700; color: #1f2937; }
+    .report-description-box { background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #f59e0b; }
+    .report-description-label { font-size: 12px; color: #92400e; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .report-description-text { font-size: 15px; color: #78350f; font-weight: 500; line-height: 1.5; }
+    .report-response-box { background: #ecfdf5; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #10b981; }
+    .report-response-label { font-size: 12px; color: #065f46; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .report-response-text { font-size: 15px; color: #064e3b; font-weight: 500; line-height: 1.5; }
     
-    .report-timeline { position: relative; padding-left: 24px; margin: 16px 0; }
-    .report-timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
-    .timeline-item { position: relative; padding-bottom: 16px; }
+    .report-timeline { position: relative; padding-left: 28px; margin: 20px 0; }
+    .report-timeline::before { content: ''; position: absolute; left: 9px; top: 0; bottom: 0; width: 3px; background: #e5e7eb; }
+    .timeline-item { position: relative; padding-bottom: 20px; }
     .timeline-item:last-child { padding-bottom: 0; }
-    .timeline-dot { width: 16px; height: 16px; border-radius: 50%; background: #e5e7eb; border: 3px solid #fff; position: absolute; left: -24px; top: 0; }
-    .timeline-dot.active { background: #3b82f6; }
-    .timeline-dot.success { background: #10b981; }
-    .timeline-dot.rejected { background: #ef4444; }
+    .timeline-dot { width: 20px; height: 20px; border-radius: 50%; background: #e5e7eb; border: 4px solid #fff; position: absolute; left: -28px; top: 0; box-shadow: 0 0 0 3px #e5e7eb; }
+    .timeline-dot.active { background: #2563eb; box-shadow: 0 0 0 3px #2563eb; }
+    .timeline-dot.success { background: #10b981; box-shadow: 0 0 0 3px #10b981; }
+    .timeline-dot.rejected { background: #ef4444; box-shadow: 0 0 0 3px #ef4444; }
     .timeline-content { }
-    .timeline-title { font-size: 13px; font-weight: 700; }
-    .timeline-time { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .timeline-title { font-size: 15px; font-weight: 700; color: #1f2937; }
+    .timeline-time { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    
+    /* Modal reporte existente */
+    .existing-report-card { text-align: center; padding: 24px; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 14px; margin-bottom: 16px; }
+    .existing-report-icon { font-size: 56px; margin-bottom: 12px; }
+    .existing-report-title { font-size: 18px; font-weight: 800; color: #92400e; margin-bottom: 4px; }
+    .existing-report-subtitle { font-size: 14px; color: #a16207; }
+    .existing-report-problem { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 2px solid #e5e7eb; }
+    .existing-report-problem-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .existing-report-problem-value { font-size: 16px; font-weight: 800; color: #1f2937; }
+    .existing-report-description { font-size: 14px; color: #6b7280; margin-top: 8px; font-style: italic; }
+    .existing-report-status { text-align: center; margin-bottom: 16px; }
+    .status-badge-large { display: inline-block; padding: 10px 24px; border-radius: 30px; font-size: 15px; font-weight: 800; }
+    .status-badge-large.pending { background: #fef3c7; color: #92400e; }
+    .status-badge-large.success { background: #d1fae5; color: #065f46; }
+    .support-response-box { background: #ecfdf5; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #10b981; }
+    .support-response-label { font-size: 12px; color: #065f46; text-transform: uppercase; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .support-response-text { font-size: 15px; color: #064e3b; font-weight: 500; line-height: 1.5; }
+    .waiting-response { text-align: center; padding: 20px; background: #f3f4f6; border-radius: 12px; margin-bottom: 16px; }
+    .waiting-icon { font-size: 40px; margin-bottom: 8px; }
+    .waiting-text { font-size: 14px; color: #6b7280; font-weight: 500; }
+    .only-one-notice { text-align: center; font-size: 13px; color: #92400e; background: #fef3c7; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-weight: 600; }
+    .btn-close-report { width: 100%; padding: 16px; background: #7c3aed; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
+    .btn-close-report:hover { background: #6d28d9; }
     
     .btn-primary { padding: 14px 24px; background: linear-gradient(135deg, #0877ff, #0057dc); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
     
