@@ -461,6 +461,18 @@
     .user-dropdown-item.danger{color:#ef4444}
     .user-dropdown-item.danger svg{stroke:#ef4444}
     .user-dropdown-divider{height:1px;background:var(--line);margin:4px 0}
+    
+    /* Avatar Picker Styles */
+    .avatar-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-height:200px;overflow-y:auto;padding:4px;background:var(--soft);border-radius:12px;border:1px solid var(--line)}
+    .avatar-emoji-btn{width:100%;aspect-ratio:1;border-radius:8px;border:2px solid transparent;background:var(--panel);font-size:18px;cursor:pointer;transition:all .15s;display:grid;place-items:center;padding:4px}
+    .avatar-emoji-btn:hover{border-color:rgba(8,119,255,.3);transform:scale(1.1)}
+    .avatar-emoji-btn.selected{border-color:var(--blue);background:rgba(8,119,255,.1)}
+    
+    .avatar-color-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+    .avatar-color-btn{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .avatar-color-btn:hover{transform:scale(1.15)}
+    .avatar-color-btn.selected{border-color:var(--text);transform:scale(1.1)}
+    
     body.dark .header-icon-btn{background:rgba(13,29,49,.85);border-color:#1e3652}
     body.dark .header-icon-btn:hover{border-color:rgba(8,119,255,.3);background:rgba(8,119,255,.08)}
     body.dark .header-balance{background:rgba(13,29,49,.85);border-color:#1e3652;color:#eef6ff}
@@ -1489,6 +1501,165 @@
     const isReseller = () => state.user && state.user.role === "Revendedor";
     const publicRole = () => isAdmin() ? "Administrador" : isClient() ? "Cliente" : isReseller() ? "Revendedor" : "Usuario";
 
+    // ─── AVATAR SYSTEM ─────────────────────────────────
+    const avatarEmojis = [
+      // Rostros
+      "😊","😎","🤩","😎","🥳","😇","🤗","😌","😏","🥰",
+      "😍","🤠","🧐","🤓","😈","👻","🤖","👾","🎅","🤶",
+      // Animales
+      "🦁","🐯","🐻","🐼","🐨","🐸","🦊","🐰","🐶","🐱",
+      "🦄","🐲","🦋","🐙","🦑","🐳","🦜","🦚","🦩","🐓",
+      // Profesiones
+      "🧑‍💻","👨‍🎨","👨‍🔬","👨‍💼","🧑‍🏫","👨‍🍳","👨‍🎤","🧑‍🚀","👨‍🔧","🧑‍🎭",
+      // Diversión
+      "🎮","🎯","🎲","🧩","🎭","🎪","🎨","🎬","🎤","🎧",
+      // Deportes
+      "⚽","🏀","🎾","🏐","🎱","🏓","🥊","⛳","🏆","🥇",
+      // Estrellas y naturaleza
+      "⭐","🌟","✨","💫","🌙","☀️","🌈","🔥","💎","🌸"
+    ];
+    
+    const avatarColors = [
+      { bg: "linear-gradient(135deg,#667eea,#764ba2)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#f093fb,#f5576c)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#4facfe,#00f2fe)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#43e97b,#38f9d7)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#fa709a,#fee140)", text: "#333" },
+      { bg: "linear-gradient(135deg,#a8edea,#fed6e3)", text: "#333" },
+      { bg: "linear-gradient(135deg,#ff9a9e,#fecfef)", text: "#333" },
+      { bg: "linear-gradient(135deg,#ffecd2,#fcb69f)", text: "#333" },
+      { bg: "linear-gradient(135deg,#667eea,#764ba2)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#f59e0b,#d97706)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#0877ff,#0057dc)", text: "#fff" },
+      { bg: "linear-gradient(135deg,#10b981,#059669)", text: "#fff" }
+    ];
+
+    const getUserAvatar = () => {
+      const u = state.user;
+      if (!u) return { emoji: "👤", color: avatarColors[0] };
+      if (u.avatarEmoji) {
+        const colorIndex = u.avatarColorIndex || 0;
+        return { emoji: u.avatarEmoji, color: avatarColors[colorIndex] || avatarColors[0] };
+      }
+      return null;
+    };
+
+    const getAvatarDisplay = (name, size = 40) => {
+      const avatar = getUserAvatar();
+      if (avatar) {
+        return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${avatar.color.bg};display:grid;place-items:center;font-size:${Math.floor(size*0.5)}px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:all .2s">${avatar.emoji}</div>`;
+      }
+      return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#0877ff,#0057dc);display:grid;place-items:center;font-weight:1000;font-size:${Math.floor(size*0.4)}px;color:#fff;box-shadow:0 4px 12px rgba(8,119,255,.25)">${initials(name)}</div>`;
+    };
+
+    function openAvatarPicker() {
+      const u = state.user || {};
+      const currentEmoji = u.avatarEmoji || "";
+      const currentColorIndex = u.avatarColorIndex || 0;
+      
+      const emojisHTML = avatarEmojis.map(e => 
+        `<button class="avatar-emoji-btn ${e === currentEmoji ? 'selected' : ''}" 
+          onclick="selectAvatarEmoji('${e}')" 
+          title="${e}">${e}</button>`
+      ).join('');
+
+      const colorsHTML = avatarColors.map((c, i) => 
+        `<button class="avatar-color-btn ${i === currentColorIndex ? 'selected' : ''}" 
+          onclick="selectAvatarColor(${i})"
+          style="background:${c.bg}"></button>`
+      ).join('');
+
+      openModal(`
+        <div style="text-align:center;margin-bottom:20px">
+          <div id="avatarPreview" style="width:80px;height:80px;border-radius:50%;background:${avatarColors[currentColorIndex].bg};display:grid;place-items:center;font-size:36px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:all .3s">
+            ${currentEmoji || initials(u.name)}
+          </div>
+          <h3 style="margin:0 0 4px;font-size:18px;font-weight:900;color:var(--text)">Elegir Avatar</h3>
+          <p style="margin:0;color:var(--muted);font-size:12px">Selecciona un emoji y color para tu perfil</p>
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase">Emoji</span>
+            <button onclick="clearAvatarCustom()" style="font-size:10px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--muted);cursor:pointer">
+              Usar iniciales
+            </button>
+          </div>
+          <div class="avatar-emoji-grid">${emojisHTML}</div>
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Color</div>
+          <div class="avatar-color-grid">${colorsHTML}</div>
+        </div>
+        
+        <div style="display:flex;gap:10px">
+          <button onclick="closeModal()" style="flex:1;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:800;font-size:13px;cursor:pointer">
+            Cancelar
+          </button>
+          <button onclick="saveAvatarChoice()" style="flex:1;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(8,119,255,.25)">
+            Guardar
+          </button>
+        </div>
+      `, { showClose: false });
+    }
+
+    function selectAvatarEmoji(emoji) {
+      state.tempAvatarEmoji = emoji;
+      document.querySelectorAll('.avatar-emoji-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.textContent === emoji);
+      });
+      updateAvatarPreview();
+    }
+
+    function selectAvatarColor(colorIndex) {
+      state.tempAvatarColorIndex = colorIndex;
+      document.querySelectorAll('.avatar-color-btn').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === colorIndex);
+      });
+      updateAvatarPreview();
+    }
+
+    function clearAvatarCustom() {
+      state.tempAvatarEmoji = null;
+      state.tempAvatarColorIndex = 0;
+      document.querySelectorAll('.avatar-emoji-btn').forEach(btn => btn.classList.remove('selected'));
+      document.querySelectorAll('.avatar-color-btn').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === 0);
+      });
+      const u = state.user || {};
+      updateAvatarPreview(u.name);
+    }
+
+    function updateAvatarPreview(name) {
+      const preview = document.getElementById('avatarPreview');
+      if (preview) {
+        const emoji = state.tempAvatarEmoji;
+        const colorIndex = state.tempAvatarColorIndex || 0;
+        const color = avatarColors[colorIndex];
+        preview.style.background = color.bg;
+        preview.textContent = emoji || initials(name || state.user?.name || 'U');
+      }
+    }
+
+    function saveAvatarChoice() {
+      const u = state.user;
+      if (u) {
+        u.avatarEmoji = state.tempAvatarEmoji || null;
+        u.avatarColorIndex = state.tempAvatarColorIndex || 0;
+        localStorage.dsUser = JSON.stringify(u);
+        // Also update in users array
+        const userIdx = state.users.findIndex(x => x.id === u.id);
+        if (userIdx >= 0) {
+          state.users[userIdx] = { ...u };
+          localStorage.dsUsers = JSON.stringify(state.users);
+        }
+      }
+      closeModal();
+      renderApp();
+      toast("Avatar actualizado", "ok");
+    }
+
     const icons = {
       home:"<svg viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m3 10 9-7 9 7'/><path d='M5 10v10h14V10'/><path d='M9 20v-6h6v6'/></svg>",
       store:"<svg viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2h12l2 7H4l2-7Z'/><path d='M5 9v11h14V9'/><path d='M9 13h6'/></svg>",
@@ -2085,7 +2256,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="21" y1="17.5" x2="21" y2="17.5"/><line x1="17.5" y1="21" x2="17.5" y2="21"/></svg>
                 </button>
                 <div style="position:relative">
-                  <button class="user-avatar-btn" onclick="toggleUserMenu(event)" title="Mi cuenta">${initials(u.name)}</button>
+                  <button class="user-avatar-btn" onclick="toggleUserMenu(event)" title="Mi cuenta" style="background:transparent;border:none;padding:0">${getAvatarDisplay(u.name, 40)}</button>
                   <div class="user-dropdown" id="userDropdown">
                     <button class="user-dropdown-item" onclick="setView('store')">
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -2094,6 +2265,10 @@
                     <button class="user-dropdown-item" onclick="setView('orders')">
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                       Historial de compra
+                    </button>
+                    <button class="user-dropdown-item" onclick="openAvatarPicker()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                      Cambiar Avatar
                     </button>
                     <button class="user-dropdown-item" onclick="openProfile()">
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -5610,12 +5785,17 @@
       const roleColor=u.role==="Administrador"?"#f59e0b":u.role==="Revendedor"?"#0877ff":"#10b981";
       const roleBg=u.role==="Administrador"?"rgba(245,158,11,.12)":u.role==="Revendedor"?"rgba(8,119,255,.12)":"rgba(16,185,129,.12)";
       const bal=Number(u.balance||0);
+      const avatar=getUserAvatar();
+      const avatarBg=avatar?avatar.color.bg:"linear-gradient(135deg,#667eea,#764ba2)";
       openModal(`
         <div style="background:linear-gradient(135deg,#4c1d95,#0877ff);border-radius:16px;padding:28px 20px;text-align:center;margin:-20px -20px 24px;position:relative;overflow:hidden">
           <div style="position:absolute;top:-40%;right:-20%;width:160px;height:160px;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);border-radius:50%"></div>
           <div style="position:absolute;bottom:-30%;left:-15%;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);border-radius:50%"></div>
-          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.1));margin:0 auto 14px;display:grid;place-items:center;border:3px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.2)">
-            <span style="font-size:28px;font-weight:1000;color:#fff">${initials(u.name)}</span>
+          <div style="position:relative;width:80px;height:80px;border-radius:50%;background:${avatarBg};margin:0 auto 14px;display:grid;place-items:center;border:3px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.2);transition:all .3s">
+            <span style="font-size:32px">${avatar?avatar.emoji:initials(u.name)}</span>
+            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--blue);border:3px solid #fff;color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:all .15s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
           </div>
           <h2 style="margin:0 0 4px;color:#fff;font-size:20px;font-weight:900">${u.name}</h2>
           <p style="margin:0 0 10px;color:rgba(255,255,255,.7);font-size:12px">${u.email}</p>
