@@ -2,55 +2,15 @@
  * 🛒 MEJORAS DE COMPRAS PARA OPERADORES Y REVENDEDORES
  * Distrito Streaming
  * 
- * Características:
- * - Dashboard de compras con métricas visuales
+ * Características simplificadas:
  * - Gestión de renovación rápida
- * - Widget de compras rápidas
- * - Estadísticas por producto
  * - Panel de revendedor
- * - Control de saldo y alertas
  * - Filtros avanzados
  */
 
 // ═══════════════════════════════════════════════════════════════
-// 📊 CONSTANTES Y HELPERS
+// 📊 HELPERS
 // ═══════════════════════════════════════════════════════════════
-
-const PurchaseStates = {
-  PENDING: 'Pendiente',
-  PROCESSING: 'Procesando',
-  DELIVERED: 'Entregado',
-  EXPIRED: 'Vencida',
-  FAILED: 'Fallida'
-};
-
-const ProductCategories = {
-  NETFLIX: { id: 'netflix', name: 'Netflix', color: '#E50914', icon: 'N' },
-  SPOTIFY: { id: 'spotify', name: 'Spotify', color: '#1DB954', icon: '♫' },
-  PRIME: { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: 'PV' },
-  MAX: { id: 'max', name: 'Max', color: '#0877ff', icon: 'M' },
-  DISNEY: { id: 'disney', name: 'Disney+', color: '#0a74ff', icon: 'D+' },
-  YOUTUBE: { id: 'youtube', name: 'YouTube', color: '#FF0000', icon: '▶' },
-  PARAMOUNT: { id: 'paramount', name: 'Paramount+', color: '#0064ff', icon: 'P+' },
-  HBO: { id: 'hbo', name: 'HBO', color: '#8B5CF6', icon: 'HBO' },
-  CRUNCHYROLL: { id: 'crunchyroll', name: 'Crunchyroll', color: '#F47521', icon: 'CR' },
-  OTHER: { id: 'other', name: 'Otro', color: '#7AA6C8', icon: '?' }
-};
-
-function getProductCategory(productName) {
-  if (!productName) return ProductCategories.OTHER;
-  const name = productName.toLowerCase();
-  if (name.includes('netflix')) return ProductCategories.NETFLIX;
-  if (name.includes('spotify')) return ProductCategories.SPOTIFY;
-  if (name.includes('prime') || name.includes('amazon')) return ProductCategories.PRIME;
-  if (name.includes('max')) return ProductCategories.MAX;
-  if (name.includes('disney') || name.includes('disney+')) return ProductCategories.DISNEY;
-  if (name.includes('youtube')) return ProductCategories.YOUTUBE;
-  if (name.includes('paramount')) return ProductCategories.PARAMOUNT;
-  if (name.includes('hbo')) return ProductCategories.HBO;
-  if (name.includes('crunchy')) return ProductCategories.CRUNCHYROLL;
-  return ProductCategories.OTHER;
-}
 
 function getDaysLeft(expiresAt) {
   if (!expiresAt) return null;
@@ -72,66 +32,26 @@ function formatMoney(amount) {
   }).format(amount || 0);
 }
 
-function getTimeAgo(dateString) {
-  if (!dateString) return 'Sin fecha';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-  if (diffMins < 1) return 'Hace un momento';
-  if (diffMins < 60) return `Hace ${diffMins} min`;
-  if (diffHours < 24) return `Hace ${diffHours}h`;
-  if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
-  return date.toLocaleDateString('es-CO');
+function getProductColor(productName) {
+  if (!productName) return '#7AA6C8';
+  const name = productName.toLowerCase();
+  if (name.includes('netflix')) return '#E50914';
+  if (name.includes('spotify')) return '#1DB954';
+  if (name.includes('prime') || name.includes('amazon')) return '#00A8E1';
+  if (name.includes('max')) return '#0877ff';
+  if (name.includes('disney')) return '#0a74ff';
+  if (name.includes('youtube')) return '#FF0000';
+  if (name.includes('paramount')) return '#0064ff';
+  if (name.includes('hbo')) return '#8B5CF6';
+  return '#7AA6C8';
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 📊 DASHBOARD DE COMPRAS
+// 📊 STATS SIMPLIFICADAS
 // ═══════════════════════════════════════════════════════════════
 
 function getPurchaseStats() {
   const orders = state.orders || [];
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(weekStart.getDate() - 7);
-  
-  // Stats básicas
-  const total = orders.length;
-  const active = orders.filter(o => {
-    const days = getDaysLeft(o.expires_at);
-    return days !== null && days >= 0;
-  });
-  const expired = orders.filter(o => {
-    const days = getDaysLeft(o.expires_at);
-    return days !== null && days < 0;
-  });
-  const expiringSoon = orders.filter(o => {
-    const days = getDaysLeft(o.expires_at);
-    return days !== null && days >= 0 && days <= 7;
-  });
-  
-  // Stats por período
-  const todayOrders = orders.filter(o => new Date(o.created_at || o.date || 0) >= todayStart);
-  const weekOrders = orders.filter(o => new Date(o.created_at || o.date || 0) >= weekStart);
-  
-  // Ingresos
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.amount || o.total || 0), 0);
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.amount || o.total || 0), 0);
-  const weekRevenue = weekOrders.reduce((sum, o) => sum + (o.amount || o.total || 0), 0);
-  
-  // Stats por producto
-  const productStats = {};
-  orders.forEach(o => {
-    const cat = getProductCategory(o.product_name);
-    if (!productStats[cat.id]) {
-      productStats[cat.id] = { ...cat, count: 0, revenue: 0 };
-    }
-    productStats[cat.id].count++;
-    productStats[cat.id].revenue += o.amount || o.total || 0;
-  });
   
   // Órdenes próximas a vencer ordenadas
   const expiringOrders = orders
@@ -142,134 +62,59 @@ function getPurchaseStats() {
     .sort((a, b) => getDaysLeft(a.expires_at) - getDaysLeft(b.expires_at));
   
   return {
-    total,
-    active: active.length,
-    expired: expired.length,
-    expiringSoon: expiringSoon.length,
-    todayOrders: todayOrders.length,
-    weekOrders: weekOrders.length,
-    totalRevenue,
-    todayRevenue,
-    weekRevenue,
-    productStats: Object.values(productStats).sort((a, b) => b.count - a.count),
     expiringOrders
   };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 📦 SECCIÓN: PRÓXIMAS A VENCER
+// ═══════════════════════════════════════════════════════════════
+
 function renderPurchaseDashboard() {
   const stats = getPurchaseStats();
   
+  if (stats.expiringOrders.length === 0) {
+    return `
+      <div class="no-expiring">
+        <div style="text-align:center;padding:32px 20px;background:var(--soft);border-radius:12px">
+          <div style="font-size:48px;margin-bottom:12px">✨</div>
+          <div style="font-size:14px;font-weight:700;color:var(--ok)">¡No hay cuentas por vencer!</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Todas tus cuentas están al día</div>
+        </div>
+      </div>
+    `;
+  }
+  
   return `
-    <div class="purchase-dashboard">
-      <!-- Métricas principales -->
-      <div class="dashboard-metrics">
-        <div class="metric-card total">
-          <div class="metric-icon">📦</div>
-          <div class="metric-content">
-            <div class="metric-value">${stats.total}</div>
-            <div class="metric-label">Total Compras</div>
-          </div>
-        </div>
-        <div class="metric-card active">
-          <div class="metric-icon">✅</div>
-          <div class="metric-content">
-            <div class="metric-value">${stats.active}</div>
-            <div class="metric-label">Activas</div>
-          </div>
-        </div>
-        <div class="metric-card warning ${stats.expiringSoon > 0 ? 'pulse' : ''}">
-          <div class="metric-icon">⏰</div>
-          <div class="metric-content">
-            <div class="metric-value">${stats.expiringSoon}</div>
-            <div class="metric-label">Por Vencer (7d)</div>
-          </div>
-        </div>
-        <div class="metric-card expired">
-          <div class="metric-icon">❌</div>
-          <div class="metric-content">
-            <div class="metric-value">${stats.expired}</div>
-            <div class="metric-label">Vencidas</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Stats de ingresos y período -->
-      <div class="dashboard-stats-row">
-        <div class="stat-box">
-          <div class="stat-label">💰 Ingresos Totales</div>
-          <div class="stat-value">${formatMoney(stats.totalRevenue)}</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">📅 Hoy</div>
-          <div class="stat-value">${stats.todayOrders} compras</div>
-          <div class="stat-sub">${formatMoney(stats.todayRevenue)}</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">📆 Esta Semana</div>
-          <div class="stat-value">${stats.weekOrders} compras</div>
-          <div class="stat-sub">${formatMoney(stats.weekRevenue)}</div>
-        </div>
-      </div>
-      
-      ${stats.productStats.length > 0 ? `
-        <!-- Distribución por producto -->
-        <div class="product-distribution">
-          <h3 class="section-title">📊 Distribución por Servicio</h3>
-          <div class="product-bars">
-            ${stats.productStats.slice(0, 6).map(p => {
-              const maxCount = stats.productStats[0].count;
-              const percentage = (p.count / maxCount) * 100;
-              return `
-                <div class="product-bar-item">
-                  <div class="product-bar-header">
-                    <div class="product-bar-info">
-                      <span class="product-dot" style="background: ${p.color}"></span>
-                      <span class="product-name">${p.name}</span>
-                    </div>
-                    <div class="product-bar-stats">
-                      <span class="product-count">${p.count}</span>
-                      <span class="product-revenue">${formatMoney(p.revenue)}</span>
-                    </div>
-                  </div>
-                  <div class="product-bar-track">
-                    <div class="product-bar-fill" style="width: ${percentage}%; background: ${p.color}"></div>
-                  </div>
+    <div class="expiring-soon-section">
+      <h3 class="section-title">⏰ Próximas a Vencer</h3>
+      <div class="expiring-list">
+        ${stats.expiringOrders.map(o => {
+          const days = getDaysLeft(o.expires_at);
+          const urgency = days <= 1 ? 'critical' : days <= 3 ? 'high' : 'normal';
+          const color = getProductColor(o.product_name);
+          return `
+            <div class="expiring-item urgency-${urgency}">
+              <div class="expiring-icon" style="background:${color}">
+                ${o.product_name ? o.product_name.charAt(0).toUpperCase() : '?'}
+              </div>
+              <div class="expiring-info">
+                <div class="expiring-product">${o.product_name || 'Producto'}</div>
+                <div class="expiring-meta">
+                  <span class="expiring-code">${o.code || '#DS-0000'}</span>
+                  <span class="expiring-date">${o.expires_at}</span>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
-      
-      ${stats.expiringOrders.length > 0 ? `
-        <!-- Próximas a vencer -->
-        <div class="expiring-soon-section">
-          <h3 class="section-title">⏰ Próximas a Vencer</h3>
-          <div class="expiring-list">
-            ${stats.expiringOrders.slice(0, 5).map(o => {
-              const days = getDaysLeft(o.expires_at);
-              const urgency = days <= 1 ? 'critical' : days <= 3 ? 'high' : 'normal';
-              return `
-                <div class="expiring-item urgency-${urgency}">
-                  <div class="expiring-info">
-                    <div class="expiring-product">${o.product_name || 'Producto'}</div>
-                    <div class="expiring-meta">
-                      <span class="expiring-code">${o.code || '#DS-0000'}</span>
-                      <span class="expiring-date">${o.expires_at}</span>
-                    </div>
-                  </div>
-                  <div class="expiring-actions">
-                    <span class="expiring-days ${urgency}">${days}d</span>
-                    <button onclick="quickRenew('${o.id}')" class="btn-renew" title="Renovar">
-                      🔄 Renovar
-                    </button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
+              </div>
+              <div class="expiring-actions">
+                <span class="expiring-days ${urgency}">${days}d</span>
+                <button onclick="quickRenew('${o.id}')" class="btn-renew" title="Renovar">
+                  🔄 Renovar
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
@@ -363,41 +208,13 @@ async function confirmQuickRenew(orderId) {
 
 function renderQuickActionsWidget() {
   const stats = getPurchaseStats();
-  const balance = state.user?.balance || 0;
-  const lowBalance = balance < 50000; // Alertar si tiene menos de 50k
   
   return `
     <div class="quick-actions-widget">
-      <h3 class="widget-title">⚡ Acciones Rápidas</h3>
-      
-      ${lowBalance ? `
-        <div class="alert-banner warning">
-          <span>⚠️</span>
-          <span>Saldo bajo: ${formatMoney(balance)}. <a href="#" onclick="setView('payments');closeModal()">Recargar</a></span>
-        </div>
-      ` : ''}
-      
-      <div class="quick-actions-grid">
-        <button onclick="setView('store')" class="quick-action-btn primary-action">
-          <span class="qa-icon">🛒</span>
-          <span class="qa-label">Nueva Compra</span>
-        </button>
-        
-        ${stats.expiringSoon > 0 ? `
-          <button onclick="showRenewalModal()" class="quick-action-btn warning-action">
-            <span class="qa-icon">🔄</span>
-            <span class="qa-label">Renovar (${stats.expiringSoon})</span>
-          </button>
-        ` : ''}
-        
-        <button onclick="setView('history')" class="quick-action-btn">
-          <span class="qa-icon">📜</span>
-          <span class="qa-label">Historial</span>
-        </button>
-        
-        <button onclick="openBulkRenewal()" class="quick-action-btn">
-          <span class="qa-icon">📦</span>
-          <span class="qa-label">Renovar Varios</span>
+      <div class="quick-actions-single">
+        <button onclick="showRenewalModal()" class="quick-action-btn full-width warning-action">
+          <span class="qa-icon">🔄</span>
+          <span class="qa-label">Renovar Cuentas por Vencer</span>
         </button>
       </div>
     </div>
@@ -520,53 +337,30 @@ function openBulkRenewal() {
 function renderResellerPanel() {
   if (!isReseller()) return ''; // Solo mostrar para revendedores
   
-  const stats = getPurchaseStats();
-  const user = state.user || {};
-  const margin = user.reseller_margin || 0;
-  const clients = state.users?.filter(u => u.referrer_id === user.id)?.length || 0;
-  
   return `
     <div class="reseller-panel">
       <div class="reseller-header">
         <div class="reseller-badge">🏷️ REVENDEDOR</div>
-        <h3 class="reseller-title">Panel de Revendedor</h3>
+        <h3 class="reseller-title">Herramientas</h3>
       </div>
       
-      <div class="reseller-stats">
-        <div class="reseller-stat">
-          <div class="reseller-stat-value">${clients}</div>
-          <div class="reseller-stat-label">Clientes Referidos</div>
-        </div>
-        <div class="reseller-stat">
-          <div class="reseller-stat-value">${margin}%</div>
-          <div class="reseller-stat-label">Tu Margen</div>
-        </div>
-        <div class="reseller-stat">
-          <div class="reseller-stat-value">${stats.active}</div>
-          <div class="reseller-stat-label">Cuentas Activas</div>
-        </div>
-      </div>
-      
-      <div class="reseller-tools">
-        <h4 class="tools-title">🛠️ Herramientas</h4>
-        <div class="tools-grid">
-          <button onclick="openResellerPricing()" class="tool-btn">
-            <span class="tool-icon">💰</span>
-            <span class="tool-label">Ver Precios</span>
-          </button>
-          <button onclick="openAffiliateLink()" class="tool-btn">
-            <span class="tool-icon">🔗</span>
-            <span class="tool-label">Mi Link</span>
-          </button>
-          <button onclick="setView('users')" class="tool-btn">
-            <span class="tool-icon">👥</span>
-            <span class="tool-label">Clientes</span>
-          </button>
-          <button onclick="openSalesReport()" class="tool-btn">
-            <span class="tool-icon">📊</span>
-            <span class="tool-label">Ventas</span>
-          </button>
-        </div>
+      <div class="tools-grid">
+        <button onclick="openResellerPricing()" class="tool-btn">
+          <span class="tool-icon">💰</span>
+          <span class="tool-label">Ver Precios</span>
+        </button>
+        <button onclick="openAffiliateLink()" class="tool-btn">
+          <span class="tool-icon">🔗</span>
+          <span class="tool-label">Mi Link</span>
+        </button>
+        <button onclick="setView('users')" class="tool-btn">
+          <span class="tool-icon">👥</span>
+          <span class="tool-label">Clientes</span>
+        </button>
+        <button onclick="openSalesReport()" class="tool-btn">
+          <span class="tool-icon">📊</span>
+          <span class="tool-label">Ventas</span>
+        </button>
       </div>
     </div>
   `;
@@ -589,12 +383,12 @@ function openResellerPricing() {
       <div style="padding:16px 20px">
         <div class="pricing-list">
           ${products.map(p => {
-            const cat = getProductCategory(p.name);
+            const color = getProductColor(p.name);
             const price = p.price || 0;
             return `
               <div class="pricing-item">
                 <div class="pricing-info">
-                  <span class="pricing-dot" style="background:${cat.color}"></span>
+                  <span class="pricing-dot" style="background:${color}"></span>
                   <span class="pricing-name">${p.name || 'Producto'}</span>
                 </div>
                 <div class="pricing-price">${formatMoney(price)}</div>
@@ -678,28 +472,6 @@ function openSalesReport() {
       </div>
     </div>
   `);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// 💰 ALERTAS DE SALDO
-// ═══════════════════════════════════════════════════════════════
-
-function renderBalanceAlert() {
-  const balance = state.user?.balance || 0;
-  const alertLevel = balance < 10000 ? 'critical' : balance < 50000 ? 'warning' : null;
-  
-  if (!alertLevel) return '';
-  
-  return `
-    <div class="balance-alert ${alertLevel}">
-      <span class="alert-icon">${alertLevel === 'critical' ? '🚨' : '⚠️'}</span>
-      <div class="alert-content">
-        <div class="alert-title">Saldo ${alertLevel === 'critical' ? 'crítico' : 'bajo'}</div>
-        <div class="alert-message">Tienes ${formatMoney(balance)}. ${alertLevel === 'critical' ? 'Recarga inmediatamente.' : 'Considere recargar pronto.'}</div>
-      </div>
-      <button onclick="setView('payments')" class="alert-action">Recargar →</button>
-    </div>
-  `;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -845,14 +617,9 @@ function resetPurchaseFilters() {
 // ═══════════════════════════════════════════════════════════════
 
 function improvedOrdersView() {
-  const stats = getPurchaseStats();
-  
   return `
     <!-- Dashboard de compras -->
     ${renderPurchaseDashboard()}
-    
-    <!-- Alerta de saldo -->
-    ${renderBalanceAlert()}
     
     <!-- Widget de acciones rápidas -->
     ${renderQuickActionsWidget()}
@@ -865,9 +632,6 @@ function improvedOrdersView() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
         <div>
           <h2 style="margin:0;font-size:16px;font-weight:900">Mis Compras</h2>
-          <p class="muted" style="margin:4px 0 0;font-size:12px">
-            <span id="ordersStats">${stats.active} activas · ${stats.total} total</span>
-          </p>
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="toggleAdvancedFilters()" class="ghost" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12px;font-weight:700;cursor:pointer">
@@ -903,117 +667,14 @@ function toggleAdvancedFilters() {
 function injectPurchaseStyles() {
   const styles = document.createElement('style');
   styles.textContent = `
-    /* Dashboard de compras */
-    .purchase-dashboard {
-      margin-bottom: 16px;
-    }
-    
-    .dashboard-metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    
-    @media (max-width: 768px) {
-      .dashboard-metrics {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    
-    .metric-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s ease;
-    }
-    
-    .metric-card:hover {
-      border-color: var(--blue);
-      box-shadow: 0 4px 12px rgba(8, 119, 255, 0.1);
-    }
-    
-    .metric-card.warning {
-      border-color: rgba(245, 158, 11, 0.3);
-      background: rgba(245, 158, 11, 0.05);
-    }
-    
-    .metric-card.warning.pulse {
-      animation: pulseWarning 2s infinite;
-    }
-    
-    @keyframes pulseWarning {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
-    }
-    
-    .metric-icon {
-      font-size: 24px;
-    }
-    
-    .metric-value {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-    }
-    
-    .metric-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    
-    /* Stats de ingresos */
-    .dashboard-stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    
-    @media (max-width: 768px) {
-      .dashboard-stats-row {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    .stat-box {
-      background: var(--soft);
-      border-radius: 10px;
-      padding: 12px 16px;
-      text-align: center;
-    }
-    
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    
-    .stat-value {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--text);
-    }
-    
-    .stat-sub {
-      font-size: 11px;
-      color: var(--blue);
-      margin-top: 2px;
-    }
-    
-    /* Distribución por producto */
-    .product-distribution {
+    /* Sección Próximas a Vencer */
+    .expiring-soon-section {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
+    }
     }
     
     .section-title {
