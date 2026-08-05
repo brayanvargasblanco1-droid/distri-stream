@@ -399,20 +399,22 @@
     .register-panel h1{color:var(--blue)}
 
     .app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
-    .side{position:sticky;top:0;height:100vh;background:rgba(255,255,255,.85);border-right:1px solid var(--line);padding:20px 14px;backdrop-filter:blur(16px);display:flex;flex-direction:column;z-index:10}
-    body.dark .side{background:rgba(8,20,35,.9)}
+    .side{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.9) 100%);border-right:1px solid rgba(102,126,234,.1);padding:20px 14px;backdrop-filter:blur(20px);display:flex;flex-direction:column;z-index:10}
+    body.dark .side{background:linear-gradient(180deg,rgba(13,29,49,.98) 0%,rgba(8,20,35,.9) 100%);border-right-color:rgba(102,126,234,.15)}
     .side-brand{display:flex;align-items:center;gap:10px;padding:4px 6px 20px}
     .side-brand img{width:48px;height:48px;border-radius:14px;object-fit:cover}
     .side-brand b{font-size:19px;line-height:.95;display:block}
     .side-brand em{display:block;color:var(--blue);font-style:italic;font-weight:1000}
-    .nav-title{font-size:11px;font-weight:1000;color:var(--muted);letter-spacing:.08em;margin:18px 8px 8px;text-transform:uppercase}
-    .nav{display:grid;gap:6px}
-    .nav button{border:0;background:transparent;color:var(--text);display:flex;align-items:center;gap:10px;padding:11px;border-radius:var(--radius);font-weight:800;text-align:left;font-size:14px;transition:all .18s ease;position:relative}
-    .nav button svg{width:18px;height:18px;stroke:var(--blue);flex-shrink:0;transition:stroke .18s}
-    .nav button.active{background:linear-gradient(135deg,#0877ff,#0877ff);color:#fff;box-shadow:0 12px 26px rgba(8,119,255,.25)}
-    .nav button.active::before{content:"";position:absolute;left:0;top:20%;bottom:20%;width:3px;background:#fff;border-radius:0 3px 3px 0}
-    .nav button.active svg{stroke:#fff}
-    .nav button:not(.active):hover{background:var(--soft);transform:translateX(3px)}
+    .nav-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin:16px 12px 10px;text-transform:uppercase}
+    .nav{display:grid;gap:6px;padding:0 8px}
+    .nav button{border:0;background:transparent;color:var(--text);display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;font-weight:600;text-align:left;font-size:13px;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+    .nav button::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%) scaleY(0);width:4px;height:60%;background:linear-gradient(180deg,#667eea,#764ba2);border-radius:0 4px 4px 0;transition:transform .25s ease}
+    .nav button svg{width:20px;height:20px;stroke:var(--muted);flex-shrink:0;transition:all .25s ease}
+    .nav button.active{background:linear-gradient(135deg,rgba(102,126,234,.15),rgba(118,75,162,.1));color:#667eea}
+    .nav button.active::before{transform:translateY(-50%) scaleY(1)}
+    .nav button.active svg{stroke:#667eea;transform:scale(1.1)}
+    .nav button:not(.active):hover{background:linear-gradient(135deg,rgba(102,126,234,.08),rgba(118,75,162,.05));transform:translateX(4px)}
+    .nav button:not(.active):hover svg{stroke:#667eea}
     .profile-card{margin-top:auto;border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 24px rgba(15,23,42,.04);transition:all .2s}
     .profile-card:hover{border-color:rgba(8,119,255,.2);box-shadow:0 12px 28px rgba(8,119,255,.08)}
     .profile-top{display:flex;align-items:center;gap:12px}
@@ -1157,11 +1159,15 @@
       body.dark .side{background:rgba(13,29,49,.95)}
       .side-brand,.nav-title{display:none}
       .profile-card{display:none!important}
-      .nav{display:flex;overflow-x:auto;gap:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 4px}
+      .nav{display:flex;overflow-x:auto;gap:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 8px}
       .nav::-webkit-scrollbar{display:none}
-      .nav button{min-width:64px;justify-content:center;flex-direction:column;font-size:10px;padding:10px 8px;gap:4px;min-height:52px;border-radius:12px}
-      .nav button svg{width:22px;height:22px}
-      .nav button.active{background:linear-gradient(135deg,#2aa0ff,#005be6);color:#fff;box-shadow:0 4px 12px rgba(8,119,255,.3)}
+      .nav button{min-width:72px;justify-content:center;flex-direction:column;font-size:10px;padding:10px 8px;gap:5px;min-height:60px;border-radius:16px;position:relative}
+      .nav button::before{display:none}
+      .nav button svg{width:24px;height:24px}
+      .nav button.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 8px 20px rgba(102,126,234,.35)}
+      .nav button.active svg{stroke:#fff;transform:scale(1.15)}
+      .nav button:not(.active):hover{background:rgba(102,126,234,.1);transform:translateY(-2px)}
+      .nav button:not(.active):hover svg{stroke:#667eea}
       .main{padding:16px 14px calc(80px + env(safe-area-inset-bottom,0px))}
       .top{flex-direction:column;align-items:flex-start;gap:12px}
       .top-actions{width:100%;justify-content:flex-end;flex-wrap:wrap;gap:6px}
@@ -1332,8 +1338,10 @@
 
     /* ─── DARK MODE: NAV ─── */
     body.dark .nav button{color:#8da0b8}
-    body.dark .nav button:hover:not(.active){background:rgba(8,119,255,.06)}
-    body.dark .nav button.active{background:linear-gradient(135deg,#2aa0ff,#005be6);color:#fff}
+    body.dark .nav button:hover:not(.active){background:rgba(102,126,234,.1)}
+    body.dark .nav button:hover:not(.active) svg{stroke:#a78bfa}
+    body.dark .nav button.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+    body.dark .nav button.active svg{stroke:#fff}
 
     /* ─── DARK MODE: MISC ─── */
     body.dark .toast{background:#071526}
