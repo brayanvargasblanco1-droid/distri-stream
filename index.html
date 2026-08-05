@@ -5714,105 +5714,154 @@
     function openEditUser(id){
       const u=state.users.find(x=>x.id===id); if(!u) return;
       const isProtected=u.email==="vargasblancobrayan@gmail.com";
-      openModal(`
-        <div style="background:linear-gradient(135deg,#4c1d95,#0877ff);border-radius:16px;padding:24px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:-30%;right:-20%;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%"></div>
-          <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 12px;display:grid;place-items:center;backdrop-filter:blur(8px)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="24" height="24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </div>
-          <h2 style="margin:0;color:#fff;font-size:18px;font-weight:900">EDITAR USUARIO</h2>
-          <p style="margin:4px 0 0;color:rgba(255,255,255,.7);font-size:12px">${u.name}</p>
-          <p style="margin:4px 0 0;color:rgba(255,255,255,.5);font-size:10px">ID: ${(u.id||"").slice(0,12)}...</p>
-          <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px)" onmouseover="this.style.background='rgba(255,255,255,.3)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">&times;</button>
-        </div>
-        <div style="display:grid;gap:16px;padding:0 4px">
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:8px">Cambiar rol</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-              <button onclick="selectRole('Cliente', this)" class="role-btn ${u.role==='Cliente'?'active':''}" style="padding:12px 8px;border:2px solid ${u.role==='Cliente'?'#10b981':'var(--line)'};border-radius:12px;background:${u.role==='Cliente'?'rgba(16,185,129,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px" ${isProtected?'disabled':''}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="${u.role==='Cliente'?'#10b981':'var(--muted)'}" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span style="font-size:11px;font-weight:700;color:${u.role==='Cliente'?'#10b981':'var(--muted)'}">Cliente</span>
-              </button>
-              <button onclick="selectRole('Revendedor', this)" class="role-btn ${u.role==='Revendedor'?'active':''}" style="padding:12px 8px;border:2px solid ${u.role==='Revendedor'?'#667eea':'var(--line)'};border-radius:12px;background:${u.role==='Revendedor'?'rgba(102,126,234,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px" ${isProtected?'disabled':''}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="${u.role==='Revendedor'?'#667eea':'var(--muted)'}" stroke-width="2" width="20" height="20"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span style="font-size:11px;font-weight:700;color:${u.role==='Revendedor'?'#667eea':'var(--muted)'}">Revendedor</span>
-              </button>
-              <button onclick="selectRole('Administrador', this)" class="role-btn ${u.role==='Administrador'?'active':''}" style="padding:12px 8px;border:2px solid ${u.role==='Administrador'?'#f59e0b':'var(--line)'};border-radius:12px;background:${u.role==='Administrador'?'rgba(245,158,11,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px" ${isProtected?'disabled':''}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="${u.role==='Administrador'?'#f59e0b':'var(--muted)'}" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span style="font-size:11px;font-weight:700;color:${u.role==='Administrador'?'#f59e0b':'var(--muted)'}">Admin</span>
-              </button>
-            </div>
-            <input id="editRole" type="hidden" value="${u.role||'Cliente'}">
-          </div>
-          <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:16px;margin-bottom:4px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <span style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">💰 Saldo y Margen</span>
-              <span style="font-size:10px;color:#8b5cf6;font-weight:700">Tu ganancia = ${u.margin || 0}%</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div>
-                <label style="font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">💵 Saldo disponible</label>
-                <input id="editBal" type="number" value="${Number(u.balance||0)}" style="width:100%;padding:14px 12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:16px;font-weight:800" ${isProtected?'disabled':''} oninput="updateMarginCalc()">
-              </div>
-              <div>
-                <label style="font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">📈 Margen (%)</label>
-                <input id="editMargin" type="number" value="${Number(u.margin||0)}" min="0" max="100" style="width:100%;padding:14px 12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:16px;font-weight:800" ${isProtected?'disabled':''} oninput="updateMarginCalc()">
-              </div>
-            </div>
-            <div id="marginInfo" style="margin-top:12px;padding:10px;background:rgba(16,185,129,.1);border-radius:8px;font-size:11px;color:#10b981">
-              <b>💡 Como funciona:</b> Si el usuario compra un producto de <b>$10.000</b>, tu ganancia sera de <b id="calcResult">$0</b> (${u.margin || 0}% del valor).
-            </div>
-          </div>
-          <script>
-            function updateMarginCalc(){
-              const bal = Number(document.getElementById('editBal')?.value) || 0;
-              const margin = Number(document.getElementById('editMargin')?.value) || 0;
-              const examplePrice = 10000;
-              const profit = Math.round(examplePrice * margin / 100);
-              const el = document.getElementById('calcResult');
-              if(el) el.textContent = '$' + profit.toLocaleString('es-CO');
-            }
-            updateMarginCalc();
-          <\/script>
-          <div>
-            <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:8px">Estado</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <button onclick="selectStatus('Activo', this)" id="statusActivo" style="padding:12px;border:2px solid ${(u.status||'Activo')==='Activo'?'#10b981':'var(--line)'};border-radius:12px;background:${(u.status||'Activo')==='Activo'?'rgba(16,185,129,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${(u.status||'Activo')==='Activo'?'#10b981':'var(--muted)'}">
-                <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> Activo
-              </button>
-              <button onclick="selectStatus('Bloqueado', this)" id="statusBloqueado" style="padding:12px;border:2px solid ${u.status==='Bloqueado'?'#8b5cf6':'var(--line)'};border-radius:12px;background:${u.status==='Bloqueado'?'rgba(139,92,246,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${u.status==='Bloqueado'?'#8b5cf6':'var(--muted)'}">
-                <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> 🔒 Bloqueado
-              </button>
-            </div>
-            <input id="editStatus" type="hidden" value="${u.status||'Activo'}">
-          </div>
-          <button onclick="saveEditUser('${u.id}')" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(102,126,234,.3);transition:all .2s;margin-top:4px" onmouseover="this.style.transform="translateY(-2px)";this.style.boxShadow='0 8px 24px rgba(102,126,234,.4)'" onmouseout="this.style.transform="";this.style.boxShadow='0 6px 20px rgba(102,126,234,.3)'">Guardar cambios</button>
-        </div>
-        <\/script>
-          function selectRole(role, btn){
-            document.getElementById('editRole').value = role;
-            document.querySelectorAll('.role-btn').forEach(b => {
-              b.style.borderColor = 'var(--line)';
-              b.style.background = 'var(--soft)';
-              b.style.color = 'var(--muted)';
-            });
-            const colors = {Cliente:'#10b981',Revendedor:'#667eea',Administrador:'#f59e0b'};
-            btn.style.borderColor = colors[role];
-            btn.style.background = colors[role] + '20';
-          }
-          function selectStatus(status, btn){
-            document.getElementById('editStatus').value = status;
-            const isActivo = status === 'Activo';
-            document.getElementById('statusActivo').style.borderColor = isActivo ? '#10b981' : 'var(--line)';
-            document.getElementById('statusActivo').style.background = isActivo ? 'rgba(16,185,129,.15)' : 'var(--soft)';
-            document.getElementById('statusActivo').style.color = isActivo ? '#10b981' : 'var(--muted)';
-            document.getElementById('statusBloqueado').style.borderColor = !isActivo ? '#8b5cf6' : 'var(--line)';
-            document.getElementById('statusBloqueado').style.background = !isActivo ? 'rgba(139,92,246,.15)' : 'var(--soft)';
-            document.getElementById('statusBloqueado').style.color = !isActivo ? '#8b5cf6' : 'var(--muted)';
-          }
-        <\/script>
-      `);
+      const uid=u.id.replace(/'/g,"\\'");
+      
+      const role=u.role||"Cliente";
+      const balance=u.balance||0;
+      const margin=u.margin||0;
+      const status=u.status||"Activo";
+      
+      const roleCliente=role==="Cliente";
+      const roleRevendedor=role==="Revendedor";
+      const roleAdmin=role==="Administrador";
+      const statusActivo=status==="Activo";
+      
+      let html='<div style="font-family:system-ui,-apple-system,sans-serif">';
+      
+      // Header
+      html+='<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:24px 20px 18px;text-align:center;border-radius:16px 16px 0 0;position:relative">';
+      html+='<button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>';
+      html+='<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff;border:3px solid rgba(255,255,255,.3)">'+(u.name||"?").charAt(0).toUpperCase()+'</div>';
+      html+='<h2 style="margin:0 0 2px;color:#fff;font-size:18px;font-weight:700">EDITAR USUARIO</h2>';
+      html+='<p style="margin:0;color:rgba(255,255,255,.8);font-size:11px">'+(u.name||"Usuario")+'</p>';
+      html+='</div>';
+      
+      // Contenido
+      html+='<div style="padding:16px;background:var(--panel)">';
+      
+      // Roles
+      html+='<div style="margin-bottom:16px">';
+      html+='<label style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">📋 Cambiar Rol</label>';
+      html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+      
+      // Cliente
+      html+='<button id="btnCliente" onclick="setRole(\x27Cliente\x27)" style="padding:12px 8px;background:'+(roleCliente?'rgba(16,185,129,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleCliente?'#10b981':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
+      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleCliente?'#10b981':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+      html+='<span style="font-size:10px;font-weight:700;color:'+(roleCliente?'#10b981':'var(--muted)')+'">Cliente</span></button>';
+      
+      // Revendedor
+      html+='<button id="btnRevendedor" onclick="setRole(\x27Revendedor\x27)" style="padding:12px 8px;background:'+(roleRevendedor?'rgba(102,126,234,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleRevendedor?'#667eea':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
+      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleRevendedor?'#667eea':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+      html+='<span style="font-size:10px;font-weight:700;color:'+(roleRevendedor?'#667eea':'var(--muted)')+'">Revendedor</span></button>';
+      
+      // Admin
+      html+='<button id="btnAdministrador" onclick="setRole(\x27Administrador\x27)" style="padding:12px 8px;background:'+(roleAdmin?'rgba(245,158,11,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleAdmin?'#f59e0b':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
+      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleAdmin?'#f59e0b':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+      html+='<span style="font-size:10px;font-weight:700;color:'+(roleAdmin?'#f59e0b':'var(--muted)')+'">Admin</span></button>';
+      html+='</div></div>';
+      
+      // Saldo
+      html+='<div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:14px;margin-bottom:14px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+      html+='<label style="font-size:10px;font-weight:800;color:#10b981;text-transform:uppercase">💰 Saldo Actual</label>';
+      html+='<span style="background:#10b981;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">$'+balance.toLocaleString('es-CO')+'</span>';
+      html+='</div>';
+      html+='<p style="margin:0 0 8px;font-size:10px;color:var(--muted)">¿Cuánto quieres agregar o quitar?</p>';
+      html+='<div style="display:flex;gap:8px;align-items:center">';
+      html+='<button onclick="saldoOp=\x27add\x27;updateSaldoUI()" id="btnAddSaldo" style="padding:8px 12px;background:rgba(16,185,129,.15);border:2px solid #10b981;border-radius:8px;color:#10b981;font-size:10px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      html+='<button onclick="saldoOp=\x27sub\x27;updateSaldoUI()" id="btnSubSaldo" style="padding:8px 12px;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:10px;font-weight:700;cursor:pointer">- Quitar</button>';
+      html+='<input id="saldoInput" type="number" placeholder="0" oninput="calcNewSaldo()" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;text-align:center">';
+      html+='<span style="font-size:11px;color:var(--muted)">=</span>';
+      html+='<span id="newSaldoDisplay" style="padding:8px 12px;background:rgba(102,126,234,.1);border-radius:8px;font-size:13px;font-weight:800;color:#667eea">$'+balance.toLocaleString('es-CO')+'</span>';
+      html+='</div>';
+      html+='<div id="saldoWarn" style="display:none;margin-top:8px;padding:8px;background:rgba(239,68,68,.1);border-radius:6px;font-size:10px;color:#ef4444;text-align:center">⚠️ No puede ser negativo</div>';
+      html+='</div>';
+      
+      // Margen
+      html+='<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:14px;margin-bottom:14px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+      html+='<label style="font-size:10px;font-weight:800;color:#8b5cf6;text-transform:uppercase">📈 Margen Actual</label>';
+      html+='<span style="background:#8b5cf6;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">'+margin+'%</span>';
+      html+='</div>';
+      html+='<p style="margin:0 0 8px;font-size:10px;color:var(--muted)">¿Cuánto quieres ajustar?</p>';
+      html+='<div style="display:flex;gap:8px;align-items:center">';
+      html+='<button onclick="margenOp=\x27add\x27;updateMargenUI()" id="btnAddMargen" style="padding:8px 12px;background:rgba(139,92,246,.15);border:2px solid #8b5cf6;border-radius:8px;color:#8b5cf6;font-size:10px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      html+='<button onclick="margenOp=\x27sub\x27;updateMargenUI()" id="btnSubMargen" style="padding:8px 12px;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:10px;font-weight:700;cursor:pointer">- Quitar</button>';
+      html+='<input id="margenInput" type="number" placeholder="0" oninput="calcNewMargen()" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;text-align:center">';
+      html+='<span style="font-size:11px;color:var(--muted)">=</span>';
+      html+='<span id="newMargenDisplay" style="padding:8px 12px;background:rgba(139,92,246,.1);border-radius:8px;font-size:13px;font-weight:800;color:#8b5cf6">'+margin+'%</span>';
+      html+='</div>';
+      html+='<div id="margenWarn" style="display:none;margin-top:8px;padding:8px;background:rgba(239,68,68,.1);border-radius:6px;font-size:10px;color:#ef4444;text-align:center">⚠️ Debe estar entre 0% y 100%</div>';
+      html+='</div>';
+      
+      // Estado
+      html+='<div style="margin-bottom:16px">';
+      html+='<label style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">🔘 Estado</label>';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      html+='<button id="btnActivo" onclick="setStatus(\x27Activo\x27)" style="padding:12px;border:2px solid '+(statusActivo?'#10b981':'var(--line)')+';border-radius:10px;background:'+(statusActivo?'rgba(16,185,129,.15)':'rgba(255,255,255,.05)')+';cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px">';
+      html+='<span style="width:8px;height:8px;border-radius:50%;background:'+(statusActivo?'#10b981':'var(--muted)')+'"></span>';
+      html+='<span style="font-size:12px;font-weight:700;color:'+(statusActivo?'#10b981':'var(--muted)')+'">✅ Activo</span></button>';
+      html+='<button id="btnBloqueado" onclick="setStatus(\x27Bloqueado\x27)" style="padding:12px;border:2px solid '+(status==='Bloqueado'?'#8b5cf6':'var(--line)')+';border-radius:10px;background:'+(status==='Bloqueado'?'rgba(139,92,246,.15)':'rgba(255,255,255,.05)')+';cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px">';
+      html+='<span style="width:8px;height:8px;border-radius:50%;background:'+(status==='Bloqueado'?'#8b5cf6':'var(--muted)')+'"></span>';
+      html+='<span style="font-size:12px;font-weight:700;color:'+(status==='Bloqueado'?'#8b5cf6':'var(--muted)')+'">🔒 Bloqueado</span></button>';
+      html+='</div></div>';
+      
+      // Guardar
+      html+='<button onclick="doSaveUser(\''+uid+'\')" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(102,126,234,.3)">💾 GUARDAR CAMBIOS</button>';
+      
+      html+='</div></div>';
+      
+      // Script interno
+      html+='<script>';
+      html+='var currentRole="'+role+'";var currentStatus="'+status+'";';
+      html+='var saldoOp="add";var margenOp="add";';
+      html+='var origSaldo='+balance+';var origMargen='+margin+';';
+      html+='function setRole(r){currentRole=r;';
+      html+='["Cliente","Revendedor","Administrador"].forEach(function(role){';
+      html+='var btn=document.getElementById("btn"+role);';
+      html+='var colors={Cliente:"#10b981",Revendedor:"#667eea",Administrador:"#f59e0b"};';
+      html+='if(btn){btn.style.borderColor=r===role?colors[role]:"var(--line)";';
+      html+='btn.style.background=r===role?colors[role]+"25":"rgba(255,255,255,.05)";';
+      html+='btn.querySelector("svg").style.stroke=r===role?colors[role]:"var(--muted)";';
+      html+='btn.querySelector("span:last-child").style.color=r===role?colors[role]:"var(--muted)";}});}';
+      html+='function setStatus(s){currentStatus=s;';
+      html+='var isActivo=s==="Activo";';
+      html+='var aBtn=document.getElementById("btnActivo");';
+      html+='var bBtn=document.getElementById("btnBloqueado");';
+      html+='if(aBtn){aBtn.style.borderColor=isActivo?"#10b981":"var(--line)";';
+      html+='aBtn.style.background=isActivo?"rgba(16,185,129,.15)":"rgba(255,255,255,.05)";';
+      html+='aBtn.querySelector("span").style.background=isActivo?"#10b981":"var(--muted)";';
+      html+='aBtn.querySelector("span:last-child").style.color=isActivo?"#10b981":"var(--muted)";}';
+      html+='if(bBtn){bBtn.style.borderColor=!isActivo?"#8b5cf6":"var(--line)";';
+      html+='bBtn.style.background=!isActivo?"rgba(139,92,246,.15)":"rgba(255,255,255,.05)";';
+      html+='bBtn.querySelector("span").style.background=!isActivo?"#8b5cf6":"var(--muted)";';
+      html+='bBtn.querySelector("span:last-child").style.color=!isActivo?"#8b5cf6":"var(--muted)";}}';
+      html+='function updateSaldoUI(){var addBtn=document.getElementById("btnAddSaldo");var subBtn=document.getElementById("btnSubSaldo");';
+      html+='if(addBtn){addBtn.style.background=saldoOp==="add"?"rgba(16,185,129,.3)":"rgba(16,185,129,.15)";addBtn.style.borderColor=saldoOp==="add"?"#10b981":"rgba(16,185,129,.3)";}';
+      html+='if(subBtn){subBtn.style.background=saldoOp==="sub"?"rgba(239,68,68,.3)":"rgba(239,68,68,.1)";subBtn.style.borderColor=saldoOp==="sub"?"#ef4444":"rgba(239,68,68,.3)";}calcNewSaldo();}';
+      html+='function calcNewSaldo(){var amt=Number(document.getElementById("saldoInput")?.value)||0;var newSaldo=saldoOp==="add"?origSaldo+amt:origSaldo-amt;';
+      html+='var warn=document.getElementById("saldoWarn");var disp=document.getElementById("newSaldoDisplay");';
+      html+='if(newSaldo<0){warn.style.display="block";newSaldo=0;}else{warn.style.display="none";}';
+      html+='if(disp)disp.textContent="$"+newSaldo.toLocaleString("es-CO");}';
+      html+='function updateMargenUI(){var addBtn=document.getElementById("btnAddMargen");var subBtn=document.getElementById("btnSubMargen");';
+      html+='if(addBtn){addBtn.style.background=margenOp==="add"?"rgba(139,92,246,.3)":"rgba(139,92,246,.15)";addBtn.style.borderColor=margenOp==="add"?"#8b5cf6":"rgba(139,92,246,.3)";}';
+      html+='if(subBtn){subBtn.style.background=margenOp==="sub"?"rgba(239,68,68,.3)":"rgba(239,68,68,.1)";subBtn.style.borderColor=margenOp==="sub"?"#ef4444":"rgba(239,68,68,.3)";}calcNewMargen();}';
+      html+='function calcNewMargen(){var amt=Number(document.getElementById("margenInput")?.value)||0;var newMargen=margenOp==="add"?origMargen+amt:origMargen-amt;';
+      html+='var warn=document.getElementById("margenWarn");var disp=document.getElementById("newMargenDisplay");';
+      html+='if(newMargen<0||newMargen>100){warn.style.display="block";newMargen=Math.max(0,Math.min(100,newMargen));}else{warn.style.display="none";}';
+      html+='if(disp)disp.textContent=newMargen+"%";}';
+      html+='function doSaveUser(uid){var newSaldo=calcNewSaldo();if(newSaldo<0){toast("Saldo no puede ser negativo","bad");return;}';
+      html+='var newMargen=Math.max(0,Math.min(100,(margenOp==="add"?origMargen+Number(document.getElementById("margenInput")?.value||0):origMargen-Number(document.getElementById("margenInput")?.value||0)));';
+      html+='showLoading("Guardando...");';
+      html+='api("users",{method:"PATCH",body:JSON.stringify({id:uid,role:currentRole,balance:newSaldo,margin:newMargen,status:currentStatus})})';
+      html+='.then(function(){closeModal();toast("Usuario actualizado","ok");boot();})';
+      html+='.catch(function(e){toast(e.message,"bad");})';
+      html+='.finally(function(){hideLoading();});}';
+      html+='<'+'/script>';
+      
+      openModal(html);
     }
+
     async function saveEditUser(id){
       try{
         // Obtener valores calculados de las funciones JS
