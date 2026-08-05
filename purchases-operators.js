@@ -79,65 +79,6 @@ function improvedOrdersView() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ⏰ SECCIÓN: CUENTAS POR VENCER
-// ═══════════════════════════════════════════════════════════════
-
-function renderExpiringSection(orders) {
-  if (orders.length === 0) {
-    return `
-      <div class="expiring-empty">
-        <div class="expiring-empty-icon">✨</div>
-        <div class="expiring-empty-title">¡Todo al día!</div>
-        <div class="expiring-empty-text">No tienes cuentas por vencer en los próximos 7 días</div>
-      </div>
-    `;
-  }
-  
-  const totalRenewal = orders.reduce((sum, o) => sum + (o.amount || o.total || 0), 0);
-  
-  return `
-    <div class="expiring-section">
-      <div class="expiring-header">
-        <div class="expiring-title">
-          <span class="expiring-icon">⏰</span>
-          <span>Cuentas por Vencer</span>
-          <span class="expiring-count">${orders.length}</span>
-        </div>
-        <button onclick="showBulkRenewal()" class="btn-renew-all">🔄 Renovar Todas</button>
-      </div>
-      
-      <div class="expiring-list">
-        ${orders.map(o => {
-          const days = getDaysLeft(o.expires_at);
-          const urgency = days <= 1 ? 'critical' : days <= 3 ? 'high' : 'normal';
-          const color = getProductColor(o.product_name);
-          return `
-            <div class="expiring-item urgency-${urgency}">
-              <div class="expiring-item-left">
-                <div class="expiring-item-icon" style="background:${color}">${o.product_name ? o.product_name.charAt(0).toUpperCase() : '?'}</div>
-                <div class="expiring-item-info">
-                  <div class="expiring-item-name">${o.product_name || 'Producto'}</div>
-                  <div class="expiring-item-meta"><span>${o.code || '#DS-0000'}</span><span>•</span><span>Vence: ${o.expires_at}</span></div>
-                </div>
-              </div>
-              <div class="expiring-item-right">
-                <span class="expiring-days urgency-${urgency}">${days}d</span>
-                <button onclick="showRenewModal('${o.id}')" class="btn-renew-item">🔄 Renovar</button>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-      
-      <div class="expiring-total">
-        <span>Total renovación:</span>
-        <span class="expiring-total-price">${formatMoney(totalRenewal)}</span>
-      </div>
-    </div>
-  `;
-}
-
-// ═══════════════════════════════════════════════════════════════
 // 🔧 PANEL DE HERRAMIENTAS DEL REVENDEDOR
 // ═══════════════════════════════════════════════════════════════
 
@@ -153,19 +94,9 @@ function renderResellerPanel() {
       </div>
       
       <div class="reseller-tools">
-        <button onclick="openPricesModal()" class="reseller-tool">
-          <span class="tool-icon">💰</span>
-          <span class="tool-text">Ver Precios</span>
-        </button>
-        
         <button onclick="openMyLinkModal()" class="reseller-tool">
           <span class="tool-icon">🔗</span>
           <span class="tool-text">Mi Link</span>
-        </button>
-        
-        <button onclick="setView('users')" class="reseller-tool">
-          <span class="tool-icon">👥</span>
-          <span class="tool-text">Mis Clientes</span>
         </button>
         
         <button onclick="openSalesModal()" class="reseller-tool">
@@ -255,15 +186,29 @@ async function doRenew(orderId) {
 
 function showBulkRenewal() {
   const orders = getExpiringOrders();
-  if (orders.length === 0) { toast('No hay cuentas por vencer', 'bad'); return; }
+  
+  if (orders.length === 0) {
+    openModal(`
+      <div class="modal-empty">
+        <div class="modal-empty-icon">✨</div>
+        <div class="modal-empty-title">¡Todo al día!</div>
+        <div class="modal-empty-text">No tienes cuentas por vencer</div>
+        <button onclick="closeModal()" class="btn-primary" style="width:100%;margin-top:20px">Cerrar</button>
+      </div>
+    `);
+    return;
+  }
   
   const total = orders.reduce((sum, o) => sum + (o.amount || o.total || 0), 0);
   const balance = state.user?.balance || 0;
   
   openModal(`
-    <div class="bulk-renewal-modal">
-      <div class="bulk-modal-header"><h2>🔄 Renovar ${orders.length} Cuenta${orders.length !== 1 ? 's' : ''}</h2></div>
-      <div class="bulk-modal-body">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔄 Renovar ${orders.length} Cuenta${orders.length !== 1 ? 's' : ''}</h2>
+        <button onclick="closeModal()" class="btn-close">×</button>
+      </div>
+      <div class="modal-body">
         <div class="bulk-summary">
           <div class="bulk-summary-item"><span>Cuentas:</span><span>${orders.length}</span></div>
           <div class="bulk-summary-item"><span>Total:</span><span class="bulk-total">${formatMoney(total)}</span></div>
@@ -458,41 +403,12 @@ function applyOrderFilters() {
 function injectPurchaseStyles() {
   const styles = document.createElement('style');
   styles.textContent = `
-    .expiring-section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
-    .expiring-empty { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05)); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 16px; }
-    .expiring-empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .expiring-empty-title { font-size: 16px; font-weight: 700; color: var(--ok); }
-    .expiring-empty-text { font-size: 13px; color: var(--muted); margin-top: 4px; }
-    .expiring-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--soft); border-bottom: 1px solid var(--line); }
-    .expiring-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
-    .expiring-icon { font-size: 18px; }
-    .expiring-count { background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    .btn-renew-all { padding: 8px 16px; border: 0; border-radius: 8px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
-    .btn-renew-all:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
-    .expiring-list { padding: 8px; }
-    .expiring-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 4px; border-left: 4px solid var(--blue); background: var(--soft); }
-    .expiring-item.urgency-high { border-left-color: #f59e0b; }
-    .expiring-item.urgency-critical { border-left-color: #ef4444; background: rgba(239,68,68,0.05); }
-    .expiring-item-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-    .expiring-item-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 16px; flex-shrink: 0; }
-    .expiring-item-info { min-width: 0; }
-    .expiring-item-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .expiring-item-meta { display: flex; gap: 6px; font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .expiring-item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-    .expiring-days { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
-    .expiring-days.urgency-normal { background: rgba(8,119,255,0.1); color: var(--blue); }
-    .expiring-days.urgency-high { background: rgba(245,158,11,0.1); color: #f59e0b; }
-    .expiring-days.urgency-critical { background: rgba(239,68,68,0.1); color: #ef4444; }
-    .btn-renew-item { padding: 6px 12px; border: 0; border-radius: 6px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
-    .expiring-total { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--soft); border-top: 1px solid var(--line); font-weight: 700; font-size: 14px; }
-    .expiring-total-price { color: var(--blue); }
-    
     .reseller-panel { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(8,119,255,0.05)); border: 1px solid rgba(124,58,237,0.15); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
     .reseller-panel-header { text-align: center; margin-bottom: 16px; }
     .reseller-badge { display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 800; }
-    .reseller-tools { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-    @media (max-width: 700px) { .reseller-tools { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 400px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
+    .reseller-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 600px) { .reseller-tools { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .reseller-tools { grid-template-columns: 1fr; } }
     .reseller-tool { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; border: 2px solid #e5e7eb; border-radius: 14px; background: #fff; cursor: pointer; transition: all 0.2s; position: relative; }
     .reseller-tool:hover { border-color: #7c3aed; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(124,58,237,0.15); }
     .reseller-tool.tool-renew-active { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
@@ -501,13 +417,32 @@ function injectPurchaseStyles() {
     .tool-text { font-size: 14px; font-weight: 700; text-align: center; color: #1f2937; }
     .tool-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 3px solid #fff; }
     
-    .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .section-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
     .section-header h2 { font-size: 18px; font-weight: 900; margin: 0; }
-    .section-count { background: var(--soft); color: var(--muted); padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+    .section-count { background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
     
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-    .modal-header h2 { font-size: 16px; font-weight: 800; margin: 0; }
-    .btn-close { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); font-size: 18px; cursor: pointer; }
+    .modal-content { min-width: 320px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
+    .modal-header h2 { font-size: 18px; font-weight: 800; margin: 0; }
+    .btn-close { width: 36px; height: 36px; border: 2px solid #e5e7eb; border-radius: 50%; background: #fff; font-size: 20px; cursor: pointer; display: grid; place-items: center; transition: all 0.2s; }
+    .btn-close:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; transform: rotate(90deg); }
+    .modal-body { padding: 20px; }
+    .modal-empty { text-align: center; padding: 40px 20px; }
+    .modal-empty-icon { font-size: 64px; margin-bottom: 16px; }
+    .modal-empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .modal-empty-text { color: #6b7280; font-size: 14px; }
+    .btn-primary { padding: 14px 24px; background: linear-gradient(135deg, #0877ff, #0057dc); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    
+    .bulk-summary { background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .bulk-summary-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+    .bulk-total { font-weight: 800; color: #0877ff; font-size: 18px; }
+    .bulk-accounts-list { max-height: 200px; overflow-y: auto; margin-bottom: 16px; }
+    .bulk-account-item { display: flex; justify-content: space-between; padding: 10px 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
+    .bulk-modal-actions { display: flex; gap: 10px; }
+    .btn-renew { width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .renew-error { display: none; padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; color: #dc2626; font-size: 13px; margin-bottom: 12px; }
+    .text-danger { color: #dc2626; }
+    .text-success { color: #059669; }
     
     .renew-product-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--soft); border-radius: 12px; margin-bottom: 16px; }
     .renew-product-icon { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 22px; }
