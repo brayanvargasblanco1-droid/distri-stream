@@ -1463,6 +1463,11 @@
     .topup-metric-card.profit{border-color:rgba(124,58,237,.3)}
     .topup-metric-card.profit::before{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
     .topup-metric-card.profit:hover{background:linear-gradient(180deg,rgba(124,58,237,.08),var(--panel))}
+    .topup-metric-card.blue{border-color:rgba(8,119,255,.3)}
+    .topup-metric-card.blue::before{background:linear-gradient(90deg,#0877ff,#00d4ff)}
+    .topup-metric-card.blue:hover{background:linear-gradient(180deg,rgba(8,119,255,.08),var(--panel))}
+    .topup-metric-card.blue .metric-glow{background:radial-gradient(circle,#0877ff,transparent 70%)}
+    .topup-metric-card.blue .metric-badge{background:rgba(8,119,255,.2);color:#0877ff}
     .metric-glow{position:absolute;top:-50%;left:-50%;width:200%;height:200%;opacity:.05;pointer-events:none;transition:opacity .3s}
     .topup-metric-card:hover .metric-glow{opacity:.1}
     .topup-metric-card.pending .metric-glow{background:radial-gradient(circle,#f59e0b,transparent 70%)}
@@ -2603,49 +2608,65 @@
       const activeUsers=state.users.filter(u=>(u.status||"Activo")==="Activo").length;
       const expiring=state.orders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=7}).length;
       const totalOrders=state.orders.length||1;
-      return `
-      <section class="premium-metrics">
-        <article class="premium-card blue" onclick="setView('store')">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-orb r3"></div>
-            <div class="premium-center"><span class="premium-num">${activeOrders().length}</span></div>
+      const todayOrders=state.orders.filter(o=>{const d=new Date(o.created_at||o.expires_at);const t=new Date();return d.toDateString()===t.toDateString()}).length;
+      const totalRevenue=state.orders.reduce((s,o)=>s+Number(o.amount||o.total||0),0);
+      
+      return `<section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+        <!-- TARJETA COMPRAS -->
+        <div class="topup-metric-card blue" onclick="setView('orders')" style="cursor:pointer">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">🛒</div>
+            <div class="metric-badge approved-badge">${activeOrders().length > 0 ? '⚡' : '✓'}</div>
           </div>
-          <div class="premium-label">Compras</div>
-        </article>
-        <article class="premium-card green" onclick="setView('users')">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-orb r3"></div>
-            <div class="premium-center"><span class="premium-num">${activeUsers}</span></div>
+          <div class="metric-value">${activeOrders().length}</div>
+          <div class="metric-label">Compras Activas</div>
+          <div class="metric-detail">${todayOrders} hoy · ${money(totalRevenue)} total</div>
+          ${activeOrders().length > 0 ? `<div class="metric-progress"><div class="progress-bar" style="width:${Math.min(activeOrders().length * 5, 100)}%"></div></div>` : ''}
+          <div class="metric-action">Ver →</div>
+        </div>
+        
+        <!-- TARJETA USUARIOS -->
+        <div class="topup-metric-card green" onclick="setView('users')" style="cursor:pointer">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">👥</div>
+            <div class="metric-badge approved-badge">📈</div>
           </div>
-          <div class="premium-label">Usuarios</div>
-        </article>
-        <article class="premium-card orange" onclick="setView('payments')">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-orb r3"></div>
-            <div class="premium-center"><span class="premium-num">${pendingTopups}</span></div>
+          <div class="metric-value success">${activeUsers}</div>
+          <div class="metric-label">Usuarios Activos</div>
+          <div class="metric-detail">${state.users.length} registrados en total</div>
+          <div class="metric-trend positive">+${activeUsers} activos</div>
+          <div class="metric-action">Ver →</div>
+        </div>
+        
+        <!-- TARJETA RECARGAS -->
+        <div class="topup-metric-card pending" onclick="setView('payments')" style="cursor:pointer">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">💰</div>
+            <div class="metric-badge ${pendingTopups > 0 ? 'active' : ''}">${pendingTopups > 0 ? '⚡' : '✓'}</div>
           </div>
-          <div class="premium-label">Por aprobar</div>
-        </article>
-        <article class="premium-card red" onclick="setView('analytics')">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap">
-            <div class="premium-orb"></div>
-            <div class="premium-orb r2"></div>
-            <div class="premium-orb r3"></div>
-            <div class="premium-center"><span class="premium-num">${expiring}</span></div>
+          <div class="metric-value">${pendingTopups}</div>
+          <div class="metric-label">Por Aprobar</div>
+          <div class="metric-detail">${pendingTopups > 0 ? 'Recargas pendientes' : 'Sin pendientes'}</div>
+          ${pendingTopups > 0 ? `<div class="metric-progress"><div class="progress-bar" style="width:${Math.min(pendingTopups * 20, 100)}%"></div></div>` : ''}
+          <div class="metric-action">Ver →</div>
+        </div>
+        
+        <!-- TARJETA POR VENCER -->
+        <div class="topup-metric-card rejected" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">⏰</div>
+            <div class="metric-badge rejected-badge">⚠️</div>
           </div>
-          <div class="premium-label">Por vencer</div>
-        </article>
-      </section>
+          <div class="metric-value danger">${expiring}</div>
+          <div class="metric-label">Por Vencer</div>
+          <div class="metric-detail">Cuentas en los próximos 7 días</div>
+          ${expiring > 0 ? `<div class="metric-trend negative">⚠️ ${expiring} pronto</div>` : `<div class="metric-trend positive">✓ Sin alertas</div>`}
+        </div>
+      </section>`;
 
       <section class="grid split section">
         <div class="card" style="overflow:hidden">
@@ -3812,29 +3833,55 @@
       const totalDebito = movements.filter(m => m.amount < 0).reduce((s,m) => s + Math.abs(m.amount), 0);
       const totalCount = movements.length;
 
-      return `
-        <div class="premium-metrics" style="margin-bottom:16px">
-          <div class="premium-card green" style="cursor:default">
-            <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-            <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:20px">$${totalCredito.toLocaleString("es-CO")}</span></div></div>
-            <div class="premium-label">Total Recargas</div>
+      return `<section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+        <div class="topup-metric-card green" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">💰</div>
+            <div class="metric-badge approved-badge">📈</div>
           </div>
-          <div class="premium-card red" style="cursor:default">
-            <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-            <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:20px">$${totalDebito.toLocaleString("es-CO")}</span></div></div>
-            <div class="premium-label">Total Compras</div>
-          </div>
-          <div class="premium-card blue" style="cursor:default">
-            <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-            <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:20px">${money(state.user?.balance || 0)}</span></div></div>
-            <div class="premium-label">Saldo Actual</div>
-          </div>
-          <div class="premium-card blue" style="cursor:default">
-            <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-            <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${movements.length}</span></div></div>
-            <div class="premium-label">Movimientos</div>
-          </div>
+          <div class="metric-value success">${money(totalCredito)}</div>
+          <div class="metric-label">Total Recargas</div>
+          <div class="metric-detail">Ingresos por recargas</div>
+          <div class="metric-trend positive">✓ ${movements.filter(m => m.amount > 0).length} recargas</div>
         </div>
+        
+        <div class="topup-metric-card rejected" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">🛒</div>
+            <div class="metric-badge rejected-badge">📊</div>
+          </div>
+          <div class="metric-value danger">${money(totalDebito)}</div>
+          <div class="metric-label">Total Gastos</div>
+          <div class="metric-detail">Gastos en compras</div>
+          <div class="metric-trend negative">↙ ${movements.filter(m => m.amount < 0).length} compras</div>
+        </div>
+        
+        <div class="topup-metric-card pending" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">💎</div>
+            <div class="metric-badge profit-badge">💵</div>
+          </div>
+          <div class="metric-value">${money(state.user?.balance || 0)}</div>
+          <div class="metric-label">Saldo Actual</div>
+          <div class="metric-detail">Disponible para usar</div>
+          ${Number(state.user?.balance || 0) > 0 ? `<div class="metric-trend positive">✓ Con saldo</div>` : `<div class="metric-trend negative">⚠️ Sin saldo</div>`}
+        </div>
+        
+        <div class="topup-metric-card profit" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">📋</div>
+            <div class="metric-badge profit-badge">📊</div>
+          </div>
+          <div class="metric-value profit-value">${movements.length}</div>
+          <div class="metric-label">Movimientos</div>
+          <div class="metric-detail">Total de transacciones</div>
+          <div class="metric-trend ${movements.length > 10 ? 'positive' : ''}">${movements.length > 0 ? '✓ Activo' : '○ Sin actividad'}</div>
+        </div>
+      </section>`;
 
         <div class="card movements-card" style="overflow:hidden">
           <div style="padding:16px 20px;border-bottom:1px solid var(--line)">
@@ -4086,17 +4133,54 @@
       if(typeof improvedReportsView === 'function'){
         return improvedReportsView();
       }
-      return `
-      <section class="premium-metrics" style="margin-bottom:16px">
-        <div class="premium-card blue" style="cursor:default">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${active}</span></div></div>
-          <div class="premium-label">Reportes Activos</div>
+      return `<section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+        <div class="topup-metric-card pending" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">🚨</div>
+            <div class="metric-badge ${active > 0 ? 'active' : ''}">${active > 0 ? '⚡' : '✓'}</div>
+          </div>
+          <div class="metric-value">${active}</div>
+          <div class="metric-label">Reportes Activos</div>
+          <div class="metric-detail">Sin resolver</div>
+          ${active > 0 ? `<div class="metric-progress"><div class="progress-bar" style="width:${Math.min(active * 20, 100)}%"></div></div>` : ''}
+          <div class="metric-trend negative">${active > 0 ? '⚠️ Requieren atención' : '✓ Sin reportes'}</div>
         </div>
-        <div class="premium-card orange" style="cursor:default">
-          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${resolved}</span></div></div>
-          <div class="premium-label">Resueltos/Rechazados</div>
+        
+        <div class="topup-metric-card approved" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">✅</div>
+            <div class="metric-badge approved-badge">✓</div>
+          </div>
+          <div class="metric-value success">${resolved}</div>
+          <div class="metric-label">Resueltos</div>
+          <div class="metric-detail">Historial completo</div>
+          <div class="metric-trend positive">✓ ${resolved} solucionados</div>
+        </div>
+        
+        <div class="topup-metric-card blue" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">📊</div>
+            <div class="metric-badge">📈</div>
+          </div>
+          <div class="metric-value">${my.length}</div>
+          <div class="metric-label">Total Reportes</div>
+          <div class="metric-detail">Todos los tiempos</div>
+          <div class="metric-trend ${my.length > 0 ? 'positive' : ''}">${my.length > 0 ? '✓ Registrados' : '○ Sin actividad'}</div>
+        </div>
+        
+        <div class="topup-metric-card profit" style="cursor:default">
+          <div class="metric-glow"></div>
+          <div class="metric-header">
+            <div class="metric-icon">🎯</div>
+            <div class="metric-badge profit-badge">💡</div>
+          </div>
+          <div class="metric-value profit-value">${my.length > 0 ? Math.round((resolved / my.length) * 100) : 0}%</div>
+          <div class="metric-label">Tasa de Resolución</div>
+          <div class="metric-detail">Problemas resueltos</div>
+          <div class="metric-trend ${my.length > 0 && (resolved / my.length) >= 0.7 ? 'positive' : 'negative'}">${my.length > 0 ? ((resolved / my.length) * 100).toFixed(0) + '% resuelto' : 'N/A'}</div>
         </div>
       </section>
       <!-- Tabs de separación -->
