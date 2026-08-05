@@ -5793,14 +5793,10 @@
       html+='var saldoOrig='+balance+';var margenOrig='+margin+';';
       html+='var saldoOp=1;var margenOp=1;';
       html+='var roles=["Cliente","Revendedor","Administrador"];var estados=["Activo","Bloqueado"];';
-      html+='function cambiarRol(i){rolActual=roles[i];';
-      html+='for(var j=0;j<3;j++){var b=document.getElementById("btnRol"+j);';
-      html+='if(b){b.style.borderColor=j===i?(j===0?"#10b981":j===1?"#667eea":"#f59e0b"):"#ddd";';
-      html+='b.style.background=j===i?(j===0?"rgba(16,185,129,.15)":j===1?"rgba(102,126,234,.15)":"rgba(245,158,11,.15)"):"#fff";}}}';
-      html+='function cambiarEstado(i){estadoActual=estados[i];';
-      html+='for(var j=0;j<2;j++){var b=document.getElementById("btnEstado"+j);';
-      html+='if(b){b.style.borderColor=j===i?(j===0?"#10b981":"#8b5cf6"):"#ddd";';
-      html+='b.style.background=j===i?(j===0?"rgba(16,185,129,.15)":"rgba(139,92,246,.15)"):"#fff";}}}';
+      html+='function cambiarRol(i){var nombres=["Cliente","Revendedor","Administrador"];var cols=["#10b981","#667eea","#f59e0b"];var bgs=["rgba(16,185,129,.15)","rgba(102,126,234,.15)","rgba(245,158,11,.15)"];rolActual=nombres[i];';
+      html+='for(var j=0;j<3;j++){var b=document.getElementById("btnRol"+j);if(b){if(j===i){b.style.borderColor=cols[j];b.style.background=bgs[j];b.style.color=cols[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.style.color="#888";}}}}';
+      html+='function cambiarEstado(i){var noms=["Activo","Bloqueado"];var cols2=["#10b981","#8b5cf6"];var bgs2=["rgba(16,185,129,.15)","rgba(139,92,246,.15)"];estadoActual=noms[i];';
+      html+='for(var j=0;j<2;j++){var b=document.getElementById("btnEstado"+j);if(b){if(j===i){b.style.borderColor=cols2[j];b.style.background=bgs2[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";}}}}';
       html+='function setSaldoOp(op){saldoOp=op;document.getElementById("btnAddSaldo").style.background=op===1?"#dcfce7":"#f5f5f5";document.getElementById("btnSubSaldo").style.background=op===-1?"#fee2e2":"#f5f5f5";calcSaldo();}';
       html+='function setMargenOp(op){margenOp=op;document.getElementById("btnAddMargen").style.background=op===1?"#f3e8ff":"#f5f5f5";document.getElementById("btnSubMargen").style.background=op===-1?"#fee2e2":"#f5f5f5";calcMargen();}';
       html+='function calcSaldo(){var amt=Number(document.getElementById("inputSaldo").value)||0;var nuevo=saldoOp===1?saldoOrig+amt:saldoOrig-amt;';
