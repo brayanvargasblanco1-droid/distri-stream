@@ -1718,6 +1718,7 @@
   </div>
   <script>
     // ─── CONFIG ────────────────────────────────────────
+    function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];return p;}
     const API = "https://tavfcrekyxnwrohsmncx.supabase.co/functions/v1/distrito-api";
     const ASSETS = "assets/";
     const DEFAULT_PAYMENT = {number:"3102765347",link:"https://checkout.nequi.wompi.co/l/VPOS_U68ZNz",name:"Distrito Streaming",qr:"nequi-negocios-qr.jpeg"};
@@ -5754,61 +5755,15 @@
           </div>
         </div>`);
     }
-    async function resetPassword(id){
-      const pass=$("#newPass")?.value;
-      if(!pass){toast("Escribe una contrasena","bad");return}
+    async function resetPassword(id, pass){
       try{
-        showLoading("Cambiando contrasena...");
+        showLoading("Guardando nueva clave...");
         await api("users",{method:"PATCH",body:JSON.stringify({id,password:pass})});
-        closeModal(); toast("Contrasena actualizada","ok");
+        closeModal(); toast("Clave actualizada","ok");
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
     
-    // Generar QR del usuario
-    function generateUserQR(userId){
-      const u = state.users.find(x => x.id === userId);
-      if(!u) return;
-      const refCode = (u.email || u.id || '').split('@')[0] + '-' + (u.id || '').slice(0, 6);
-      const baseUrl = window.location.origin;
-      const qrUrl = baseUrl + '?ref=' + refCode;
-      const userLink = baseUrl + '?ref=' + refCode;
-      
-      openModal(`
-        <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:24px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:-30%;right:-20%;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%"></div>
-          <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 12px;display:grid;place-items:center;backdrop-filter:blur(8px)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="28" height="28"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
-          </div>
-          <h2 style="margin:0;color:#fff;font-size:18px;font-weight:900">QR DE AFILIACION</h2>
-          <p style="margin:4px 0 0;color:rgba(255,255,255,.7);font-size:12px">${u.name}</p>
-          <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer">&times;</button>
-        </div>
-        <div style="padding:0 4px;text-align:center">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Este es el enlace de afiliacion del usuario. Si perdio su QR, puedes compartirle este enlace.</p>
-          
-          <div style="background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px">
-            <div id="qrPlaceholder" style="width:180px;height:180px;margin:0 auto;background:var(--soft);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" width="100" height="100"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
-            </div>
-            <p style="font-size:10px;color:var(--muted);margin:8px 0 0">Codigo: ${refCode}</p>
-          </div>
-          
-          <div style="display:flex;gap:8px">
-            <button onclick="copyText('${userLink}')" style="flex:1;padding:14px;border:0;border-radius:12px;background:#10b981;color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copiar enlace
-            </button>
-            <a href="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(userLink)}" target="_blank" download="qr-${refCode}.png" style="flex:1;padding:14px;border:0;border-radius:12px;background:#667eea;color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar QR
-            </a>
-          </div>
-          
-          <p style="font-size:10px;color:var(--muted);margin-top:12px">Tambien puedes generar el QR desde: <b>api.qrserver.com</b></p>
-        </div>
-      `);
-    }
     function deleteUser(id,name){
       openModal(`
         <div style="background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:16px;padding:24px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
