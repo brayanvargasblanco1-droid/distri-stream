@@ -3235,6 +3235,11 @@
 
     // ─── HISTORIAL DE MOVIMIENTOS ──────────────────────
     function history(){
+      // Usar la vista mejorada si está disponible
+      if(typeof improvedHistoryView === 'function'){
+        return improvedHistoryView();
+      }
+      
       const allMovements = buildMovements();
       const movements = getFilteredMovements();
 
