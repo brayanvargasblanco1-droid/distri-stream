@@ -1537,11 +1537,13 @@
     const getUserAvatar = () => {
       const u = state.user;
       if (!u) return { emoji: "👤", color: avatarColors[0] };
-      if (u.avatarEmoji) {
-        const colorIndex = u.avatarColorIndex || 0;
-        return { emoji: u.avatarEmoji, color: avatarColors[colorIndex] || avatarColors[0] };
+      // Check if user has custom avatar
+      if (u.avatarEmoji && u.avatarEmoji.trim() !== "") {
+        const colorIndex = parseInt(u.avatarColorIndex) || 0;
+        const safeIndex = Math.min(Math.max(0, colorIndex), avatarColors.length - 1);
+        return { emoji: u.avatarEmoji, color: avatarColors[safeIndex] };
       }
-      return null;
+      return null; // Will use initials
     };
 
     const getAvatarDisplay = (name, size = 40) => {
@@ -5868,13 +5870,13 @@
               <span style="font-size:20px">📋</span>
               <span style="font-size:10px;font-weight:700;color:var(--text)">Reportes</span>
             </button>
-            <button onclick="closeModal();openAvatarPicker()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">😊</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Avatar</span>
+            <button onclick="closeModal();openQrCode()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:20px">📱</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Mi QR</span>
             </button>
             <button onclick="openEditProfile()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">✏️</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Editar</span>
+              <span style="font-size:20px">⚙️</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Configurar</span>
             </button>
           </div>
         </div>
@@ -5902,9 +5904,11 @@
         
         <!-- Settings -->
         <div style="display:flex;gap:8px">
-          <button onclick="toggleDark()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"/></svg>
-            Tema
+          <button onclick="toggleDark();closeModal()" id="themeToggleBtn" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden">
+            <span id="themeIcon" style="transition:transform .4s ease,opacity .3s ease">
+              ${localStorage.dsDark === "1" ? "☀️" : "🌙"}
+            </span>
+            <span id="themeLabel" style="transition:opacity .2s">${localStorage.dsDark === "1" ? "Modo Claro" : "Modo Oscuro"}</span>
           </button>
           <button onclick="logout()" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -5993,7 +5997,23 @@
       if (diff < 86400) return `Hace ${Math.floor(diff/3600)}h`;
       return `Hace ${Math.floor(diff/86400)} dias`;
     }
-    function toggleDark(){localStorage.dsDark=localStorage.dsDark==="1"?"0":"1";const icon=document.getElementById('appleTouchIcon');if(icon)icon.href=localStorage.dsDark==="1"?"assets/distrito-angel-blue-v1.png":"assets/distrito-angel-white.png";renderApp()}
+    function toggleDark(){
+      const isDark = localStorage.dsDark === "1";
+      // Animacion de transicion
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+      if(themeIcon) {
+        themeIcon.style.transform = 'rotate(360deg) scale(0)';
+        themeIcon.style.opacity = '0';
+      }
+      setTimeout(() => {
+        localStorage.dsDark = isDark ? "0" : "1";
+        const icon = document.getElementById('appleTouchIcon');
+        if(icon) icon.href = isDark ? "assets/distrito-angel-white.png" : "assets/distrito-angel-blue-v1.png";
+        renderApp();
+        toast(isDark ? "Modo claro activado ☀️" : "Modo oscuro activado 🌙", "ok");
+      }, 200);
+    }
     function toggleAlerts(ev){
       ev?.stopPropagation();
       const panel=$("#alerts");
