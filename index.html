@@ -644,19 +644,55 @@
     
     /* Greeting */
     .home-greeting{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 16px 16px}
-    .greeting-text{}
     .greeting-hi{font-size:13px;color:var(--muted);font-weight:500}
     .greeting-name{font-size:24px;font-weight:800;margin:4px 0 0;color:var(--text)}
     .greeting-date{background:linear-gradient(135deg,#0877ff,#0057dc);border-radius:14px;padding:12px 16px;text-align:center;color:#fff}
     .date-day{font-size:24px;font-weight:900;display:block;line-height:1}
     .date-month{font-size:11px;font-weight:600;text-transform:uppercase;opacity:.9}
     
-    /* Balance Card */
-    .balance-card{position:relative;margin:0 16px 20px;background:linear-gradient(135deg,#1e3a5f,#0d2137);border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(8,119,255,.25)}
-    .balance-bg{position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(8,119,255,.3),transparent 70%);border-radius:50%}
+    /* Carousel Slides */
+    .carousel{position:relative;border-radius:18px;overflow:hidden;margin:0 16px 20px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+    .carousel-track{display:flex;transition:transform .4s ease}
+    .carousel-slide{display:flex;align-items:center;gap:16px;padding:20px;min-width:100%;min-height:140px}
+    .carousel-slide h3{font-size:16px;font-weight:800;margin:0 0 8px}
+    .carousel-slide p{font-size:13px;margin:0;opacity:.9}
+    .hours-slide{background:linear-gradient(135deg,#1e3a5f,#0d2137)}
+    .support-slide{background:linear-gradient(135deg,#7c3aed,#5b21b6)}
+    .welcome-slide{background:linear-gradient(135deg,#059669,#047857)}
+    .slide-icon{font-size:36px;flex-shrink:0}
+    .slide-content{flex:1;color:#fff}
+    .slide-btn{margin-top:12px;padding:10px 20px;background:#fff;color:#1e3a5f;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s}
+    .slide-btn:hover{transform:scale(1.05)}
+    .slide-btn.full{width:100%}
+    .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;transition:all .2s;z-index:2}
+    .carousel-arrow:hover{background:rgba(255,255,255,.3)}
+    .carousel-arrow.prev{left:8px}
+    .carousel-arrow.next{right:8px}
+    .carousel-nav{display:flex;justify-content:center;gap:6px;padding:10px;background:rgba(0,0,0,.1)}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;border:0;background:rgba(255,255,255,.4);cursor:pointer;transition:all .2s}
+    .carousel-dot.active{background:#fff;width:20px;border-radius:4px}
+    
+    /* Hours in carousel */
+    .hours-grid{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .hours-row{display:flex;justify-content:space-between;align-items:center}
+    .hours-label{font-size:12px;font-weight:600;opacity:.8}
+    .hours-value{font-size:12px;font-weight:700}
+    .hours-value.warn{color:#fbbf24}
+    .hours-row.festive .hours-label,.hours-row.festive .hours-value{color:#fca5a5}
+    
+    /* Support info in carousel */
+    .support-info{text-align:left}
+    .support-info p{font-size:12px;opacity:.9;margin:4px 0}
+    .support-time{font-size:11px;opacity:.8}
+    
+    /* Balance Card Animado */
+    @keyframes balancePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+    .balance-card{position:relative;margin:0 16px 20px;background:linear-gradient(135deg,#1e3a5f,#0d2137);border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(8,119,255,.25);animation:balancePulse 3s ease-in-out infinite}
+    .balance-bg{position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(8,119,255,.3),transparent 70%);border-radius:50%;animation:balanceGlow 2s ease-in-out infinite alternate}
+    @keyframes balanceGlow{0%{opacity:.5;transform:scale(1)}100%{opacity:1;transform:scale(1.1)}}
     .balance-content{position:relative;padding:24px;color:#fff}
     .balance-label{font-size:12px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:1px}
-    .balance-amount{font-size:36px;font-weight:900;margin:8px 0 16px;letter-spacing:-1px}
+    .balance-amount{font-size:36px;font-weight:900;margin:8px 0 16px;letter-spacing:-1px;text-shadow:0 2px 10px rgba(8,119,255,.5)}
     .balance-actions{display:flex;gap:10px}
     .balance-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#fff;color:#1e3a5f;border-radius:12px;font-weight:700;font-size:13px;border:0;cursor:pointer;transition:all .2s}
     .balance-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,255,255,.2)}
@@ -676,6 +712,7 @@
     /* Section Title */
     .section-title{display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin:0 0 12px;font-size:15px;font-weight:800;color:var(--text)}
     .section-badge{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+    .section-badge.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
     
     /* Quick Grid */
     .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px;margin-bottom:24px}
@@ -692,8 +729,9 @@
     
     /* Expiring List */
     .expiring-list{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;overflow:hidden}
-    .expiring-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .expiring-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:all .2s}
     .expiring-item:last-child{border-bottom:none}
+    .expiring-item:hover{background:rgba(8,119,255,.03)}
     .expiring-logo{flex-shrink:0}
     .expiring-info{flex:1;min-width:0}
     .expiring-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -703,8 +741,6 @@
     .expiring-badge.warning{background:rgba(245,158,11,.1);color:#f59e0b}
     .expiring-badge.critical{background:rgba(239,68,68,.1);color:#ef4444}
     .expiring-badge.expired{background:rgba(239,68,68,.15);color:#dc2626}
-    .expiring-more{display:block;text-align:center;padding:12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;border-top:1px solid var(--line)}
-    .expiring-more:hover{background:rgba(8,119,255,.05)}
     
     /* Purchases List */
     .purchases-list{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;overflow:hidden}
@@ -717,21 +753,16 @@
     .purchase-date{font-size:11px;color:var(--muted);margin-top:2px}
     .purchase-price{font-size:14px;font-weight:800;color:var(--blue)}
     
-    /* Hours Card */
-    .hours-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px;padding:16px}
-    .hours-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-    .hours-list{display:flex;flex-direction:column;gap:8px}
-    .hours-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
-    .hours-day{font-size:12px;font-weight:600;color:var(--text)}
-    .hours-time{font-size:12px;color:var(--muted)}
-    .hours-item.festive .hours-time{color:#ef4444;font-weight:700}
-    
-    /* Status badges legacy */
-    .days-ok,.days-mid,.days-warn,.days-expired{padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
-    .days-ok{background:rgba(16,185,129,.1);color:#10b981}
-    .days-mid{background:rgba(245,158,11,.1);color:#f59e0b}
-    .days-warn{background:rgba(249,115,22,.1);color:#f97316}
-    .days-expired{background:rgba(239,68,68,.1);color:#ef4444}
+    /* Support Card */
+    .support-card{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(91,33,182,.05));border:1px solid rgba(124,58,237,.2);border-radius:16px;margin:0 16px 20px;overflow:hidden}
+    .support-card-header{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-weight:700;font-size:14px}
+    .support-icon{font-size:20px}
+    .support-card-body{padding:16px}
+    .support-card-body p{font-size:13px;color:var(--text);margin:0 0 12px}
+    .support-list{list-style:none;padding:0;margin:0 0 12px}
+    .support-list li{font-size:12px;color:var(--text);padding:8px 0;border-bottom:1px solid rgba(124,58,237,.1)}
+    .support-list li:last-child{border-bottom:none}
+    .support-card-body .support-time{font-size:12px;color:var(--muted);margin-bottom:12px}
     
     /* Oscuro home */
     body.dark .greeting-name{color:var(--text)}
@@ -748,9 +779,8 @@
     body.dark .quick-card:hover{border-color:var(--blue)}
     body.dark .expiring-list,.dark .purchases-list{background:rgba(13,29,49,.8);border-color:#1e3652}
     body.dark .expiring-name,.dark .purchase-name{color:var(--text)}
-    body.dark .expiring-more{border-color:#1e3652;color:#60a5fa}
-    body.dark .hours-card{background:rgba(13,29,49,.8);border-color:#1e3652}
-    body.dark .hours-title,.dark .hours-day{color:var(--text)}
+    body.dark .support-card{background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,33,182,.1));border-color:rgba(124,58,237,.3)}
+    body.dark .support-card-body p,.dark .support-list li{color:var(--text)}
     .premium-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 20px 60px rgba(0,0,0,.4)}
     .premium-card:hover::before{opacity:.25}
 
@@ -2109,16 +2139,16 @@
       const activeOrdersCount = activeOrders().length;
       const totalSpent = state.orders.reduce((s,o) => s + Number(o.amount || 0), 0);
       const pendingReports = (state.reports || []).filter(r => r.status === "En proceso").length;
+      const totalReports = (state.reports || []).length;
       
-      const serviceColors = {netflix:"#E50914",spotify:"#1DB954",max:"#000",prime:"#00A8E1",disney:"#0E1A40",youtube:"#FF0000",other:"#7c3aed"};
       const serviceLogos = {
-        netflix:`<div style="width:36px;height:36px;background:#E50914;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">N</div>`,
-        spotify:`<div style="width:36px;height:36px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
-        max:`<div style="width:48px;height:28px;background:#000;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;letter-spacing:2px">max</div>`,
-        prime:`<div style="width:48px;height:32px;background:#00A8E1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;letter-spacing:1px">prime</div>`,
-        disney:`<div style="width:36px;height:28px;background:#0E1A40;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">D+</div>`,
-        youtube:`<div style="width:36px;height:36px;background:#FF0000;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>`,
-        other:`<div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">?</div>`
+        netflix:`<div style="width:32px;height:32px;background:#E50914;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0">N</div>`,
+        spotify:`<div style="width:32px;height:32px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
+        max:`<div style="width:40px;height:24px;background:#000;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;flex-shrink:0">max</div>`,
+        prime:`<div style="width:40px;height:26px;background:#00A8E1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;letter-spacing:1px;flex-shrink:0">prime</div>`,
+        disney:`<div style="width:32px;height:24px;background:#0E1A40;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">D+</div>`,
+        youtube:`<div style="width:32px;height:32px;background:#FF0000;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>`,
+        other:`<div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">?</div>`
       };
 
       return `
@@ -2135,12 +2165,63 @@
           </div>
         </div>
 
+        <!-- CAROUSEL INFO -->
+        <div class="carousel" id="homeCarousel">
+          <div class="carousel-track" id="carouselTrack">
+            <div class="carousel-slide hours-slide">
+              <div class="slide-icon">📅</div>
+              <div class="slide-content">
+                <h3>Horarios de Atencion</h3>
+                <div class="hours-grid">
+                  <div class="hours-row">
+                    <span class="hours-label">Lun - Vie</span>
+                    <span class="hours-value">08:00 AM - 08:00 PM</span>
+                  </div>
+                  <div class="hours-row">
+                    <span class="hours-label">Sab - Dom</span>
+                    <span class="hours-value">08:00 AM - 04:00 PM</span>
+                  </div>
+                  <div class="hours-row festive">
+                    <span class="hours-label">Festivos</span>
+                    <span class="hours-value warn">Cerrado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-slide support-slide">
+              <div class="slide-icon">💬</div>
+              <div class="slide-content">
+                <h3>Soporte y Reportes</h3>
+                <div class="support-info">
+                  <p>¿Tienes problemas con tus compras o pagos?</p>
+                  <p class="support-time">⏱️ Tiempo de respuesta: 1-24 horas</p>
+                  <button class="slide-btn" onclick="setView('reports')">Ir a Soporte</button>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-slide welcome-slide">
+              <div class="slide-icon">🎬</div>
+              <div class="slide-content">
+                <h3>Bienvenido a Distrito Streaming</h3>
+                <p>Compra, vende y gestiona tus pantallas de streaming de forma facil y segura.</p>
+              </div>
+            </div>
+          </div>
+          <button class="carousel-arrow prev" onclick="moveCarousel(-1)">&#8249;</button>
+          <button class="carousel-arrow next" onclick="moveCarousel(1)">&#8250;</button>
+          <div class="carousel-nav">
+            <button class="carousel-dot active" onclick="goToSlide(0)"></button>
+            <button class="carousel-dot" onclick="goToSlide(1)"></button>
+            <button class="carousel-dot" onclick="goToSlide(2)"></button>
+          </div>
+        </div>
+
         <!-- SALDO PRINCIPAL -->
         <div class="balance-card">
           <div class="balance-bg"></div>
           <div class="balance-content">
             <div class="balance-label">Saldo disponible</div>
-            <div class="balance-amount">${money(state.user?.balance || 0)}</div>
+            <div class="balance-amount" id="balanceAmount">${money(state.user?.balance || 0)}</div>
             <div class="balance-actions">
               <button class="balance-btn" onclick="openTopup()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -2165,11 +2246,11 @@
             <div class="stat-value">${money(totalSpent)}</div>
             <div class="stat-label">Total invertido</div>
           </div>
-          ${pendingReports > 0 ? `<div class="stat-divider"></div>
+          <div class="stat-divider"></div>
           <div class="stat-item">
-            <div class="stat-value stat-alert">${pendingReports}</div>
-            <div class="stat-label">Reportes</div>
-          </div>` : ""}
+            <div class="stat-value ${pendingReports > 0 ? 'stat-alert' : ''}">${pendingReports}</div>
+            <div class="stat-label">Reportes abiertos</div>
+          </div>
         </div>
 
         <!-- QUICK ACTIONS -->
@@ -2205,17 +2286,17 @@
         <!-- CUENTAS POR VENCER -->
         <div class="section-title">
           <span>Cuentas por vencer</span>
-          <span class="section-badge">${expiring.length}</span>
+          <span class="section-badge danger">${expiring.length}</span>
         </div>
         <div class="expiring-list">
-          ${expiring.slice(0, 3).map(o => {
+          ${expiring.map(o => {
             const left = daysLeft(o.expires_at);
             const cls = serviceClass(o.product_name);
             const logo = serviceLogos[cls] || serviceLogos.other;
             const expiresLabel = left < 0 ? `Vencio hace ${Math.abs(left)}d` : left === 0 ? "Vence hoy" : `${left}d restantes`;
             const expiresClass = left < 0 ? "expired" : left <= 3 ? "critical" : left <= 7 ? "warning" : "ok";
             return `
-            <div class="expiring-item">
+            <div class="expiring-item" onclick="setView('orders')">
               <div class="expiring-logo">${logo}</div>
               <div class="expiring-info">
                 <div class="expiring-name">${o.product_name || "Producto"}</div>
@@ -2224,7 +2305,6 @@
               <div class="expiring-badge ${expiresClass}">${expiresLabel}</div>
             </div>`;
           }).join("")}
-          ${expiring.length > 3 ? `<div class="expiring-more" onclick="setView('orders')">Ver todas (${expiring.length}) →</div>` : ""}
         </div>
         ` : ""}
 
@@ -2238,7 +2318,7 @@
             const cls = serviceClass(o.product_name);
             const logo = serviceLogos[cls] || serviceLogos.other;
             return `
-            <div class="purchase-item" onclick="openPurchaseDetail('${o.id}')">
+            <div class="purchase-item" onclick="setView('orders')">
               <div class="purchase-logo">${logo}</div>
               <div class="purchase-info">
                 <div class="purchase-name">${o.product_name || "Producto"}</div>
@@ -2250,22 +2330,21 @@
         </div>
         ` : ""}
 
-        <!-- HORARIOS -->
-        <div class="hours-card">
-          <div class="hours-title">📅 Horarios de atencion</div>
-          <div class="hours-list">
-            <div class="hours-item">
-              <span class="hours-day">Lun - Vie</span>
-              <span class="hours-time">08:00 AM - 08:00 PM</span>
-            </div>
-            <div class="hours-item">
-              <span class="hours-day">Sab - Dom</span>
-              <span class="hours-time">08:00 AM - 04:00 PM</span>
-            </div>
-            <div class="hours-item festive">
-              <span class="hours-day">Festivos</span>
-              <span class="hours-time">Cerrado</span>
-            </div>
+        <!-- INFO SOPORTE -->
+        <div class="support-card">
+          <div class="support-card-header">
+            <span class="support-icon">💬</span>
+            <span>Centro de Soporte</span>
+          </div>
+          <div class="support-card-body">
+            <p>¿Necesitas ayuda? Reporta problemas con:</p>
+            <ul class="support-list">
+              <li>💰 <strong>Pagos:</strong> Recargas no reflejadas, montos incorrectos</li>
+              <li>🛒 <strong>Compras:</strong> Cuentas con problemas, datos incorrectos</li>
+              <li>❓ <strong>Otros:</strong> Cualquier otra incidencia</li>
+            </ul>
+            <p class="support-time">⏱️ Tiempo promedio de respuesta: 1-24 horas</p>
+            <button class="slide-btn full" onclick="setView('reports')">Ver todos mis reportes (${totalReports})</button>
           </div>
         </div>
       </div>`;
