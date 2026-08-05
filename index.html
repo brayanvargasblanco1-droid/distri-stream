@@ -638,6 +638,65 @@
     .premium-card{position:relative;border-radius:20px;padding:24px 16px 20px;text-align:center;overflow:hidden;cursor:pointer;transition:all .3s cubic-bezier(.2,.8,.2,1);border:1px solid rgba(255,255,255,.08);min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
     .premium-card::before{content:"";position:absolute;inset:0;opacity:.15;transition:opacity .3s}
     .premium-card::after{content:"";position:absolute;top:50%;left:50%;width:200px;height:200px;transform:translate(-50%,-50%);border-radius:50%;opacity:.08;animation:premiumPulse 3s ease-in-out infinite}
+    
+    /* ─── HOME / INICIO PREMIUM ─── */
+    .home-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+    .home-header h1{font-size:22px;font-weight:800;margin:0;color:var(--text)}
+    .home-header-sub{font-size:13px;color:var(--muted);margin-top:4px}
+    .home-date{background:linear-gradient(135deg,var(--blue),#0066dd);color:#fff;padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700}
+    
+    /* Carousel moderno */
+    .carousel{position:relative;border-radius:16px;overflow:hidden;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+    .carousel-track{display:flex;transition:transform .4s ease}
+    .carousel-slide{padding:24px 20px;min-width:100%;background:linear-gradient(135deg,#1a1035,#2d1b69)}
+    .carousel-slide h3{font-size:18px;font-weight:800;margin:0 0 12px;color:#fff}
+    .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:20px;cursor:pointer;transition:all .2s;z-index:2}
+    .carousel-arrow:hover{background:rgba(255,255,255,.3)}
+    .carousel-arrow.prev{left:10px}
+    .carousel-arrow.next{right:10px}
+    .carousel-nav{display:flex;justify-content:center;gap:8px;padding:12px}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;border:0;background:rgba(0,0,0,.2);cursor:pointer;transition:all .2s}
+    .carousel-dot.active{background:var(--blue);width:24px;border-radius:4px}
+    
+    /* Saldo card premium */
+    .saldo-card{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0877ff,#0057dc);border-radius:16px;padding:20px;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(8,119,255,.3)}
+    .saldo-info{flex:1}
+    .saldo-label{font-size:12px;font-weight:600;opacity:.9}
+    .saldo-sub{font-size:10px;opacity:.7;margin-top:2px}
+    .saldo-amount{font-size:28px;font-weight:900;margin-top:4px}
+    .saldo-icon{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center}
+    .saldo-icon svg{width:24px;height:24px;stroke:#fff}
+    
+    /* Quick actions */
+    .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+    .quick-action{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:all .2s;text-decoration:none}
+    .quick-action:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08);border-color:var(--blue)}
+    .quick-action-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center}
+    .quick-action-icon.blue{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb}
+    .quick-action-icon.green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a}
+    .quick-action-icon.purple{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#9333ea}
+    .quick-action-icon svg{width:20px;height:20px;stroke:currentColor}
+    .quick-action-label{font-size:11px;font-weight:700;color:var(--text);text-align:center}
+    
+    /* Expiring card moderno */
+    .expiring-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+    .expiring-card .card-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)}
+    .expiring-card .card-header h2{font-size:15px;font-weight:800;margin:0}
+    .expiring-card .card-header p{font-size:12px;color:var(--muted);margin:4px 0 0}
+    
+    /* Status badges */
+    .days-ok{background:rgba(16,185,129,.1);color:#10b981;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    .days-mid{background:rgba(245,158,11,.1);color:#f59e0b;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    .days-warn{background:rgba(249,115,22,.1);color:#f97316;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    .days-expired{background:rgba(239,68,68,.1);color:#ef4444;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    
+    /* Oscuro home */
+    body.dark .home-header h1{color:var(--text)}
+    body.dark .carousel{box-shadow:0 4px 16px rgba(0,0,0,.3)}
+    body.dark .quick-action{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .quick-action:hover{border-color:var(--blue)}
+    body.dark .expiring-card{background:var(--panel);border-color:#1e3652}
+    body.dark .expiring-card .card-header{border-color:#1e3652}
     .premium-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 20px 60px rgba(0,0,0,.4)}
     .premium-card:hover::before{opacity:.25}
 
@@ -741,6 +800,27 @@
       .btn{padding:10px 16px;font-size:13px;border-radius:10px}
       .order-btn{padding:10px 14px;font-size:12px}
       .primary{padding:12px 20px;font-size:14px}
+      .premium-metrics{grid-template-columns:repeat(2,1fr);gap:10px}
+      .premium-card{min-height:120px;padding:16px 10px}
+      .premium-orb-wrap{width:48px;height:48px}
+      .premium-num{font-size:20px}
+      .premium-label{font-size:9px}
+      .home-header{padding:12px 0}
+      .home-header h1{font-size:18px}
+      .carousel-slide{padding:16px}
+      .carousel-slide h3{font-size:15px}
+      .carousel-arrow{width:30px;height:30px;font-size:16px}
+      .saldo-card{padding:16px;border-radius:14px}
+      .saldo-amount{font-size:22px}
+      .quick-actions{grid-template-columns:repeat(3,1fr);gap:8px}
+      .quick-action{padding:12px 6px}
+      .quick-action-icon{width:36px;height:36px}
+      .quick-action-label{font-size:10px}
+      .expiring-card{border-radius:14px}
+      .expiring-card .card-header{padding:12px}
+      .expiring-card .card-header h2{font-size:14px}
+      .expiring-table{font-size:11px}
+      .expiring-table th,.expiring-table td{padding:8px 10px}
     }
     
     /* Móvil: Modales */
@@ -3911,7 +3991,7 @@
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
-    async function deleteReport(id){try{showLoading("Cerrando...");await api("reports?id="+id,{method:"DELETE"});toast("Reporte cerrado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function deleteReport(id){try{showLoading("Eliminando...");await api("reports",{method:"DELETE",body:JSON.stringify({id})});toast("Reporte eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
     async function resolveReport(id,status){try{showLoading("Actualizando...");await api("reports",{method:"PATCH",body:JSON.stringify({id,status})});toast("Reporte actualizado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
     function exportReportsCsv(){
       const rows=state.reports.map(r=>[r.code,r.product_name,r.reason,r.status,r.description,r.provider_response].map(csvCell).join(";")).join("\n");
@@ -4181,7 +4261,7 @@
       }
       box.className="copy-box";
     }
-    async function deleteAd(id){try{showLoading("Eliminando...");await api("ads?id="+id,{method:"DELETE"});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function deleteAd(id){try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
 
     function editAd(id){
       const a=state.ads.find(x=>x.id===id);
