@@ -640,63 +640,117 @@
     .premium-card::after{content:"";position:absolute;top:50%;left:50%;width:200px;height:200px;transform:translate(-50%,-50%);border-radius:50%;opacity:.08;animation:premiumPulse 3s ease-in-out infinite}
     
     /* ─── HOME / INICIO PREMIUM ─── */
-    .home-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-    .home-header h1{font-size:22px;font-weight:800;margin:0;color:var(--text)}
-    .home-header-sub{font-size:13px;color:var(--muted);margin-top:4px}
-    .home-date{background:linear-gradient(135deg,var(--blue),#0066dd);color:#fff;padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700}
+    .home-container{padding:0 0 100px;max-width:600px;margin:0 auto}
     
-    /* Carousel moderno */
-    .carousel{position:relative;border-radius:16px;overflow:hidden;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
-    .carousel-track{display:flex;transition:transform .4s ease}
-    .carousel-slide{padding:24px 20px;min-width:100%;background:linear-gradient(135deg,#1a1035,#2d1b69)}
-    .carousel-slide h3{font-size:18px;font-weight:800;margin:0 0 12px;color:#fff}
-    .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:20px;cursor:pointer;transition:all .2s;z-index:2}
-    .carousel-arrow:hover{background:rgba(255,255,255,.3)}
-    .carousel-arrow.prev{left:10px}
-    .carousel-arrow.next{right:10px}
-    .carousel-nav{display:flex;justify-content:center;gap:8px;padding:12px}
-    .carousel-dot{width:8px;height:8px;border-radius:50%;border:0;background:rgba(0,0,0,.2);cursor:pointer;transition:all .2s}
-    .carousel-dot.active{background:var(--blue);width:24px;border-radius:4px}
+    /* Greeting */
+    .home-greeting{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 16px 16px}
+    .greeting-text{}
+    .greeting-hi{font-size:13px;color:var(--muted);font-weight:500}
+    .greeting-name{font-size:24px;font-weight:800;margin:4px 0 0;color:var(--text)}
+    .greeting-date{background:linear-gradient(135deg,#0877ff,#0057dc);border-radius:14px;padding:12px 16px;text-align:center;color:#fff}
+    .date-day{font-size:24px;font-weight:900;display:block;line-height:1}
+    .date-month{font-size:11px;font-weight:600;text-transform:uppercase;opacity:.9}
     
-    /* Saldo card premium */
-    .saldo-card{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0877ff,#0057dc);border-radius:16px;padding:20px;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(8,119,255,.3)}
-    .saldo-info{flex:1}
-    .saldo-label{font-size:12px;font-weight:600;opacity:.9}
-    .saldo-sub{font-size:10px;opacity:.7;margin-top:2px}
-    .saldo-amount{font-size:28px;font-weight:900;margin-top:4px}
-    .saldo-icon{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center}
-    .saldo-icon svg{width:24px;height:24px;stroke:#fff}
+    /* Balance Card */
+    .balance-card{position:relative;margin:0 16px 20px;background:linear-gradient(135deg,#1e3a5f,#0d2137);border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(8,119,255,.25)}
+    .balance-bg{position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(8,119,255,.3),transparent 70%);border-radius:50%}
+    .balance-content{position:relative;padding:24px;color:#fff}
+    .balance-label{font-size:12px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:1px}
+    .balance-amount{font-size:36px;font-weight:900;margin:8px 0 16px;letter-spacing:-1px}
+    .balance-actions{display:flex;gap:10px}
+    .balance-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#fff;color:#1e3a5f;border-radius:12px;font-weight:700;font-size:13px;border:0;cursor:pointer;transition:all .2s}
+    .balance-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,255,255,.2)}
+    .balance-btn svg{width:18px;height:18px}
+    .balance-btn-outline{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:rgba(255,255,255,.1);color:#fff;border-radius:12px;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.2);cursor:pointer;transition:all .2s}
+    .balance-btn-outline:hover{background:rgba(255,255,255,.2)}
+    .balance-btn-outline svg{width:18px;height:18px}
     
-    /* Quick actions */
-    .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-    .quick-action{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:all .2s;text-decoration:none}
-    .quick-action:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08);border-color:var(--blue)}
-    .quick-action-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center}
-    .quick-action-icon.blue{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb}
-    .quick-action-icon.green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a}
-    .quick-action-icon.purple{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#9333ea}
-    .quick-action-icon svg{width:20px;height:20px;stroke:currentColor}
-    .quick-action-label{font-size:11px;font-weight:700;color:var(--text);text-align:center}
+    /* Stats Row */
+    .stats-row{display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;padding:16px}
+    .stat-item{flex:1;text-align:center}
+    .stat-value{font-size:20px;font-weight:900;color:var(--text)}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+    .stat-divider{width:1px;height:40px;background:var(--line)}
+    .stat-alert{color:#ef4444}
     
-    /* Expiring card moderno */
-    .expiring-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-    .expiring-card .card-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)}
-    .expiring-card .card-header h2{font-size:15px;font-weight:800;margin:0}
-    .expiring-card .card-header p{font-size:12px;color:var(--muted);margin:4px 0 0}
+    /* Section Title */
+    .section-title{display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin:0 0 12px;font-size:15px;font-weight:800;color:var(--text)}
+    .section-badge{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
     
-    /* Status badges */
-    .days-ok{background:rgba(16,185,129,.1);color:#10b981;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
-    .days-mid{background:rgba(245,158,11,.1);color:#f59e0b;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
-    .days-warn{background:rgba(249,115,22,.1);color:#f97316;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
-    .days-expired{background:rgba(239,68,68,.1);color:#ef4444;padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    /* Quick Grid */
+    .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px;margin-bottom:24px}
+    .quick-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:all .2s}
+    .quick-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.08);border-color:var(--blue)}
+    .quick-card:active{transform:scale(.97)}
+    .quick-card span{font-size:11px;font-weight:700;color:var(--text);text-align:center}
+    .quick-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center}
+    .quick-icon svg{width:20px;height:20px;stroke:currentColor;fill:none}
+    .quick-icon.blue{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb}
+    .quick-icon.green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#16a34a}
+    .quick-icon.purple{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#9333ea}
+    .quick-icon.orange{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#ea580c}
+    
+    /* Expiring List */
+    .expiring-list{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;overflow:hidden}
+    .expiring-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .expiring-item:last-child{border-bottom:none}
+    .expiring-logo{flex-shrink:0}
+    .expiring-info{flex:1;min-width:0}
+    .expiring-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .expiring-date{font-size:11px;color:var(--muted);margin-top:2px}
+    .expiring-badge{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+    .expiring-badge.ok{background:rgba(16,185,129,.1);color:#10b981}
+    .expiring-badge.warning{background:rgba(245,158,11,.1);color:#f59e0b}
+    .expiring-badge.critical{background:rgba(239,68,68,.1);color:#ef4444}
+    .expiring-badge.expired{background:rgba(239,68,68,.15);color:#dc2626}
+    .expiring-more{display:block;text-align:center;padding:12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;border-top:1px solid var(--line)}
+    .expiring-more:hover{background:rgba(8,119,255,.05)}
+    
+    /* Purchases List */
+    .purchases-list{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;overflow:hidden}
+    .purchase-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+    .purchase-item:last-child{border-bottom:none}
+    .purchase-item:hover{background:rgba(8,119,255,.03)}
+    .purchase-logo{flex-shrink:0}
+    .purchase-info{flex:1;min-width:0}
+    .purchase-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .purchase-date{font-size:11px;color:var(--muted);margin-top:2px}
+    .purchase-price{font-size:14px;font-weight:800;color:var(--blue)}
+    
+    /* Hours Card */
+    .hours-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px;padding:16px}
+    .hours-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .hours-list{display:flex;flex-direction:column;gap:8px}
+    .hours-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+    .hours-day{font-size:12px;font-weight:600;color:var(--text)}
+    .hours-time{font-size:12px;color:var(--muted)}
+    .hours-item.festive .hours-time{color:#ef4444;font-weight:700}
+    
+    /* Status badges legacy */
+    .days-ok,.days-mid,.days-warn,.days-expired{padding:4px 10px;border-radius:8px;font-weight:700;font-size:11px}
+    .days-ok{background:rgba(16,185,129,.1);color:#10b981}
+    .days-mid{background:rgba(245,158,11,.1);color:#f59e0b}
+    .days-warn{background:rgba(249,115,22,.1);color:#f97316}
+    .days-expired{background:rgba(239,68,68,.1);color:#ef4444}
     
     /* Oscuro home */
-    body.dark .home-header h1{color:var(--text)}
-    body.dark .carousel{box-shadow:0 4px 16px rgba(0,0,0,.3)}
-    body.dark .quick-action{background:rgba(13,29,49,.8);border-color:#1e3652}
-    body.dark .quick-action:hover{border-color:var(--blue)}
-    body.dark .expiring-card{background:var(--panel);border-color:#1e3652}
-    body.dark .expiring-card .card-header{border-color:#1e3652}
+    body.dark .greeting-name{color:var(--text)}
+    body.dark .balance-card{background:linear-gradient(135deg,#1e3a5f,#0a1628)}
+    body.dark .balance-bg{background:radial-gradient(circle,rgba(8,119,255,.4),transparent 70%)}
+    body.dark .balance-btn{background:#fff;color:#0d2137}
+    body.dark .balance-btn-outline{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
+    body.dark .stats-row{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .stat-value{color:var(--text)}
+    body.dark .stat-divider{background:#1e3652}
+    body.dark .section-title{color:var(--text)}
+    body.dark .quick-card{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .quick-card span{color:var(--text)}
+    body.dark .quick-card:hover{border-color:var(--blue)}
+    body.dark .expiring-list,.dark .purchases-list{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .expiring-name,.dark .purchase-name{color:var(--text)}
+    body.dark .expiring-more{border-color:#1e3652;color:#60a5fa}
+    body.dark .hours-card{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .hours-title,.dark .hours-day{color:var(--text)}
     .premium-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 20px 60px rgba(0,0,0,.4)}
     .premium-card:hover::before{opacity:.25}
 
@@ -2036,6 +2090,11 @@
 
     // ─── HOME ──────────────────────────────────────────
     function home(){
+      const u = state.user || {};
+      const firstName = u.name ? u.name.split(" ")[0] : "Usuario";
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? "Buenos dias" : hour < 18 ? "Buenas tardes" : "Buenas noches";
+      
       const expiring = activeOrders().filter(o => {
         const left = daysLeft(o.expires_at);
         return left !== null && left >= -7 && left <= 14;
@@ -2045,110 +2104,168 @@
         const da = a.created_at || a.expires_at || "";
         const db = b.created_at || b.expires_at || "";
         return db.localeCompare(da);
-      }).slice(0, 5);
+      }).slice(0, 4);
 
-      const serviceColors = {netflix:"#E50914",spotify:"#1DB954",max:"#000",prime:"#00A8E1",disney:"#0E1A40",youtube:"#FF0000",other:"#0877ff"};
-      const serviceIcons = {netflix:"N",spotify:"♫",max:"M",prime:"PV",disney:"D+",youtube:"▶",other:"?"};
+      const activeOrdersCount = activeOrders().length;
+      const totalSpent = state.orders.reduce((s,o) => s + Number(o.amount || 0), 0);
+      const pendingReports = (state.reports || []).filter(r => r.status === "En proceso").length;
+      
+      const serviceColors = {netflix:"#E50914",spotify:"#1DB954",max:"#000",prime:"#00A8E1",disney:"#0E1A40",youtube:"#FF0000",other:"#7c3aed"};
+      const serviceLogos = {
+        netflix:`<div style="width:36px;height:36px;background:#E50914;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">N</div>`,
+        spotify:`<div style="width:36px;height:36px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
+        max:`<div style="width:48px;height:28px;background:#000;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;letter-spacing:2px">max</div>`,
+        prime:`<div style="width:48px;height:32px;background:#00A8E1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;letter-spacing:1px">prime</div>`,
+        disney:`<div style="width:36px;height:28px;background:#0E1A40;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">D+</div>`,
+        youtube:`<div style="width:36px;height:36px;background:#FF0000;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>`,
+        other:`<div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">?</div>`
+      };
 
-      return `<div class="dash-grid">
-        <div class="dash-main">
-          <!-- CAROUSEL -->
-          <div class="carousel" id="homeCarousel">
-            <div class="carousel-track" id="carouselTrack">
-              <div class="carousel-slide">
-                <h3>HORARIOS DE<br>ATENCION</h3>
-                <div class="hours">
-                  <div class="day">LUNES - VIERNES</div>
-                  <div class="time">08:00AM - 08:00PM</div>
-                  <div class="day" style="margin-top:6px">SABADOS Y DOMINGOS</div>
-                  <div class="time">08:00AM - 04:00PM</div>
-                  <div class="day" style="margin-top:6px">FESTIVOS</div>
-                  <div class="time" style="color:#f59e0b">NO SE LABORA</div>
-                </div>
-              </div>
-              <div class="carousel-slide" style="background:linear-gradient(135deg,#1a1035,#2d1b69)">
-                <h3>BIENVENIDO A<br>DISTRITO STREAMING</h3>
-                <div class="hours">
-                  <div class="day">PANEL DE CONTROL</div>
-                  <div class="time" style="font-size:14px">Compra, vende y gestiona</div>
-                </div>
-              </div>
-              <div class="carousel-slide" style="background:linear-gradient(135deg,#0f2027,#203a43)">
-                <h3>SOPORTE RAPIDO</h3>
-                <div class="hours">
-                  <div class="day">REPORTA FALLAS</div>
-                  <div class="time" style="font-size:14px">Te respondemos pronto</div>
-                </div>
-              </div>
-            </div>
-            <button class="carousel-arrow prev" onclick="moveCarousel(-1)">&#8249;</button>
-            <button class="carousel-arrow next" onclick="moveCarousel(1)">&#8250;</button>
-            <div class="carousel-nav">
-              <button class="carousel-dot active" onclick="goToSlide(0)"></button>
-              <button class="carousel-dot" onclick="goToSlide(1)"></button>
-              <button class="carousel-dot" onclick="goToSlide(2)"></button>
-            </div>
+      return `
+      <div class="home-container">
+        <!-- HEADER SALUDO -->
+        <div class="home-greeting">
+          <div class="greeting-text">
+            <span class="greeting-hi">${greeting}</span>
+            <h1 class="greeting-name">${firstName} 👋</h1>
           </div>
+          <div class="greeting-date">
+            <span class="date-day">${new Date().toLocaleDateString("es-CO", {day:"2-digit"})}</span>
+            <span class="date-month">${new Date().toLocaleDateString("es-CO", {month:"short"})}</span>
+          </div>
+        </div>
 
-          <!-- CUENTAS PROXIMAS A VENCER -->
-          <div class="expiring-card">
-            <div class="card-header">
-              <h2>Cuentas proximas a vencer</h2>
-              <p>${expiring.length?`${expiring.filter(o=>daysLeft(o.expires_at)>=0).length} por vencer · ${expiring.filter(o=>daysLeft(o.expires_at)<0).length} vencidas`:"No hay cuentas por vencer."}</p>
-            </div>
-            <div style="overflow-x:auto">
-              <table class="expiring-table table-purple">
-                <thead><tr><th>Producto</th><th>Datos de cuenta</th><th>Fecha de compra</th><th>Fecha de vencimiento</th><th>Vence en</th></tr></thead>
-                <tbody>${expiring.length ? expiring.map(o => {
-                  const left = daysLeft(o.expires_at);
-                  const cls = left < 0 ? "days-expired" : left <= 3 ? "days-warn" : left <= 7 ? "days-mid" : "days-ok";
-                  const label = left < 0 ? `Vencida hace ${Math.abs(left)}d` : `${left} dias`;
-                  return `<tr style="${left<0?'opacity:.6':''}">
-                    <td style="font-weight:700">${o.product_name||"-"}</td>
-                    <td class="account-data">${o.delivered_data||"-"}</td>
-                    <td>${o.created_at||"-"}</td>
-                    <td>${o.expires_at||"-"}</td>
-                    <td><span class="${cls}">${label}</span></td>
-                  </tr>`;
-                }).join("") : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No hay cuentas proximas a vencer.</td></tr>`}</tbody>
-              </table>
+        <!-- SALDO PRINCIPAL -->
+        <div class="balance-card">
+          <div class="balance-bg"></div>
+          <div class="balance-content">
+            <div class="balance-label">Saldo disponible</div>
+            <div class="balance-amount">${money(state.user?.balance || 0)}</div>
+            <div class="balance-actions">
+              <button class="balance-btn" onclick="openTopup()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Recargar
+              </button>
+              <button class="balance-btn-outline" onclick="openQrCode()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                QR
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="dash-side">
-          <!-- SALDO ACTUAL -->
-          <div class="saldo-card">
-            <div class="saldo-info">
-              <div class="saldo-label">Saldo Actual</div>
-              <div class="saldo-sub">Mira tu saldo en tiempo real</div>
-              <div class="saldo-amount">${money(state.user?.balance || 0)}</div>
-            </div>
-            <div class="saldo-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
-            </div>
+        <!-- STATS ROW -->
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-value">${activeOrdersCount}</div>
+            <div class="stat-label">Pantallas activas</div>
           </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-value">${money(totalSpent)}</div>
+            <div class="stat-label">Total invertido</div>
+          </div>
+          ${pendingReports > 0 ? `<div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-value stat-alert">${pendingReports}</div>
+            <div class="stat-label">Reportes</div>
+          </div>` : ""}
+        </div>
 
-          <!-- COMPRAS RECIENTES -->
-          <div class="compras-card">
-            <div class="card-header">
-              <h2>Compras Recientes</h2>
-              <p>Ultimas compras realizadas en la plataforma</p>
+        <!-- QUICK ACTIONS -->
+        <div class="section-title">Acciones rapidas</div>
+        <div class="quick-grid">
+          <div class="quick-card" onclick="setView('store')">
+            <div class="quick-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
-            <div>${recentPurchases.length ? recentPurchases.map(o => {
-              const cls = serviceClass(o.product_name);
-              const color = serviceColors[cls] || serviceColors.other;
-              const icon = serviceIcons[cls] || serviceIcons.other;
-              const price = salePrice(o);
-              return `<div class="compra-item">
-                <div class="compra-icon" style="background:${color}">${icon}</div>
-                <div class="compra-info">
-                  <div class="compra-name">${o.product_name||"-"}</div>
-                  <div class="compra-price">${money(o.amount||price)}</div>
-                  <div class="compra-date">${o.expires_at||"-"}</div>
-                </div>
-              </div>`;
-            }).join("") : `<div style="padding:24px;text-align:center;color:var(--muted)">Sin compras recientes.</div>`}</div>
+            <span>Tienda</span>
+          </div>
+          <div class="quick-card" onclick="setView('orders')">
+            <div class="quick-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span>Compras</span>
+          </div>
+          <div class="quick-card" onclick="setView('history')">
+            <div class="quick-icon purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></svg>
+            </div>
+            <span>Movimientos</span>
+          </div>
+          <div class="quick-card" onclick="setView('reports')">
+            <div class="quick-icon orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <span>Soporte</span>
+          </div>
+        </div>
+
+        ${expiring.length > 0 ? `
+        <!-- CUENTAS POR VENCER -->
+        <div class="section-title">
+          <span>Cuentas por vencer</span>
+          <span class="section-badge">${expiring.length}</span>
+        </div>
+        <div class="expiring-list">
+          ${expiring.slice(0, 3).map(o => {
+            const left = daysLeft(o.expires_at);
+            const cls = serviceClass(o.product_name);
+            const logo = serviceLogos[cls] || serviceLogos.other;
+            const expiresLabel = left < 0 ? `Vencio hace ${Math.abs(left)}d` : left === 0 ? "Vence hoy" : `${left}d restantes`;
+            const expiresClass = left < 0 ? "expired" : left <= 3 ? "critical" : left <= 7 ? "warning" : "ok";
+            return `
+            <div class="expiring-item">
+              <div class="expiring-logo">${logo}</div>
+              <div class="expiring-info">
+                <div class="expiring-name">${o.product_name || "Producto"}</div>
+                <div class="expiring-date">Vence: ${o.expires_at || "-"}</div>
+              </div>
+              <div class="expiring-badge ${expiresClass}">${expiresLabel}</div>
+            </div>`;
+          }).join("")}
+          ${expiring.length > 3 ? `<div class="expiring-more" onclick="setView('orders')">Ver todas (${expiring.length}) →</div>` : ""}
+        </div>
+        ` : ""}
+
+        ${recentPurchases.length > 0 ? `
+        <!-- COMPRAS RECIENTES -->
+        <div class="section-title">
+          <span>Compras recientes</span>
+        </div>
+        <div class="purchases-list">
+          ${recentPurchases.map(o => {
+            const cls = serviceClass(o.product_name);
+            const logo = serviceLogos[cls] || serviceLogos.other;
+            return `
+            <div class="purchase-item" onclick="openPurchaseDetail('${o.id}')">
+              <div class="purchase-logo">${logo}</div>
+              <div class="purchase-info">
+                <div class="purchase-name">${o.product_name || "Producto"}</div>
+                <div class="purchase-date">${formatDate(o.created_at || o.expires_at)}</div>
+              </div>
+              <div class="purchase-price">${money(o.amount || 0)}</div>
+            </div>`;
+          }).join("")}
+        </div>
+        ` : ""}
+
+        <!-- HORARIOS -->
+        <div class="hours-card">
+          <div class="hours-title">📅 Horarios de atencion</div>
+          <div class="hours-list">
+            <div class="hours-item">
+              <span class="hours-day">Lun - Vie</span>
+              <span class="hours-time">08:00 AM - 08:00 PM</span>
+            </div>
+            <div class="hours-item">
+              <span class="hours-day">Sab - Dom</span>
+              <span class="hours-time">08:00 AM - 04:00 PM</span>
+            </div>
+            <div class="hours-item festive">
+              <span class="hours-day">Festivos</span>
+              <span class="hours-time">Cerrado</span>
+            </div>
           </div>
         </div>
       </div>`;
