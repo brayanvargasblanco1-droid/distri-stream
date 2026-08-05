@@ -6267,7 +6267,7 @@
           await api('topups/' + t.id, {method: 'DELETE'});
         }
         closeModal();
-        toast(count + " recargas eliminadas", "ok");
+        toast(toDelete.length + " recargas eliminadas", "ok");
         await boot();
       } catch(e) {
         toast(e.message, "bad");
