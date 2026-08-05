@@ -2686,45 +2686,177 @@
             <table style="width:100%;border-collapse:collapse;font-size:13px">
               <thead>
                 <tr style="background:var(--soft);border-bottom:1px solid var(--line)">
-                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">ID</th>
-                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Producto</th>
-                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Usuario</th>
-                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Monto</th>
-                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Estado</th>
-                  <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Accion</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Tipo</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Detalles</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Usuario</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Monto</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Estado</th>
+                  <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Fecha</th>
+                  <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Acción</th>
                 </tr>
               </thead>
               <tbody>
-                ${activeOrders().slice(0,5).map(o=>{
-                  const left=daysLeft(o.expires_at);
-                  const cls=serviceClass(o.product_name);
-                  const color={netflix:"#ef1437",prime:"#00b8ff",max:"#0877ff",disney:"#0a74ff",spotify:"#1db954",youtube:"#ff0033",other:"#7aa6c8"}[cls]||"#7aa6c8";
-                  const logo={netflix:`<div style="width:22px;height:22px;background:#E50914;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff">N</div>`,spotify:`<div style="width:22px;height:22px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px">♫</div>`,max:`<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;background:#1a1a2e;border-radius:3px">max</div>`,prime:`<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#00A8E1;border:1px solid #00A8E1;border-radius:3px">PV</div>`,disney:`<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;background:#0a74ff;border-radius:3px">D+</div>`,youtube:`<div style="width:22px;height:22px;background:#FF0000;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff">▶</div>`}[cls]||`<div style="width:22px;height:22px;background:#7AA6C8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff">?</div>`;
-                  const isExpired=left!==null&&left<0;
-                  const isCritical=left!==null&&left>=0&&left<=3;
-                  const isWarning=left!==null&&left>3&&left<=7;
-                  const deliverStatus=o.status||"Entregado";
-                  const isDelivered=deliverStatus.includes("Entregado")||deliverStatus.includes("entregado");
-                  let badgeColor,badgeBg,badgeText;
-                  if(isExpired){badgeColor="#6b21a8";badgeBg="rgba(107,33,168,.1)";badgeText=`Vencida ${Math.abs(left)}d`;}
-                  else if(isCritical){badgeColor="#ef4444";badgeBg="rgba(239,68,68,.1)";badgeText=`Vence ${left}d`;}
-                  else if(isWarning){badgeColor="#d97706";badgeBg="rgba(217,119,6,.1)";badgeText=`Vence ${left}d`;}
-                  else if(isDelivered){badgeColor="#10b981";badgeBg="rgba(16,185,129,.1)";badgeText=`Activa ${left!==null?`· ${left}d`:""}`;}
-                  else{badgeColor="#6b7280";badgeBg="rgba(107,114,128,.1)";badgeText=deliverStatus;}
-                  return `<tr style="border-bottom:1px solid var(--line);transition:background .15s;${isExpired?'background:rgba(107,33,168,.02)':''}" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='${isExpired?'rgba(107,33,168,.02)':''}'">
-                    <td style="padding:12px 16px"><span style="font-family:monospace;font-size:12px;color:var(--muted)">${o.code||"#DS-0000"}</span></td>
-                    <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:10px">${logo}<div><div style="font-weight:700;font-size:13px">${o.product_name||"-"}</div><div style="font-size:11px;color:var(--muted)">${serviceName(o.product_name)}</div></div></div></td>
-                    <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="font-size:12px">${esc(o.client_name||"-")}</span></div></td>
-                    <td style="padding:12px 16px"><span style="font-weight:700;font-size:13px">${money(o.amount||o.total||0)}</span></td>
-                    <td style="padding:12px 16px"><div style="display:flex;flex-direction:column;gap:4px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;color:${badgeColor};background:${badgeBg};width:fit-content"><span style="width:5px;height:5px;border-radius:50%;background:${badgeColor}"></span>${badgeText}</span>${o.expires_at?`<span style="font-size:10px;color:var(--muted)">Exp: ${o.expires_at}</span>`:""}</div></td>
-                    <td style="padding:12px 16px;text-align:center"><button onclick="openAccountModal('${safeOrder(o)}')" title="Ver datos" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text)" onmouseover="this.style.background='var(--soft)';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--panel)';this.style.borderColor='var(--line)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Datos</button></td>
-                  </tr>`;
-                }).join("")||`<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin operaciones</div><div style="font-size:12px">Las compras apareceran aqui</div></td></tr>`}
+                ${renderAdminActivityRows()}
               </tbody>
             </table>
           </div>
         </div>
       </section>`;
+    }
+    
+    // Variables globales para paginación de actividad
+    window.adminActivityTab = window.adminActivityTab || 'all';
+    window.adminActivityPage = window.adminActivityPage || 1;
+    
+    function renderAdminActivityRows(){
+      const tab = window.adminActivityTab || 'all';
+      const page = window.adminActivityPage || 1;
+      const perPage = 20;
+      
+      const activities = [];
+      
+      // Órdenes/Ventas
+      if(tab === 'all' || tab === 'orders'){
+        state.orders.forEach(o => {
+          const user = state.users.find(u => u.id === o.user_id) || {};
+          const left = daysLeft(o.expires_at);
+          const cls = serviceClass(o.product_name);
+          const logos = {netflix:'N',spotify:'♫',max:'M',prime:'PV',disney:'D+',youtube:'▶',other:'?'};
+          activities.push({
+            type: 'venta',
+            id: o.code || o.id,
+            title: o.product_name || 'Producto',
+            subtitle: serviceName(o.product_name),
+            logo: logos[cls] || '?',
+            user: o.client_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente',
+            amount: o.amount || o.total || 0,
+            status: o.status || 'Entregado',
+            date: o.created_at || o.expires_at,
+            daysLeft: left,
+            data: o
+          });
+        });
+      }
+      
+      // Recargas/Topups
+      if(tab === 'all' || tab === 'topups'){
+        state.topups.forEach(t => {
+          const user = state.users.find(u => u.id === t.user_id) || {};
+          activities.push({
+            type: 'recarga',
+            id: t.id,
+            title: 'Recarga ' + (t.method || 'Nequi'),
+            subtitle: t.reference || 'Sin referencia',
+            logo: '💵',
+            user: t.user_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente',
+            amount: t.amount || 0,
+            status: t.status || 'Pendiente',
+            date: t.created_at,
+            data: t
+          });
+        });
+      }
+      
+      // Reportes
+      if(tab === 'all' || tab === 'reports'){
+        state.reports.forEach(r => {
+          const user = state.users.find(u => u.id === r.user_id) || {};
+          activities.push({
+            type: 'reporte',
+            id: r.id,
+            title: r.subject || 'Reporte',
+            subtitle: r.product_name || 'Sin producto',
+            logo: '⚠️',
+            user: r.user_name || user.name || user.email || 'Usuario',
+            userRole: user.role || 'Cliente',
+            amount: 0,
+            status: r.status || 'Abierto',
+            date: r.created_at,
+            data: r
+          });
+        });
+      }
+      
+      // Ordenar por fecha
+      activities.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      
+      const start = (page - 1) * perPage;
+      const paginated = activities.slice(start, start + perPage);
+      
+      if(paginated.length === 0){
+        return '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">📭</div><div style="font-size:14px;font-weight:600">Sin actividades</div></td></tr>';
+      }
+      
+      return paginated.map(a => {
+        const typeBadge = a.type === 'venta' ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(16,185,129,.12);color:#10b981">🛒 Venta</span>' : 
+                         a.type === 'recarga' ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b">💰 Recarga</span>' : 
+                         '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(239,68,68,.12);color:#ef4444">🚨 Reporte</span>';
+        
+        const logoStyle = a.type === 'recarga' ? 'background:linear-gradient(135deg,#f59e0b,#d97706)' : 
+                         a.type === 'reporte' ? 'background:linear-gradient(135deg,#ef4444,#dc2626)' : 
+                         a.logo === 'N' ? 'background:#E50914' :
+                         a.logo === '♫' ? 'background:#1DB954;border-radius:50%' :
+                         'background:#7AA6C8;border-radius:50%';
+        
+        let statusHtml = '';
+        if(a.type === 'venta'){
+          const isExpired = a.daysLeft !== null && a.daysLeft < 0;
+          const isCritical = a.daysLeft !== null && a.daysLeft >= 0 && a.daysLeft <= 3;
+          const isWarning = a.daysLeft !== null && a.daysLeft > 3 && a.daysLeft <= 7;
+          const isDelivered = a.status.includes('Entregado');
+          
+          if(isExpired) statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(107,33,168,.1);color:#6b21a8">⚰️ Vencida</span>';
+          else if(isCritical) statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(239,68,68,.1);color:#ef4444">🔴 Vence ' + a.daysLeft + 'd</span>';
+          else if(isWarning) statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(217,119,6,.1);color:#d97706">🟡 Vence ' + a.daysLeft + 'd</span>';
+          else if(isDelivered) statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(16,185,129,.1);color:#10b981">✅ Activa</span>';
+          else statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:var(--soft);color:var(--muted)">' + a.status + '</span>';
+        } else if(a.type === 'recarga'){
+          if(a.status === 'Aprobada') statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(16,185,129,.1);color:#10b981">✓ Aprobada</span>';
+          else if(a.status === 'Rechazada') statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(239,68,68,.1);color:#ef4444">✗ Rechazada</span>';
+          else statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(245,158,11,.1);color:#f59e0b">⏳ Pendiente</span>';
+        } else {
+          if(a.status === 'Resuelto') statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(16,185,129,.1);color:#10b981">✅ Resuelto</span>';
+          else if(a.status === 'Rechazado') statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(239,68,68,.1);color:#ef4444">❌ Rechazado</span>';
+          else statusHtml = '<span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(239,68,68,.1);color:#ef4444">🚨 ' + a.status + '</span>';
+        }
+        
+        const date = a.date ? new Date(a.date) : new Date();
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        let timeAgo = '';
+        if(diffMins < 1) timeAgo = 'Ahora';
+        else if(diffMins < 60) timeAgo = diffMins + 'min';
+        else if(diffHours < 24) timeAgo = diffHours + 'h';
+        else if(diffDays < 7) timeAgo = diffDays + 'd';
+        else timeAgo = date.toLocaleDateString('es-CO', {day:'2-digit',month:'short'});
+        
+        let actionBtn = '';
+        if(a.type === 'venta'){
+          actionBtn = '<button onclick="openAccountModal(\'' + safeOrder(a.data) + '\')" style="padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;font-size:10px;font-weight:600">Ver</button>';
+        } else if(a.type === 'recarga' && a.status === 'Pendiente'){
+          actionBtn = '<button onclick="confirmApproveTopup(\'' + a.id + '\')" style="padding:5px 10px;border:0;border-radius:6px;background:#10b981;cursor:pointer;font-size:10px;font-weight:600;color:#fff">Aprobar</button>';
+        } else {
+          actionBtn = '<button onclick="setView(\'' + (a.type === 'reporte' ? 'reports' : 'payments') + '\')" style="padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;font-size:10px;font-weight:600">Ver</button>';
+        }
+        
+        const amountColor = a.amount > 0 ? (a.type === 'venta' ? '#ef4444' : '#10b981') : 'var(--muted)';
+        const amountPrefix = a.amount > 0 ? (a.type === 'venta' ? '-' : '+') : '';
+        
+        return '<tr style="border-bottom:1px solid var(--line);transition:background .15s" onmouseover="this.style.background=\'var(--soft)\'" onmouseout="this.style.background=\'\'">' +
+          '<td style="padding:10px 14px">' + typeBadge + '</td>' +
+          '<td style="padding:10px 14px"><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:4px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;' + logoStyle + '">' + a.logo + '</div><div><div style="font-weight:600;font-size:12px">' + esc(a.title) + '</div><div style="font-size:10px;color:var(--muted)">' + esc(a.subtitle) + '</div></div></div></td>' +
+          '<td style="padding:10px 14px"><div style="font-size:12px;font-weight:600">' + esc(a.user) + '</div><div style="font-size:10px;color:var(--muted)">' + a.userRole + '</div></td>' +
+          '<td style="padding:10px 14px"><span style="font-weight:700;font-size:12px;color:' + amountColor + '">' + amountPrefix + money(a.amount) + '</span></td>' +
+          '<td style="padding:10px 14px">' + statusHtml + '</td>' +
+          '<td style="padding:10px 14px"><span style="font-size:11px;color:var(--muted)">' + timeAgo + '</span></td>' +
+          '<td style="padding:10px 14px;text-align:center">' + actionBtn + '</td>' +
+          '</tr>';
+      }).join('');
     }
 
     // ─── CONFIGURACION (SOLO ADMIN) ────────────────────
