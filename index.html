@@ -5732,11 +5732,11 @@
       modalHtml+='<div style="margin-bottom:20px">';
       modalHtml+='<div style="font-size:11px;font-weight:800;color:#888;margin-bottom:8px">ROL</div>';
       modalHtml+='<div style="display:flex;gap:8px">';
-      modalHtml+='<button id="r0" onclick="selRol(0)" style="flex:1;padding:12px;border:2px solid '+(rol==="Cliente"?"#10b981":"#ddd")+';border-radius:10px;background:'+(rol==="Cliente"?"rgba(16,185,129,0.15)":"#fff")+';cursor:pointer">';
+      modalHtml+='<button id="r0" type="button" onclick="selRol(0)" style="flex:1;padding:12px;border:2px solid '+(rol==="Cliente"?"#10b981":"#ddd")+';border-radius:10px;background:'+(rol==="Cliente"?"rgba(16,185,129,0.15)":"#fff")+';cursor:pointer">';
       modalHtml+='<div style="font-size:20px;text-align:center">👤</div><div style="font-size:11px;font-weight:700;color:'+(rol==="Cliente"?"#10b981":"#888")+'">Cliente</div></button>';
-      modalHtml+='<button id="r1" onclick="selRol(1)" style="flex:1;padding:12px;border:2px solid '+(rol==="Revendedor"?"#667eea":"#ddd")+';border-radius:10px;background:'+(rol==="Revendedor"?"rgba(102,126,234,0.15)":"#fff")+';cursor:pointer">';
+      modalHtml+='<button id="r1" type="button" onclick="selRol(1)" style="flex:1;padding:12px;border:2px solid '+(rol==="Revendedor"?"#667eea":"#ddd")+';border-radius:10px;background:'+(rol==="Revendedor"?"rgba(102,126,234,0.15)":"#fff")+';cursor:pointer">';
       modalHtml+='<div style="font-size:20px;text-align:center">👥</div><div style="font-size:11px;font-weight:700;color:'+(rol==="Revendedor"?"#667eea":"#888")+'">Revendedor</div></button>';
-      modalHtml+='<button id="r2" onclick="selRol(2)" style="flex:1;padding:12px;border:2px solid '+(rol==="Administrador"?"#f59e0b":"#ddd")+';border-radius:10px;background:'+(rol==="Administrador"?"rgba(245,158,11,0.15)":"#fff")+';cursor:pointer">';
+      modalHtml+='<button id="r2" type="button" onclick="selRol(2)" style="flex:1;padding:12px;border:2px solid '+(rol==="Administrador"?"#f59e0b":"#ddd")+';border-radius:10px;background:'+(rol==="Administrador"?"rgba(245,158,11,0.15)":"#fff")+';cursor:pointer">';
       modalHtml+='<div style="font-size:20px;text-align:center">🛡️</div><div style="font-size:11px;font-weight:700;color:'+(rol==="Administrador"?"#f59e0b":"#888")+'">Admin</div></button>';
       modalHtml+='</div></div>';
       
@@ -5747,8 +5747,8 @@
       modalHtml+='<span style="background:#16a34a;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">$'+saldo.toLocaleString('es-CO')+'</span>';
       modalHtml+='</div>';
       modalHtml+='<div style="display:flex;gap:8px;align-items:center">';
-      modalHtml+='<button id="sa" onclick="setSaldoOp(1)" style="padding:10px 12px;background:#dcfce7;border:2px solid #16a34a;border-radius:8px;color:#16a34a;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
-      modalHtml+='<button id="sq" onclick="setSaldoOp(-1)" style="padding:10px 12px;background:#fff;border:2px solid #ddd;border-radius:8px;color:#888;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
+      modalHtml+='<button id="sa" type="button" onclick="setSaldoOp(1)" style="padding:10px 12px;background:#dcfce7;border:2px solid #16a34a;border-radius:8px;color:#16a34a;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      modalHtml+='<button id="sq" type="button" onclick="setSaldoOp(-1)" style="padding:10px 12px;background:#fff;border:2px solid #ddd;border-radius:8px;color:#888;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
       modalHtml+='<input id="si" type="number" placeholder="0" oninput="calcSaldo()" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:700;text-align:center">';
       modalHtml+='<span style="font-size:16px;color:#888">=</span>';
       modalHtml+='<span id="sr" style="background:#e0e7ff;padding:8px 12px;border-radius:8px;font-size:14px;font-weight:800;color:#4338ca">$'+saldo.toLocaleString('es-CO')+'</span>';
@@ -5761,8 +5761,8 @@
       modalHtml+='<span style="background:#9333ea;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">'+margen+'%</span>';
       modalHtml+='</div>';
       modalHtml+='<div style="display:flex;gap:8px;align-items:center">';
-      modalHtml+='<button id="ma" onclick="setMargenOp(1)" style="padding:10px 12px;background:#f3e8ff;border:2px solid #9333ea;border-radius:8px;color:#9333ea;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
-      modalHtml+='<button id="mq" onclick="setMargenOp(-1)" style="padding:10px 12px;background:#fff;border:2px solid #ddd;border-radius:8px;color:#888;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
+      modalHtml+='<button id="ma" type="button" onclick="setMargenOp(1)" style="padding:10px 12px;background:#f3e8ff;border:2px solid #9333ea;border-radius:8px;color:#9333ea;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      modalHtml+='<button id="mq" type="button" onclick="setMargenOp(-1)" style="padding:10px 12px;background:#fff;border:2px solid #ddd;border-radius:8px;color:#888;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
       modalHtml+='<input id="mi" type="number" placeholder="0" oninput="calcMargen()" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:700;text-align:center">';
       modalHtml+='<span style="font-size:16px;color:#888">=</span>';
       modalHtml+='<span id="mr" style="background:#f3e8ff;padding:8px 12px;border-radius:8px;font-size:14px;font-weight:800;color:#9333ea">'+margen+'%</span>';
@@ -5772,14 +5772,14 @@
       modalHtml+='<div style="margin-bottom:20px">';
       modalHtml+='<div style="font-size:11px;font-weight:800;color:#888;margin-bottom:8px">ESTADO</div>';
       modalHtml+='<div style="display:flex;gap:8px">';
-      modalHtml+='<button id="e0" onclick="selEstado(0)" style="flex:1;padding:12px;border:2px solid '+(estado==="Activo"?"#10b981":"#ddd")+';border-radius:10px;background:'+(estado==="Activo"?"rgba(16,185,129,0.15)":"#fff")+';cursor:pointer">';
+      modalHtml+='<button id="e0" type="button" onclick="selEstado(0)" style="flex:1;padding:12px;border:2px solid '+(estado==="Activo"?"#10b981":"#ddd")+';border-radius:10px;background:'+(estado==="Activo"?"rgba(16,185,129,0.15)":"#fff")+';cursor:pointer">';
       modalHtml+='<div style="font-size:12px;font-weight:700;color:'+(estado==="Activo"?"#10b981":"#888")+'">✅ Activo</div></button>';
-      modalHtml+='<button id="e1" onclick="selEstado(1)" style="flex:1;padding:12px;border:2px solid '+(estado==="Bloqueado"?"#8b5cf6":"#ddd")+';border-radius:10px;background:'+(estado==="Bloqueado"?"rgba(139,92,246,0.15)":"#fff")+';cursor:pointer">';
+      modalHtml+='<button id="e1" type="button" onclick="selEstado(1)" style="flex:1;padding:12px;border:2px solid '+(estado==="Bloqueado"?"#8b5cf6":"#ddd")+';border-radius:10px;background:'+(estado==="Bloqueado"?"rgba(139,92,246,0.15)":"#fff")+';cursor:pointer">';
       modalHtml+='<div style="font-size:12px;font-weight:700;color:'+(estado==="Bloqueado"?"#8b5cf6":"#888")+'">🔒 Bloqueado</div></button>';
       modalHtml+='</div></div>';
       
       // BOTON GUARDAR
-      modalHtml+='<button onclick="guardarEdicion()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:800;cursor:pointer">💾 GUARDAR CAMBIOS</button>';
+      modalHtml+='<button type="button" onclick="guardarEdicion()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:800;cursor:pointer">💾 GUARDAR CAMBIOS</button>';
       
       modalHtml+='</div>';
       
@@ -5793,12 +5793,10 @@
       modalHtml+='var colsRol=["#10b981","#667eea","#f59e0b"];';
       modalHtml+='var nomsEst=["Activo","Bloqueado"];';
       modalHtml+='var colsEst=["#10b981","#8b5cf6"];';
-      modalHtml+='function selRol(i){rolSel=nomsRol[i];';
-      modalHtml+='for(var j=0;j<3;j++){var b=document.getElementById("r"+j);if(b){if(j===i){b.style.borderColor=colsRol[j];b.style.background=colsRol[j]+"20";b.style.color=colsRol[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.style.color="#888";}}}}';
-      modalHtml+='function selEstado(i){estSel=nomsEst[i];';
-      modalHtml+='for(var j=0;j<2;j++){var b=document.getElementById("e"+j);if(b){if(j===i){b.style.borderColor=colsEst[j];b.style.background=colsEst[j]+"20";b.style.color=colsEst[j];}else{b.style.borderColor="#ddd";b.style.background="#fff";b.style.color="#888";}}}}';
-      modalHtml+='function setSaldoOp(op){salOp=op;var sa=document.getElementById("sa");var sq=document.getElementById("sq");if(sa)sa.style.background=op===1?"#dcfce7":"#fff";if(sq)sq.style.background=op===-1?"#fee2e2":"#fff";calcSaldo();}';
-      modalHtml+='function setMargenOp(op){marOp=op;var ma=document.getElementById("ma");var mq=document.getElementById("mq");if(ma)ma.style.background=op===1?"#f3e8ff":"#fff";if(mq)mq.style.background=op===-1?"#fee2e2":"#fff";calcMargen();}';
+      modalHtml+='function selRol(i){rolSel=nomsRol[i];for(var j=0;j<3;j++){var b=document.getElementById("r"+j);if(b){b.style.borderColor=(j===i)?colsRol[j]:"#ddd";b.style.background=(j===i)?colsRol[j]+"20":"#fff";}}}';
+      modalHtml+='function selEstado(i){estSel=nomsEst[i];for(var j=0;j<2;j++){var b=document.getElementById("e"+j);if(b){b.style.borderColor=(j===i)?colsEst[j]:"#ddd";b.style.background=(j===i)?colsEst[j]+"20":"#fff";}}}';
+      modalHtml+='function setSaldoOp(op){salOp=op;var sa=document.getElementById("sa");var sq=document.getElementById("sq");if(sa){sa.style.background=op===1?"#dcfce7":"#f5f5f5";sa.style.borderColor=op===1?"#16a34a":"#ddd";sa.style.color=op===1?"#16a34a":"#888";}if(sq){sq.style.background=op===-1?"#fee2e2":"#f5f5f5";sq.style.borderColor=op===-1?"#ef4444":"#ddd";sq.style.color=op===-1?"#ef4444":"#888";}calcSaldo();}';
+      modalHtml+='function setMargenOp(op){marOp=op;var ma=document.getElementById("ma");var mq=document.getElementById("mq");if(ma){ma.style.background=op===1?"#f3e8ff":"#f5f5f5";ma.style.borderColor=op===1?"#9333ea":"#ddd";ma.style.color=op===1?"#9333ea":"#888";}if(mq){mq.style.background=op===-1?"#fee2e2":"#f5f5f5";mq.style.borderColor=op===-1?"#ef4444":"#ddd";mq.style.color=op===-1?"#ef4444":"#888";}calcMargen();}';
       modalHtml+='function calcSaldo(){var amt=Number(document.getElementById("si").value)||0;var nuevo=salOp===1?salOrig+amt:salOrig-amt;if(nuevo<0)nuevo=0;document.getElementById("sr").textContent="$"+nuevo.toLocaleString("es-CO");return nuevo;}';
       modalHtml+='function calcMargen(){var amt=Number(document.getElementById("mi").value)||0;var nuevo=marOp===1?marOrig+amt:marOrig-amt;if(nuevo<0)nuevo=0;if(nuevo>100)nuevo=100;document.getElementById("mr").textContent=nuevo+"%";return nuevo;}';
       modalHtml+='function guardarEdicion(){var ns=calcSaldo();var nm=calcMargen();';
