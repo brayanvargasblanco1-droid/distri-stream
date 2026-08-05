@@ -5815,8 +5815,27 @@
     }
     async function saveEditUser(id){
       try{
+        // Obtener valores calculados de las funciones JS
+        const newSaldo = calcSaldo ? calcSaldo() : 0;
+        const newMargen = calcMargen ? calcMargen() : 0;
+        
+        if(newSaldo < 0){
+          toast("El saldo no puede ser negativo","bad");
+          return;
+        }
+        if(newMargen < 0 || newMargen > 100){
+          toast("El margen debe estar entre 0% y 100%","bad");
+          return;
+        }
+        
         showLoading("Guardando...");
-        await api("users",{method:"PATCH",body:JSON.stringify({id,role:$("#editRole").value,balance:Number($("#editBal").value||0),margin:Number($("#editMargin").value||0),status:$("#editStatus").value})});
+        await api("users",{method:"PATCH",body:JSON.stringify({
+          id,
+          role: currentRole,
+          balance: newSaldo,
+          margin: newMargen,
+          status: currentStatus
+        })});
         closeModal(); toast("Usuario actualizado","ok"); await boot();
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
