@@ -5367,8 +5367,8 @@
       return paginated.items.map(u => {
         const isProtected = u.email === "vargasblancobrayan@gmail.com";
         const userStatus = u.status || "Activo";
-        const isActive = userStatus === "Activo";
         const isBlocked = userStatus === "Bloqueado";
+        const isActivo = userStatus === "Activo";
         const username = (u.name||"").toLowerCase().replace(/\s+/g,".").replace(/[^a-z0-9.]/g,"").slice(0,15);
         const role = u.role || "Cliente";
         
@@ -5379,29 +5379,38 @@
         const roleColor = role === "Administrador" ? "#f59e0b" : role === "Revendedor" ? "#667eea" : "#10b981";
         const roleBg = role === "Administrador" ? "rgba(245,158,11,.1)" : role === "Revendedor" ? "rgba(102,126,234,.1)" : "rgba(16,185,129,.1)";
         
-        const statusColor = isBlocked ? "#8b5cf6" : isActive ? "#10b981" : "#ef4444";
-        const statusBg = isBlocked ? "rgba(139,92,246,.1)" : isActive ? "rgba(16,185,129,.1)" : "rgba(239,68,68,.1)";
-        const statusText = isBlocked ? "Bloqueado" : isActive ? "Activo" : "Inactivo";
+        const statusColor = isBlocked ? "#8b5cf6" : isActivo ? "#10b981" : "#ef4444";
+        const statusBg = isBlocked ? "rgba(139,92,246,.1)" : isActivo ? "rgba(16,185,129,.1)" : "rgba(239,68,68,.1)";
+        const statusText = isBlocked ? "🔒 Bloqueado" : isActivo ? "✅ Activo" : "❌ Inactivo";
         
         const disabled = isProtected ? 'style="opacity:0.4;pointer-events:none"' : '';
-        const cardStyle = isBlocked ? 'style="opacity:0.7"' : '';
+        const cardStyle = isBlocked ? 'style="opacity:0.85"' : '';
         
         return '<div class="user-mobile-card" ' + cardStyle + '>' +
           '<div class="card-header">' +
             '<div class="user-avatar" style="background:' + avatarBg + '">' + (u.name||"?").charAt(0).toUpperCase() + '</div>' +
             '<div class="user-info">' +
               '<div class="user-name">' + esc(u.name || 'Usuario') + '</div>' +
-              '<div class="user-meta">@' + username + ' · ' + (u.id||"").slice(0,8) + '</div>' +
-              '<span style="display:inline-flex;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:' + roleBg + ';color:' + roleColor + ';margin-top:4px">' + role + '</span>' +
+              '<div class="user-meta">@' + username + '</div>' +
+              '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">' +
+                '<span style="display:inline-flex;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;background:' + roleBg + ';color:' + roleColor + '">' + role + '</span>' +
+                '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '">' + statusText + '</span>' +
+              '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="font-size:12px;color:var(--muted);padding-left:60px">' + (u.email || 'Sin correo') + '</div>' +
-          '<div class="card-actions">' +
-            '<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '">' +
-              '<span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>' + statusText +
-            '</span>' +
+          '<div style="font-size:11px;color:var(--muted)">' + (u.email || 'Sin correo') + '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-top:10px;border-top:1px solid var(--line)">' +
+            '<button onclick="copyText(\'' + (u.id||u.email) + '\')" class="action-btn" title="Copiar ID" ' + disabled + '>📋 Copiar</button>' +
             '<button onclick="openEditUser(\'' + u.id + '\')" class="action-btn" ' + disabled + '>✏️ Editar</button>' +
             '<button onclick="openResetPass(\'' + u.id + '\',\'' + esc(u.name) + '\')" class="action-btn" ' + disabled + '>🔑 Clave</button>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
+            (isBlocked 
+              ? '<button onclick="unblockUser(\'' + u.id + '\',\'' + esc(u.name) + '\')" class="action-btn" style="border-color:#10b981;color:#10b981" ' + disabled + '>🔓 Desbloq</button>'
+              : '<button onclick="blockUser(\'' + u.id + '\',\'' + esc(u.name) + '\')" class="action-btn" style="border-color:#8b5cf6;color:#8b5cf6" ' + disabled + '>🔒 Bloquear</button>'
+            ) +
+            '<button onclick="generateUserQR(\'' + u.id + '\')" class="action-btn" style="border-color:#667eea;color:#667eea" ' + disabled + '>📱 QR</button>' +
+            '<button onclick="deleteUser(\'' + u.id + '\',\'' + esc(u.name) + '\')" class="action-btn" style="border-color:#ef4444;color:#ef4444" ' + disabled + '>🗑️ Eliminar</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -5566,7 +5575,7 @@
       const avatarBg=role==="Administrador"?"linear-gradient(135deg,#f59e0b,#d97706)":role==="Revendedor"?"linear-gradient(135deg,#667eea,#764ba2)":"linear-gradient(135deg,#10b981,#059669)";
       const statusColor=isBlocked?"#8b5cf6":isActive?"#10b981":"#ef4444";
       const statusBg=isBlocked?"rgba(139,92,246,.1)":isActive?"rgba(16,185,129,.1)":"rgba(239,68,68,.1)";
-      return `<tr style="border-bottom:1px solid var(--line);transition:all .2s;${isBlocked?'opacity:.7':''}" onmouseover="this.style.background='linear-gradient(90deg,rgba(102,126,234,.05),transparent)'" onmouseout="this.style.background=''">
+      return `<tr style="border-bottom:1px solid var(--line);transition:all .2s;${isBlocked?'opacity:.85':''}" onmouseover="this.style.background='linear-gradient(90deg,rgba(102,126,234,.05),transparent)'" onmouseout="this.style.background=''">
         <td style="padding:14px 16px">
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:42px;height:42px;border-radius:12px;background:${avatarBg};color:#fff;display:grid;place-items:center;font-weight:900;font-size:16px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.15)">${(u.name||"?").charAt(0).toUpperCase()}</div>
@@ -5644,23 +5653,43 @@
             </div>
             <input id="editRole" type="hidden" value="${u.role||'Cliente'}">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Saldo</label>
-              <input id="editBal" type="number" value="${Number(u.balance||0)}" style="width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px;font-weight:700" ${isProtected?'disabled':''}>
+          <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:16px;margin-bottom:4px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <span style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">💰 Saldo y Margen</span>
+              <span style="font-size:10px;color:#8b5cf6;font-weight:700">Tu ganancia = ${u.margin || 0}%</span>
             </div>
-            <div>
-              <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Margen %</label>
-              <input id="editMargin" type="number" value="${Number(u.margin||0)}" style="width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px;font-weight:700" ${isProtected?'disabled':''}>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">💵 Saldo disponible</label>
+                <input id="editBal" type="number" value="${Number(u.balance||0)}" style="width:100%;padding:14px 12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:16px;font-weight:800" ${isProtected?'disabled':''} oninput="updateMarginCalc()">
+              </div>
+              <div>
+                <label style="font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">📈 Margen (%)</label>
+                <input id="editMargin" type="number" value="${Number(u.margin||0)}" min="0" max="100" style="width:100%;padding:14px 12px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:16px;font-weight:800" ${isProtected?'disabled':''} oninput="updateMarginCalc()">
+              </div>
+            </div>
+            <div id="marginInfo" style="margin-top:12px;padding:10px;background:rgba(16,185,129,.1);border-radius:8px;font-size:11px;color:#10b981">
+              <b>💡 Como funciona:</b> Si el usuario compra un producto de <b>$10.000</b>, tu ganancia sera de <b id="calcResult">$0</b> (${u.margin || 0}% del valor).
             </div>
           </div>
+          <script>
+            function updateMarginCalc(){
+              const bal = Number(document.getElementById('editBal')?.value) || 0;
+              const margin = Number(document.getElementById('editMargin')?.value) || 0;
+              const examplePrice = 10000;
+              const profit = Math.round(examplePrice * margin / 100);
+              const el = document.getElementById('calcResult');
+              if(el) el.textContent = '$' + profit.toLocaleString('es-CO');
+            }
+            updateMarginCalc();
+          <\/script>
           <div>
             <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:8px">Estado</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <button onclick="selectStatus('Activo', this)" id="statusActivo" style="padding:12px;border:2px solid ${(u.status||'Activo')==='Activo'?'#10b981':'var(--line)'};border-radius:12px;background:${(u.status||'Activo')==='Activo'?'rgba(16,185,129,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${(u.status||'Activo')==='Activo'?'#10b981':'var(--muted)'}">
                 <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> Activo
               </button>
-              <button onclick="selectStatus('Inactivo', this)" id="statusInactivo" style="padding:12px;border:2px solid ${u.status==='Inactivo'?'#ef4444':'var(--line)'};border-radius:12px;background:${u.status==='Inactivo'?'rgba(239,68,68,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${u.status==='Inactivo'?'#ef4444':'var(--muted)'}">
+              <button onclick="selectStatus('Bloqueado', this)" id="statusBloqueado" style="padding:12px;border:2px solid ${u.status==='Bloqueado'?'#ef4444':'var(--line)'};border-radius:12px;background:${u.status==='Bloqueado'?'rgba(239,68,68,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${u.status==='Bloqueado'?'#ef4444':'var(--muted)'}">
                 <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> Inactivo
               </button>
             </div>
@@ -5686,9 +5715,9 @@
             document.getElementById('statusActivo').style.borderColor = isActivo ? '#10b981' : 'var(--line)';
             document.getElementById('statusActivo').style.background = isActivo ? 'rgba(16,185,129,.15)' : 'var(--soft)';
             document.getElementById('statusActivo').style.color = isActivo ? '#10b981' : 'var(--muted)';
-            document.getElementById('statusInactivo').style.borderColor = !isActivo ? '#ef4444' : 'var(--line)';
-            document.getElementById('statusInactivo').style.background = !isActivo ? 'rgba(239,68,68,.15)' : 'var(--soft)';
-            document.getElementById('statusInactivo').style.color = !isActivo ? '#ef4444' : 'var(--muted)';
+            document.getElementById('statusBloqueado').style.borderColor = !isActivo ? '#8b5cf6' : 'var(--line)';
+            document.getElementById('statusBloqueado').style.background = !isActivo ? 'rgba(139,92,246,.15)' : 'var(--soft)';
+            document.getElementById('statusBloqueado').style.color = !isActivo ? '#8b5cf6' : 'var(--muted)';
           }
         <\/script>
       `);
@@ -5734,6 +5763,51 @@
         closeModal(); toast("Contrasena actualizada","ok");
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
+    }
+    
+    // Generar QR del usuario
+    function generateUserQR(userId){
+      const u = state.users.find(x => x.id === userId);
+      if(!u) return;
+      const refCode = (u.email || u.id || '').split('@')[0] + '-' + (u.id || '').slice(0, 6);
+      const baseUrl = window.location.origin;
+      const qrUrl = baseUrl + '?ref=' + refCode;
+      const userLink = baseUrl + '?ref=' + refCode;
+      
+      openModal(`
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:24px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-30%;right:-20%;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%"></div>
+          <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 12px;display:grid;place-items:center;backdrop-filter:blur(8px)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="28" height="28"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
+          </div>
+          <h2 style="margin:0;color:#fff;font-size:18px;font-weight:900">QR DE AFILIACION</h2>
+          <p style="margin:4px 0 0;color:rgba(255,255,255,.7);font-size:12px">${u.name}</p>
+          <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer">&times;</button>
+        </div>
+        <div style="padding:0 4px;text-align:center">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Este es el enlace de afiliacion del usuario. Si perdio su QR, puedes compartirle este enlace.</p>
+          
+          <div style="background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px">
+            <div id="qrPlaceholder" style="width:180px;height:180px;margin:0 auto;background:var(--soft);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" width="100" height="100"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
+            </div>
+            <p style="font-size:10px;color:var(--muted);margin:8px 0 0">Codigo: ${refCode}</p>
+          </div>
+          
+          <div style="display:flex;gap:8px">
+            <button onclick="copyText('${userLink}')" style="flex:1;padding:14px;border:0;border-radius:12px;background:#10b981;color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar enlace
+            </button>
+            <a href="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(userLink)}" target="_blank" download="qr-${refCode}.png" style="flex:1;padding:14px;border:0;border-radius:12px;background:#667eea;color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar QR
+            </a>
+          </div>
+          
+          <p style="font-size:10px;color:var(--muted);margin-top:12px">Tambien puedes generar el QR desde: <b>api.qrserver.com</b></p>
+        </div>
+      `);
     }
     function deleteUser(id,name){
       openModal(`
