@@ -2876,6 +2876,11 @@
       });
     }
     function orders(){
+      // Usar el panel mejorado si está disponible
+      if(typeof improvedOrdersView === 'function'){
+        return improvedOrdersView();
+      }
+      // Fallback al panel original
       const allOrders=state.orders||[];
       const active=activeOrders();
       const expired=allOrders.filter(o=>daysLeft(o.expires_at)<0);
@@ -5495,6 +5500,8 @@
 <script src="reports-bootstrap.js?v=2"></script>
 <!-- Panel de Soporte para Operadores y Revendedores -->
 <script src="support-operators.js?v=1"></script>
+<!-- Mejoras de Compras para Operadores y Revendedores -->
+<script src="purchases-operators.js?v=1"></script>
 
 
   <script>
