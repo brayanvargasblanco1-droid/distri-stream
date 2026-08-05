@@ -348,6 +348,88 @@ function improvedOrderRows(rows) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 📊 VISTA MEJORADA DE MOVIMIENTOS
+// ═══════════════════════════════════════════════════════════════
+
+function improvedHistoryView() {
+  const allMovements = buildMovements();
+  const movements = getFilteredMovements ? getFilteredMovements() : allMovements;
+  
+  const totalCredito = movements.filter(m => m.amount > 0).reduce((s,m) => s + m.amount, 0);
+  const totalDebito = movements.filter(m => m.amount < 0).reduce((s,m) => s + Math.abs(m.amount), 0);
+  
+  return `
+    <div class="history-stats">
+      <div class="history-stat-card green">
+        <div class="history-stat-icon">💰</div>
+        <div class="history-stat-info">
+          <div class="history-stat-label">Total Recargas</div>
+          <div class="history-stat-value">${formatMoney(totalCredito)}</div>
+        </div>
+      </div>
+      
+      <div class="history-stat-card red">
+        <div class="history-stat-icon">🛒</div>
+        <div class="history-stat-info">
+          <div class="history-stat-label">Total Compras</div>
+          <div class="history-stat-value">${formatMoney(totalDebito)}</div>
+        </div>
+      </div>
+      
+      <div class="history-stat-card purple">
+        <div class="history-stat-icon">💳</div>
+        <div class="history-stat-info">
+          <div class="history-stat-label">Saldo Actual</div>
+          <div class="history-stat-value">${formatMoney(state.user?.balance || 0)}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="history-section">
+      <div class="section-header">
+        <h2>📊 Detalle de Movimientos</h2>
+        <span class="section-count purple">${movements.length}</span>
+      </div>
+      
+      <div class="history-list">
+        ${movements.length > 0 ? movements.map(m => improvedMovementCard(m)).join('') : `
+          <div class="orders-empty">
+            <div class="orders-empty-icon">📊</div>
+            <div class="orders-empty-title">Sin movimientos</div>
+            <div class="orders-empty-text">Tus recargas y compras aparecerán aquí</div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function improvedMovementCard(m) {
+  const isCredit = m.amount > 0;
+  const dateStr = formatDate(m.date);
+  
+  return `
+    <div class="movement-card ${isCredit ? 'credit' : 'debit'}">
+      <div class="movement-card-left">
+        <div class="movement-icon ${isCredit ? 'green' : 'red'}">${isCredit ? '💰' : '🛒'}</div>
+        <div class="movement-info">
+          <div class="movement-desc">${m.description || (isCredit ? 'Recarga' : 'Compra')}</div>
+          <div class="movement-date">${dateStr}</div>
+        </div>
+      </div>
+      <div class="movement-card-right">
+        <div class="movement-amount ${isCredit ? 'positive' : 'negative'}">
+          ${isCredit ? '+' : '-'}${formatMoney(Math.abs(m.amount))}
+        </div>
+        <div class="movement-type ${isCredit ? 'credit' : 'debit'}">
+          ${isCredit ? 'Recarga' : 'Débito'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // 💰 MODAL DE PRECIOS
 // ═══════════════════════════════════════════════════════════════
 
@@ -547,6 +629,37 @@ function injectPurchaseStyles() {
     .orders-empty-icon { font-size: 56px; margin-bottom: 12px; opacity: 0.5; }
     .orders-empty-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .orders-empty-text { font-size: 13px; color: #9ca3af; }
+    
+    .history-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 700px) { .history-stats { grid-template-columns: 1fr; } }
+    .history-stat-card { display: flex; align-items: center; gap: 12px; padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
+    .history-stat-icon { font-size: 28px; }
+    .history-stat-label { font-size: 12px; color: #6b7280; margin-bottom: 2px; }
+    .history-stat-value { font-size: 16px; font-weight: 800; }
+    .history-stat-card.green .history-stat-value { color: #059669; }
+    .history-stat-card.red .history-stat-value { color: #dc2626; }
+    .history-stat-card.purple .history-stat-value { color: #7c3aed; }
+    
+    .history-section { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; }
+    .history-list { display: flex; flex-direction: column; }
+    .movement-card { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
+    .movement-card:hover { background: #f9fafb; }
+    .movement-card:last-child { border-bottom: none; }
+    .movement-card.credit { border-left: 3px solid #10b981; }
+    .movement-card.debit { border-left: 3px solid #dc2626; }
+    .movement-card-left { display: flex; align-items: center; gap: 12px; }
+    .movement-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; }
+    .movement-icon.green { background: rgba(16,185,129,0.1); }
+    .movement-icon.red { background: rgba(220,38,38,0.1); }
+    .movement-desc { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .movement-date { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .movement-card-right { text-align: right; }
+    .movement-amount { font-size: 15px; font-weight: 800; }
+    .movement-amount.positive { color: #059669; }
+    .movement-amount.negative { color: #dc2626; }
+    .movement-type { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+    .movement-type.credit { background: rgba(16,185,129,0.1); color: #059669; }
+    .movement-type.debit { background: rgba(220,38,38,0.1); color: #dc2626; }
     
     .modal-content { min-width: 320px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
