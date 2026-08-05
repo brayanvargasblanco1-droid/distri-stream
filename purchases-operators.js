@@ -266,6 +266,227 @@ async function doBulkRenewal() {
 // 📋 TABLA DE ÓRDENES MEJORADA
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// 🎫 SECCIÓN DE SOPORTE MEJORADA
+// ═══════════════════════════════════════════════════════════════
+
+function improvedReportsView() {
+  const myReports = state.reports || [];
+  const active = myReports.filter(r => r.status !== "Resuelto" && r.status !== "Rechazado");
+  const resolved = myReports.filter(r => r.status === "Resuelto" || r.status === "Rechazado");
+  
+  return `
+    <div class="reports-container">
+      <div class="reports-stats">
+        <div class="report-stat-card active">
+          <div class="report-stat-icon">🔵</div>
+          <div class="report-stat-info">
+            <div class="report-stat-num">${active.length}</div>
+            <div class="report-stat-label">En Proceso</div>
+          </div>
+        </div>
+        
+        <div class="report-stat-card resolved">
+          <div class="report-stat-icon">✅</div>
+          <div class="report-stat-info">
+            <div class="report-stat-num">${resolved.length}</div>
+            <div class="report-stat-label">Resueltos</div>
+          </div>
+        </div>
+        
+        <div class="report-stat-card total">
+          <div class="report-stat-icon">📋</div>
+          <div class="report-stat-info">
+            <div class="report-stat-num">${myReports.length}</div>
+            <div class="report-stat-label">Total</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="reports-tabs">
+        <button onclick="switchReportsTab('active')" id="tab_reports_active" class="reports-tab active">
+          🔵 En Proceso <span class="tab-count">${active.length}</span>
+        </button>
+        <button onclick="switchReportsTab('resolved')" id="tab_reports_resolved" class="reports-tab">
+          ✅ Resueltos <span class="tab-count">${resolved.length}</span>
+        </button>
+      </div>
+      
+      <div class="reports-list" id="reportsList">
+        ${renderReportsList(active.length > 0 ? active : resolved, active.length > 0 ? 'active' : 'resolved')}
+      </div>
+    </div>
+  `;
+}
+
+function switchReportsTab(tab) {
+  const myReports = state.reports || [];
+  const filtered = tab === 'active' 
+    ? myReports.filter(r => r.status !== "Resuelto" && r.status !== "Rechazado")
+    : myReports.filter(r => r.status === "Resuelto" || r.status === "Rechazado");
+  
+  document.getElementById('tab_reports_active').classList.toggle('active', tab === 'active');
+  document.getElementById('tab_reports_resolved').classList.toggle('active', tab === 'resolved');
+  document.getElementById('reportsList').innerHTML = renderReportsList(filtered, tab);
+}
+
+function renderReportsList(reports, tab) {
+  if (!reports || reports.length === 0) {
+    return `
+      <div class="reports-empty">
+        <div class="reports-empty-icon">${tab === 'active' ? '🎉' : '📭'}</div>
+        <div class="reports-empty-title">${tab === 'active' ? '¡Sin reportes pendientes!' : 'Sin reportes resueltos'}</div>
+        <div class="reports-empty-text">
+          ${tab === 'active' 
+            ? 'Todos tus reportes han sido atendidos. ¡Eso es bueno!' 
+            : 'Los reportes resueltos aparecerán aquí'}
+        </div>
+      </div>
+    `;
+  }
+  
+  return reports.map(r => renderReportCard(r)).join('<div style="height:12px"></div>');
+}
+
+function renderReportCard(r) {
+  const statusConfig = {
+    'En proceso': { icon: '🔄', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', text: 'En Proceso' },
+    'En revisión': { icon: '👁️', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', text: 'En Revisión' },
+    'Abierto': { icon: '🔵', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', text: 'Abierto' },
+    'Resuelto': { icon: '✅', color: '#10b981', bg: 'rgba(16,185,129,0.1)', text: 'Resuelto' },
+    'Rechazado': { icon: '❌', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', text: 'Rechazado' }
+  };
+  
+  const config = statusConfig[r.status] || { icon: '●', color: '#6b7280', bg: 'rgba(107,114,128,0.1)', text: r.status };
+  const timeAgo = getTimeAgo(r.created_at);
+  const reasonLabel = getReasonLabel(r.reason);
+  
+  return `
+    <div class="report-item" onclick="showReportDetail('${r.id}')">
+      <div class="report-item-header">
+        <div class="report-item-icon" style="background:${config.bg}">${config.icon}</div>
+        <div class="report-item-info">
+          <div class="report-item-title">${reasonLabel}</div>
+          <div class="report-item-sub">${r.product_name || 'Reporte #' + (r.code || r.id || '').slice(-6)}</div>
+        </div>
+        <div class="report-item-status" style="background:${config.bg};color:${config.color}">
+          ${config.text}
+        </div>
+      </div>
+      <div class="report-item-footer">
+        <span class="report-item-time">🕐 ${timeAgo}</span>
+        <span class="report-item-id">#${(r.code || r.id || '').slice(-6)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function getReasonLabel(reason) {
+  const labels = {
+    'no_received': '💰 Pago no reflejado',
+    'wrong_amount': '🔢 Monto incorrecto',
+    'no_confirmation': '⏳ Sin confirmación',
+    'account_issue': '🔐 Problema con la cuenta',
+    'invalid_data': '❌ Datos inválidos',
+    'expired_soon': '⏰ Cuenta por vencer',
+    'other': '❓ Otro problema'
+  };
+  return labels[reason] || '📋 Reporte';
+}
+
+function showReportDetail(reportId) {
+  const report = state.reports.find(r => r.id === reportId);
+  if (!report) return;
+  
+  const statusConfig = {
+    'En proceso': { icon: '🔄', color: '#8b5cf6' },
+    'En revisión': { icon: '👁️', color: '#f59e0b' },
+    'Abierto': { icon: '🔵', color: '#3b82f6' },
+    'Resuelto': { icon: '✅', color: '#10b981' },
+    'Rechazado': { icon: '❌', color: '#ef4444' }
+  };
+  
+  const config = statusConfig[report.status] || { icon: '●', color: '#6b7280' };
+  const reasonLabel = getReasonLabel(report.reason);
+  const timeAgo = getTimeAgo(report.created_at);
+  
+  openModal(`
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📋 Detalle del Reporte</h2>
+        <button onclick="closeModal()" class="btn-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="report-detail-status" style="background:${config.color}">
+          ${config.icon} ${report.status}
+        </div>
+        
+        <div class="detail-info">
+          <div class="detail-row"><span>ID Reporte:</span><span>#${(report.code || report.id || '').slice(-6)}</span></div>
+          <div class="detail-row"><span>Fecha:</span><span>${formatDate(report.created_at)}</span></div>
+          <div class="detail-row"><span>Hace:</span><span>${timeAgo}</span></div>
+          ${report.product_name ? `<div class="detail-row"><span>Producto:</span><span>${report.product_name}</span></div>` : ''}
+        </div>
+        
+        <div class="report-reason-box">
+          <div class="report-reason-label">Tipo de problema:</div>
+          <div class="report-reason-value">${reasonLabel}</div>
+        </div>
+        
+        ${report.description ? `
+        <div class="report-description-box">
+          <div class="report-description-label">Descripción:</div>
+          <div class="report-description-text">${report.description}</div>
+        </div>
+        ` : ''}
+        
+        ${report.provider_response ? `
+        <div class="report-response-box">
+          <div class="report-response-label">💬 Respuesta del soporte:</div>
+          <div class="report-response-text">${report.provider_response}</div>
+        </div>
+        ` : ''}
+        
+        <div class="report-timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot active"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">Reporte creado</div>
+              <div class="timeline-time">${formatDate(report.created_at)}</div>
+            </div>
+          </div>
+          ${report.status !== 'Abierto' ? `
+          <div class="timeline-item">
+            <div class="timeline-dot active"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">En revisión</div>
+              <div class="timeline-time">En proceso</div>
+            </div>
+          </div>
+          ` : ''}
+          ${report.status === 'Resuelto' || report.status === 'Rechazado' ? `
+          <div class="timeline-item">
+            <div class="timeline-dot ${report.status === 'Resuelto' ? 'success' : 'rejected'}"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">${report.status}</div>
+              <div class="timeline-time">Completado</div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <button onclick="closeModal()" class="order-btn datos" style="width:100%;margin-top:16px">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 📋 TABLA DE ÓRDENES MEJORADA
+// ═══════════════════════════════════════════════════════════════
+
 function improvedOrderRows(rows) {
   if (!rows || rows.length === 0) {
     return `
@@ -990,6 +1211,63 @@ function injectPurchaseStyles() {
     .modal-empty-icon { font-size: 64px; margin-bottom: 16px; }
     .modal-empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
     .modal-empty-text { color: #6b7280; font-size: 14px; }
+    
+    /* Soporte */
+    .reports-container { padding: 0; }
+    .reports-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 500px) { .reports-stats { grid-template-columns: 1fr; } }
+    .report-stat-card { display: flex; align-items: center; gap: 10px; padding: 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
+    .report-stat-icon { font-size: 24px; }
+    .report-stat-num { font-size: 20px; font-weight: 800; }
+    .report-stat-label { font-size: 11px; color: #6b7280; }
+    .report-stat-card.active .report-stat-num { color: #3b82f6; }
+    .report-stat-card.resolved .report-stat-num { color: #10b981; }
+    .report-stat-card.total .report-stat-num { color: #7c3aed; }
+    
+    .reports-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .reports-tab { flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .reports-tab.active { border-color: #7c3aed; background: rgba(124,58,237,0.08); color: #7c3aed; }
+    .reports-tab .tab-count { background: #f3f4f6; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .reports-tab.active .tab-count { background: rgba(124,58,237,0.15); color: #7c3aed; }
+    
+    .reports-empty { text-align: center; padding: 48px 20px; background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; }
+    .reports-empty-icon { font-size: 56px; margin-bottom: 12px; }
+    .reports-empty-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .reports-empty-text { font-size: 13px; color: #9ca3af; }
+    
+    .report-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .report-item:hover { border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.1); transform: translateY(-2px); }
+    .report-item-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .report-item-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+    .report-item-info { flex: 1; min-width: 0; }
+    .report-item-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-item-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .report-item-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .report-item-footer { display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+    
+    .report-detail-status { text-align: center; padding: 12px; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 800; margin-bottom: 16px; }
+    .report-reason-box { background: #f9fafb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .report-reason-label { font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .report-reason-value { font-size: 14px; font-weight: 700; }
+    .report-description-box { background: #fef3c7; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .report-description-label { font-size: 11px; color: #92400e; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .report-description-text { font-size: 13px; color: #78350f; }
+    .report-response-box { background: #ecfdf5; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .report-response-label { font-size: 11px; color: #065f46; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .report-response-text { font-size: 13px; color: #064e3b; }
+    
+    .report-timeline { position: relative; padding-left: 24px; margin: 16px 0; }
+    .report-timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+    .timeline-item { position: relative; padding-bottom: 16px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot { width: 16px; height: 16px; border-radius: 50%; background: #e5e7eb; border: 3px solid #fff; position: absolute; left: -24px; top: 0; }
+    .timeline-dot.active { background: #3b82f6; }
+    .timeline-dot.success { background: #10b981; }
+    .timeline-dot.rejected { background: #ef4444; }
+    .timeline-content { }
+    .timeline-title { font-size: 13px; font-weight: 700; }
+    .timeline-time { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    
     .btn-primary { padding: 14px 24px; background: linear-gradient(135deg, #0877ff, #0057dc); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
     
     .bulk-summary { background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 16px; }

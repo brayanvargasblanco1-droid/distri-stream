@@ -3517,9 +3517,9 @@
       const my=state.reports;
       const active=my.filter(r=>r.status!=="Resuelto"&&r.status!=="Rechazado").length;
       const resolved=my.filter(r=>r.status==="Resuelto"||r.status==="Rechazado").length;
-      // Usar el panel mejorado si está disponible, si no usar el original
-      if(typeof reportsUserImproved === 'function'){
-        return reportsUserImproved();
+      // Usar la vista mejorada si está disponible
+      if(typeof improvedReportsView === 'function'){
+        return improvedReportsView();
       }
       return `
       <section class="premium-metrics" style="margin-bottom:16px">
