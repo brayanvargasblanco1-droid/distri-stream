@@ -5781,41 +5781,49 @@
         </section>`;
     }
 
-    // ─── UTILIDADES ────────────────────────────────────
+        // ─── UTILIDADES ────────────────────────────────────
+    
+    // Sistema de rangos/levels
+    const rankSystem = {
+      bronze: { name: 'Bronce', min: 1, max: 9, icon: '🥉', color: '#cd7f32', bg: 'rgba(205,127,50,.15)' },
+      silver: { name: 'Plata', min: 10, max: 24, icon: '🥈', color: '#c0c0c0', bg: 'rgba(192,192,192,.15)' },
+      gold: { name: 'Oro', min: 25, max: 49, icon: '🥇', color: '#ffd700', bg: 'rgba(255,215,0,.15)' },
+      diamond: { name: 'Diamante', min: 50, max: Infinity, icon: '💎', color: '#b9f2ff', bg: 'rgba(185,242,255,.15)' }
+    };
+    
+    function getUserRank(orderCount) {
+      if (orderCount >= 50) return rankSystem.diamond;
+      if (orderCount >= 25) return rankSystem.gold;
+      if (orderCount >= 10) return rankSystem.silver;
+      return rankSystem.bronze;
+    }
+    
+    function getNextRank(currentRank) {
+      if (currentRank === rankSystem.bronze) return rankSystem.silver;
+      if (currentRank === rankSystem.silver) return rankSystem.gold;
+      if (currentRank === rankSystem.gold) return rankSystem.diamond;
+      return null;
+    }
+    
     function openProfile(){
       const u=state.user;
-      const bal=Number(u.balance||0);
-      const avatar=getUserAvatar();
-      const avatarBg=avatar?avatar.color.bg:"linear-gradient(135deg,#667eea,#764ba2)";
-      
-      // Calculate stats
       const myOrders = state.orders.filter(o => o.user_id === u.id || o.email === u.email);
-      const myReports = state.reports.filter(r => r.user_id === u.id || r.email === u.email);
-      const myTopups = state.topups.filter(t => t.user_id === u.id || t.email === u.email);
-      const totalSpent = myOrders.reduce((s,o) => s + Number(o.amount||0), 0);
-      const totalRecharged = myTopups.reduce((s,t) => s + Number(t.amount||0), 0);
-      const openReports = myReports.filter(r => r.status !== "Resuelto").length;
-      const activeOrders = myOrders.filter(o => daysLeft(o.expires_at) !== null && daysLeft(o.expires_at) >= 0).length;
-      
-      // Recent activity
-      const recentOrders = [...myOrders].sort((a,b) => (b.created_at||"").localeCompare(a.created_at||"")).slice(0,3);
-      const recentActivity = recentOrders.map(o => ({
-        type: 'order',
-        icon: '🛒',
-        title: `Compra ${o.service}`,
-        time: timeAgo(o.created_at),
-        amount: money(o.amount)
-      }));
+      const orderCount = myOrders.length;
+      const currentRank = getUserRank(orderCount);
+      const nextRank = getNextRank(currentRank);
+      const progressToNext = nextRank ? Math.round(((orderCount - currentRank.min) / (nextRank.min - currentRank.min)) * 100) : 100;
       
       openModal(`
+        <!-- Header con avatar igual al header -->
         <div style="background:linear-gradient(135deg,#4c1d95,#0877ff);border-radius:16px;padding:24px 20px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
           <div style="position:absolute;top:-40%;right:-20%;width:160px;height:160px;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);border-radius:50%"></div>
-          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:16px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px)">&times;</button>
+          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:16px;display:grid;place-items:center;cursor:pointer">&times;</button>
           
-          <div style="position:relative;width:72px;height:72px;border-radius:50%;background:${avatarBg};margin:0 auto 12px;display:grid;place-items:center;border:3px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.2)">
-            <span style="font-size:28px">${avatar?avatar.emoji:initials(u.name)}</span>
-            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:var(--blue);border:2px solid #fff;color:#fff;font-size:11px;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <!-- Avatar igual al del header -->
+          <div style="position:relative;width:80px;height:80px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+            ${getAvatarDisplay(u.name, 80)}
+            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--blue);border:3px solid #fff;color:#fff;font-size:12px;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             </button>
           </div>
           <h2 style="margin:0 0 4px;color:#fff;font-size:18px;font-weight:900">${u.name}</h2>
@@ -5823,94 +5831,82 @@
           <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:16px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.2);color:#fff">${publicRole()}</span>
         </div>
         
-        <!-- Stats Grid -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:var(--blue)">${myOrders.length}</div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Compras</div>
+        <!-- Sistema de Rangos Interactivo -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Nivel actual</div>
+          
+          <!-- Rango actual -->
+          <div style="background:${currentRank.bg};border:2px solid ${currentRank.color};border-radius:14px;padding:16px;margin-bottom:14px;text-align:center">
+            <div style="font-size:40px;margin-bottom:4px;animation:pulse 2s infinite">${currentRank.icon}</div>
+            <div style="font-size:20px;font-weight:900;color:${currentRank.color}">${currentRank.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${orderCount} ventas realizadas</div>
           </div>
-          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:#10b981">${activeOrders}</div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Activas</div>
+          
+          ${nextRank ? `
+          <!-- Progreso al siguiente rango -->
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="font-size:11px;font-weight:700;color:var(--muted)">Siguiente: <span style="color:${nextRank.color}">${nextRank.icon} ${nextRank.name}</span></span>
+              <span style="font-size:11px;font-weight:800;color:var(--text)">${nextRank.min - orderCount} ventas</span>
+            </div>
+            <div style="height:8px;background:var(--line);border-radius:999px;overflow:hidden">
+              <div style="height:100%;width:${progressToNext}%;background:linear-gradient(90deg,${currentRank.color},${nextRank.color});border-radius:999px;transition:width .5s ease"></div>
+            </div>
           </div>
-          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
-            <div style="font-size:22px;font-weight:900;color:#f59e0b">${openReports}</div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Reportes</div>
+          ` : `
+          <div style="background:linear-gradient(135deg,rgba(185,242,255,.2),rgba(185,242,255,.1));border:1px solid rgba(185,242,255,.3);border-radius:12px;padding:14px;text-align:center">
+            <div style="font-size:32px;margin-bottom:4px;animation:spin 3s linear infinite">👑</div>
+            <div style="font-size:14px;font-weight:800;color:#b9f2ff">¡Nivel Maximo!</div>
+            <div style="font-size:11px;color:var(--muted)">Eres un usuario Diamante</div>
+          </div>
+          `}
+          
+          <!-- Todos los rangos -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px">
+            ${Object.values(rankSystem).map(r => {
+              const isActive = orderCount >= r.min;
+              const isCurrent = r.name === currentRank.name;
+              return `
+                <div style="background:${isActive ? r.bg : 'var(--soft)'};border:2px solid ${isActive ? r.color : 'var(--line)'};border-radius:10px;padding:10px 6px;text-align:center;opacity:${isActive ? '1' : '0.5'};${isCurrent ? 'transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,.1)' : ''}">
+                  <div style="font-size:22px;margin-bottom:2px">${r.icon}</div>
+                  <div style="font-size:9px;font-weight:800;color:${isActive ? r.color : 'var(--muted)'}">${r.name}</div>
+                  <div style="font-size:8px;color:var(--muted)">${r.max === Infinity ? r.min + '+' : r.min + '-' + r.max}</div>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
-        
-        <!-- Balance & Actions -->
-        ${!isAdmin()?`
-        <div style="background:linear-gradient(135deg,rgba(8,119,255,.08),rgba(8,119,255,.02));border:1.5px solid rgba(8,119,255,.2);border-radius:14px;padding:16px;margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <div>
-              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:2px">Saldo</div>
-              <div style="font-size:24px;font-weight:900;color:var(--blue)">${money(bal)}</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:9px;color:var(--muted)">Total gastado</div>
-              <div style="font-size:13px;font-weight:700;color:var(--text)">${money(totalSpent)}</div>
-            </div>
-          </div>
-          <button onclick="closeModal();openTopup()" style="width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Recargar Saldo
-          </button>
-        </div>`:""}
         
         <!-- Quick Actions -->
         <div style="margin-bottom:16px">
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Acciones rapidas</div>
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-            <button onclick="closeModal();setView('orders')" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">🛒</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Mis Compras</span>
+            <button onclick="closeModal();setView('orders')" style="padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:24px">🛒</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text)">Mis Compras</span>
             </button>
-            <button onclick="closeModal();setView('reports')" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">📋</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Reportes</span>
+            <button onclick="closeModal();setView('reports')" style="padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:24px">📋</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text)">Reportes</span>
             </button>
-            <button onclick="closeModal();openQrCode()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">📱</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Mi QR</span>
+            <button onclick="closeModal();openQrCode()" style="padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:24px">📱</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text)">Mi QR</span>
             </button>
-            <button onclick="openEditProfile()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
-              <span style="font-size:20px">⚙️</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text)">Configurar</span>
+            <button onclick="openEditProfile()" style="padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:24px">⚙️</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text)">Configurar</span>
             </button>
-          </div>
-        </div>
-        
-        <!-- Recent Activity -->
-        <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Actividad reciente</div>
-          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;overflow:hidden">
-            ${recentActivity.length > 0 ? recentActivity.map(a => `
-              <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--line)">
-                <span style="font-size:18px">${a.icon}</span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;font-weight:700;color:var(--text)">${a.title}</div>
-                  <div style="font-size:10px;color:var(--muted)">${a.time}</div>
-                </div>
-                <div style="font-size:12px;font-weight:800;color:var(--text)">${a.amount}</div>
-              </div>
-            `).join('') : `
-              <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">
-                Sin actividad reciente
-              </div>
-            `}
           </div>
         </div>
         
         <!-- Settings -->
         <div style="display:flex;gap:8px">
-          <button onclick="toggleDark();closeModal()" id="themeToggleBtn" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden">
-            <span id="themeIcon" style="transition:transform .4s ease,opacity .3s ease">
-              ${localStorage.dsDark === "1" ? "☀️" : "🌙"}
-            </span>
-            <span id="themeLabel" style="transition:opacity .2s">${localStorage.dsDark === "1" ? "Modo Claro" : "Modo Oscuro"}</span>
+          <button onclick="toggleDark();closeModal()" style="flex:1;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <span style="font-size:18px;transition:transform .4s ease">${localStorage.dsDark === "1" ? "☀️" : "🌙"}</span>
+            Cambiar tema
           </button>
-          <button onclick="logout()" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <button onclick="logout()" style="flex:1;padding:14px;border:0;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Salir
           </button>
@@ -5919,6 +5915,7 @@
     }
     
     function openEditProfile(){
+function openEditProfile(){
       const u = state.user;
       openModal(`
         <div style="text-align:center;margin-bottom:20px">
@@ -5999,20 +5996,26 @@
     }
     function toggleDark(){
       const isDark = localStorage.dsDark === "1";
-      // Animacion de transicion
-      const themeIcon = document.getElementById('themeIcon');
-      const themeLabel = document.getElementById('themeLabel');
-      if(themeIcon) {
-        themeIcon.style.transform = 'rotate(360deg) scale(0)';
-        themeIcon.style.opacity = '0';
-      }
+      // Animacion de transicion en toda la pagina
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position:fixed;inset:0;z-index:9999;pointer-events:none;
+        background:${isDark ? '#fff' : '#0a0f1a'};
+        opacity:0;transition:opacity .3s ease;
+      `;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '0.3';
+      });
       setTimeout(() => {
         localStorage.dsDark = isDark ? "0" : "1";
         const icon = document.getElementById('appleTouchIcon');
         if(icon) icon.href = isDark ? "assets/distrito-angel-white.png" : "assets/distrito-angel-blue-v1.png";
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 300);
         renderApp();
         toast(isDark ? "Modo claro activado ☀️" : "Modo oscuro activado 🌙", "ok");
-      }, 200);
+      }, 150);
     }
     function toggleAlerts(ev){
       ev?.stopPropagation();
