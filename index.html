@@ -397,6 +397,7 @@
     .register-panel{display:none}
     .register-panel.show{display:block;animation:loginIn .4s cubic-bezier(.2,.8,.2,1)}
     .register-panel h1{color:var(--blue)}
+    .hidden{display:none!important}
 
     .app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
     .side{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.9) 100%);border-right:1px solid rgba(102,126,234,.1);padding:20px 14px;backdrop-filter:blur(20px);display:flex;flex-direction:column;z-index:10}
@@ -1934,7 +1935,7 @@
             <div class="hero-center"><img src="${ASSETS}${angelImg}" alt="Distrito" class="hero-logo" onerror="this.style.display='none'"></div>
           </div>
           <!-- LOGIN FORM -->
-          <div id="loginForm" ${isRegister?'style="display:none"':''}>
+          <div id="loginForm" class="${isRegister?'hidden':''}">
             <div class="login-brand"><img class="brand-logo" src="${ASSETS}${angelImg}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div class="brand-title">DISTRITO<em>Streaming</em></div></div>
             <h1 style="animation:fadeIn .5s ease .1s both">Bienvenido <span>de nuevo</span></h1>
             
@@ -1960,11 +1961,11 @@
           </div>
 
           <!-- REGISTER FORM -->
-          <div id="registerForm" class="register-panel" ${isRegister?'style="display:block"':''}>
+          <div id="registerForm" class="register-panel ${isRegister?'show':''}">
             <div class="login-brand"><img class="brand-logo" src="${ASSETS}${angelImg}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div class="brand-title">DISTRITO<em>Streaming</em></div></div>
             ${refBanner}
             <h1 style="animation:fadeIn .5s ease .1s both">Crear <span>cuenta</span></h1>
-            <p style="animation:fadeIn .5s ease .2s both">Regístrate para acceder al panel de ventas.</p>
+            <p style="animation:fadeIn .5s ease .2s both">${isRegister?'Completa tus datos para registrarte.':'Regístrate para acceder al panel de ventas.'}</p>
             <label class="field" style="animation:fadeIn .5s ease .3s both">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <input id="regName" placeholder="Nombre completo" autocomplete="name">
