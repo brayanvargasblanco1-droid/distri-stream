@@ -5814,139 +5814,197 @@
       const nextRank = getNextRank(currentRank);
       const progressToNext = nextRank ? Math.round(((orderCount - currentRank.min) / (nextRank.min - currentRank.min)) * 100) : 100;
       
+      // Calcular beneficios por rango
+      const rankBenefits = {
+        bronze: { discount: '0%', priority: 'Normal', badge: '🥉' },
+        silver: { discount: '5%', priority: 'Alta', badge: '🥈' },
+        gold: { discount: '10%', priority: 'Muy Alta', badge: '🥇' },
+        diamond: { discount: '15%', priority: 'VIP', badge: '💎' }
+      };
+      const benefits = rankBenefits[currentRank === rankSystem.bronze ? 'bronze' : currentRank === rankSystem.silver ? 'silver' : currentRank === rankSystem.gold ? 'gold' : 'diamond'];
+      
+      // Logros del usuario
+      const achievements = [];
+      if (orderCount >= 1) achievements.push({ icon: '🎯', name: 'Primera Compra', desc: 'Hiciste tu primera compra' });
+      if (orderCount >= 5) achievements.push({ icon: '🔥', name: 'Cliente Fiel', desc: '5 compras realizadas' });
+      if (orderCount >= 10) achievements.push({ icon: '⭐', name: 'Bronce achieved', desc: '10 compras - Nivel Bronce' });
+      if (orderCount >= 25) achievements.push({ icon: '🌟', name: 'Plata achieved', desc: '25 compras - Nivel Plata' });
+      if (orderCount >= 50) achievements.push({ icon: '💫', name: 'Oro achieved', desc: '50 compras - Nivel Oro' });
+      if (orderCount >= 100) achievements.push({ icon: '👑', name: 'Diamante', desc: '100+ compras - ¡Máximo!' });
+      
       openModal(`
-        <!-- Header Premium con Avatar Animado -->
-        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);border-radius:20px;padding:28px 20px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
-          <!-- Efectos decorativos -->
+        <!-- Header Premium -->
+        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);border-radius:20px;padding:24px 20px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
           <div style="position:absolute;top:-50%;left:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;animation:spin 8s linear infinite"></div>
           <div style="position:absolute;bottom:-40%;right:-20%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);border-radius:50%;animation:spin 6s linear infinite reverse"></div>
-          <div style="position:absolute;top:10%;right:10%;width:60px;height:60px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);border-radius:50%"></div>
           
-          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:18px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px);z-index:10">&times;</button>
+          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:18px;display:grid;place-items:center;cursor:pointer;z-index:10">&times;</button>
           
-          <!-- Avatar Grande con Animacion -->
-          <div style="position:relative;width:100px;height:100px;margin:0 auto 14px;">
+          <!-- Avatar -->
+          <div style="position:relative;width:90px;height:90px;margin:0 auto 12px;">
             <div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:grid;place-items:center;box-shadow:0 0 0 4px rgba(255,255,255,.3),0 12px 40px rgba(102,126,234,.4);animation:profileAvatarPulse 3s ease-in-out infinite">
-              <span style="font-size:42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))">${u.avatarEmoji || initials(u.name)}</span>
+              <span style="font-size:38px">${u.avatarEmoji || initials(u.name)}</span>
             </div>
-            <!-- Halo animado -->
             <div style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(255,255,255,.3);animation:spin 10s linear infinite"></div>
-            <!-- Boton editar avatar -->
-            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:0;right:0;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:3px solid #fff;color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.4);transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:0;right:0;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:3px solid #fff;color:#fff;font-size:12px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.4)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             </button>
           </div>
           
-          <!-- Nombre y info -->
-          <h2 style="margin:0 0 6px;color:#fff;font-size:22px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.2)">${u.name}</h2>
-          <p style="margin:0 0 10px;color:rgba(255,255,255,.8);font-size:12px">${u.email}</p>
+          <h2 style="margin:0 0 4px;color:#fff;font-size:20px;font-weight:900">${u.name}</h2>
+          <p style="margin:0 0 8px;color:rgba(255,255,255,.8);font-size:11px">${u.email}</p>
           
-          <!-- Badges -->
           <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.25);color:#fff;backdrop-filter:blur(4px)">
-              ${publicRole()}
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.25);color:#fff;backdrop-filter:blur(4px)">
-              ${currentRank.icon} ${currentRank.name}
-            </span>
+            <span style="padding:5px 12px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.25);color:#fff">${publicRole()}</span>
+          </div>
+        </div>
+        
+        <!-- Stats del Usuario -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:24px;font-weight:900;color:#667eea">${orderCount}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Ventas</div>
+          </div>
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:24px;font-weight:900;color:#10b981">${myOrders.filter(o=>daysLeft(o.expires_at)!==null&&daysLeft(o.expires_at)>=0).length}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Activas</div>
+          </div>
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:24px;font-weight:900;color:#f59e0b">${benefits.discount}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Descuento</div>
+          </div>
+        </div>
+        
+        <!-- Sistema de Rangos CON EXPLICACION -->
+        <div style="background:linear-gradient(135deg,${currentRank.bg},rgba(255,255,255,.3));border:2px solid ${currentRank.color};border-radius:16px;padding:16px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:32px">${currentRank.icon}</span>
+              <div>
+                <div style="font-size:18px;font-weight:900;color:${currentRank.color}">${currentRank.name}</div>
+                <div style="font-size:10px;color:var(--muted)">Nivel ${currentRank === rankSystem.bronze ? 1 : currentRank === rankSystem.silver ? 2 : currentRank === rankSystem.gold ? 3 : 4} de 4</div>
+              </div>
+            </div>
+            ${nextRank ? `<span style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${nextRank.color};color:#fff">Faltan ${nextRank.min - orderCount} ventas</span>` : '<span style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff">¡MAXIMO!</span>'}
+          </div>
+          
+          ${nextRank ? `
+          <div style="background:var(--panel);border-radius:10px;padding:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:var(--muted)">Progreso hacia ${nextRank.name} ${nextRank.icon}</span>
+              <span style="font-size:11px;font-weight:700">${progressToNext}%</span>
+            </div>
+            <div style="height:8px;background:var(--line);border-radius:999px;overflow:hidden">
+              <div style="height:100%;width:${progressToNext}%;background:linear-gradient(90deg,${currentRank.color},${nextRank.color});border-radius:999px;transition:width .5s ease"></div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <!-- Explicacion de Rangos -->
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Como funciona?</div>
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--panel);border-radius:10px;border-left:3px solid ${currentRank === rankSystem.bronze ? currentRank.color : 'var(--line)'}">
+              <span style="font-size:24px">🥉</span>
+              <div>
+                <div style="font-size:12px;font-weight:700">Bronce <span style="color:var(--muted);font-weight:400">(1-9 ventas)</span></div>
+                <div style="font-size:10px;color:var(--muted)">Descuento 0% - Cliente nuevo</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--panel);border-radius:10px;border-left:3px solid ${currentRank === rankSystem.silver ? currentRank.color : 'var(--line)'}">
+              <span style="font-size:24px">🥈</span>
+              <div>
+                <div style="font-size:12px;font-weight:700">Plata <span style="color:var(--muted);font-weight:400">(10-24 ventas)</span></div>
+                <div style="font-size:10px;color:var(--muted)">Descuento 5% - Prioridad Alta</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--panel);border-radius:10px;border-left:3px solid ${currentRank === rankSystem.gold ? currentRank.color : 'var(--line)'}">
+              <span style="font-size:24px">🥇</span>
+              <div>
+                <div style="font-size:12px;font-weight:700">Oro <span style="color:var(--muted);font-weight:400">(25-49 ventas)</span></div>
+                <div style="font-size:10px;color:var(--muted)">Descuento 10% - Prioridad Muy Alta</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--panel);border-radius:10px;border-left:3px solid ${currentRank === rankSystem.diamond ? currentRank.color : 'var(--line)'}">
+              <span style="font-size:24px">💎</span>
+              <div>
+                <div style="font-size:12px;font-weight:700">Diamante <span style="color:var(--muted);font-weight:400">(50+ ventas)</span></div>
+                <div style="font-size:10px;color:var(--muted)">Descuento 15% - Prioridad VIP</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Logros/Recompensas -->
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Tus Logros</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${achievements.length > 0 ? achievements.map(a => `
+              <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:28px;margin-bottom:4px">${a.icon}</div>
+                <div style="font-size:9px;font-weight:700;color:var(--text)">${a.name}</div>
+              </div>
+            `).join('') : `
+              <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:12px">
+                Completa compras para desbloquear logros
+              </div>
+            `}
           </div>
         </div>
         
         <!-- Info del Usuario -->
-        <div style="background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Informacion</div>
-          <div style="display:grid;gap:10px">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:40px;height:40px;border-radius:10px;background:rgba(102,126,234,.15);display:grid;place-items:center;flex-shrink:0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="20" height="20"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </div>
-              <div style="flex:1">
-                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600">Telefono</div>
-                <div style="font-size:14px;font-weight:700">${u.phone || 'No establecido'}</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:40px;height:40px;border-radius:10px;background:rgba(102,126,234,.15);display:grid;place-items:center;flex-shrink:0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="20" height="20"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              </div>
-              <div style="flex:1">
-                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600">Ubicacion</div>
-                <div style="font-size:14px;font-weight:700">Colombia</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Sistema de Rangos Interactivo -->
-        <div style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Nivel</span>
-            <span style="font-size:10px;color:var(--muted)">${orderCount} ventas</span>
-          </div>
-          
-          <!-- Rango actual con diseño premium -->
-          <div style="background:linear-gradient(135deg,${currentRank.bg},rgba(255,255,255,.5));border:2px solid ${currentRank.color};border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;position:relative;overflow:hidden">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,${currentRank.color},transparent)"></div>
-            <div style="font-size:48px;margin-bottom:4px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15))">${currentRank.icon}</div>
-            <div style="font-size:24px;font-weight:900;color:${currentRank.color};text-shadow:0 2px 4px rgba(0,0,0,.1)">${currentRank.name}</div>
-          </div>
-          
-          ${nextRank ? `
-          <!-- Progreso al siguiente rango -->
-          <div style="background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <span style="font-size:11px;font-weight:700;color:var(--muted)">Proximo nivel</span>
-              <span style="font-size:12px;font-weight:800;color:var(--text)">${nextRank.min - orderCount} ventas</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:20px">${currentRank.icon}</span>
-              <div style="flex:1;height:10px;background:var(--line);border-radius:999px;overflow:hidden">
-                <div style="height:100%;width:${progressToNext}%;background:linear-gradient(90deg,${currentRank.color},${nextRank.color});border-radius:999px;transition:width .5s ease;position:relative">
-                  <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:6px;height:6px;background:#fff;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,.3)"></div>
-                </div>
-              </div>
-              <span style="font-size:20px">${nextRank.icon}</span>
-            </div>
-          </div>
-          ` : `
-          <div style="background:linear-gradient(135deg,rgba(185,242,255,.2),rgba(102,126,234,.2));border:2px solid #667eea;border-radius:14px;padding:16px;text-align:center">
-            <div style="font-size:36px;margin-bottom:4px">👑</div>
-            <div style="font-size:16px;font-weight:800;color:#667eea">¡Diamante Maximo!</div>
-          </div>
-          `}
-        </div>
-        
-        <!-- Quick Actions Mejoradas -->
-        <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Acciones</div>
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px">
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-            <button onclick="closeModal();setView('orders')" style="padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.05)" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(102,126,234,.15)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.05)'">
-              <span style="font-size:28px">🛒</span>
-              <span style="font-size:12px;font-weight:700;color:var(--text)">Mis Compras</span>
-            </button>
-            <button onclick="closeModal();setView('reports')" style="padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.05)" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(102,126,234,.15)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.05)'">
-              <span style="font-size:28px">📋</span>
-              <span style="font-size:12px;font-weight:700;color:var(--text)">Reportes</span>
-            </button>
-            <button onclick="closeModal();openQrCode()" style="padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.05)" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(102,126,234,.15)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.05)'">
-              <span style="font-size:28px">📱</span>
-              <span style="font-size:12px;font-weight:700;color:var(--text)">Mi QR</span>
-            </button>
-            <button onclick="openEditProfile()" style="padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.05)" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(102,126,234,.15)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.05)'">
-              <span style="font-size:28px">✏️</span>
-              <span style="font-size:12px;font-weight:700;color:var(--text)">Editar</span>
-            </button>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:36px;height:36px;border-radius:8px;background:rgba(102,126,234,.15);display:grid;place-items:center;flex-shrink:0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:9px;color:var(--muted)">Telefono</div>
+                <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.phone || 'No establecido'}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:36px;height:36px;border-radius:8px;background:rgba(102,126,234,.15);display:grid;place-items:center;flex-shrink:0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:9px;color:var(--muted)">Ubicacion</div>
+                <div style="font-size:12px;font-weight:700">Colombia</div>
+              </div>
+            </div>
           </div>
         </div>
         
-        <!-- Settings Premium -->
-        <div style="display:flex;gap:10px">
-          <button onclick="toggleDark();closeModal()" style="flex:1;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-            <span style="font-size:20px;transition:transform .4s ease">${localStorage.dsDark === "1" ? "☀️" : "🌙"}</span>
+        <!-- Acciones -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">
+          <button onclick="closeModal();setView('orders')" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+            <span style="font-size:20px">🛒</span>
+            <span style="font-size:11px;font-weight:700">Mis Compras</span>
+          </button>
+          <button onclick="closeModal();setView('reports')" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+            <span style="font-size:20px">📋</span>
+            <span style="font-size:11px;font-weight:700">Reportes</span>
+          </button>
+          <button onclick="closeModal();openQrCode()" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+            <span style="font-size:20px">📱</span>
+            <span style="font-size:11px;font-weight:700">Mi QR</span>
+          </button>
+          <button onclick="openEditProfile()" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+            <span style="font-size:20px">✏️</span>
+            <span style="font-size:11px;font-weight:700">Editar</span>
+          </button>
+        </div>
+        
+        <!-- Settings -->
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleDark();closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <span style="font-size:16px">${localStorage.dsDark === "1" ? "☀️" : "🌙"}</span>
             Tema
           </button>
-          <button onclick="logout()" style="flex:1;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(239,68,68,.25);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(239,68,68,.35)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(239,68,68,.25)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <button onclick="logout()" style="flex:1;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Salir
           </button>
         </div>
