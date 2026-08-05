@@ -6229,8 +6229,17 @@
     }
     function openQrCode(){
       const u=state.user;
-      const qrData=u.id||u.email||"usuario";
-      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=111111&margin=10`;
+      const baseUrl = window.location.origin;
+      
+      // QR 1: Identificación (para admin encontrar usuario)
+      const identData = JSON.stringify({type:"user",id:u.id,name:u.name,role:u.role});
+      const identUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(identData)}&bgcolor=ffffff&color=111111&margin=10`;
+      
+      // QR 2: Registro/Referido (enlace único)
+      const refCode = u.id || u.email.split('@')[0];
+      const registerUrl = `${baseUrl}?ref=${refCode}`;
+      const refUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(registerUrl)}&bgcolor=ffffff&color=111111&margin=10`;
+      
       openModal(`
         <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px 20px 0 0;padding:24px;text-align:center;margin:-20px -20px 20px -20px;position:relative;overflow:hidden">
           <div style="position:absolute;top:-50%;right:-20%;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;animation:spin 10s linear infinite"></div>
@@ -6244,45 +6253,113 @@
           <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.25);color:#fff;margin-top:8px">${publicRole()}</span>
         </div>
         
-        <div style="text-align:center;padding:0 10px 10px">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Escanea este codigo para identificarte rapidamente</div>
-          
-          <!-- QR Premium -->
-          <div style="background:linear-gradient(135deg,#fff,#f8fafc);border-radius:20px;padding:20px;display:inline-block;box-shadow:0 8px 32px rgba(102,126,234,.2);border:3px solid rgba(102,126,234,.2)">
-            <div style="width:220px;height:220px;margin:0 auto;position:relative">
-              <img src="${qrUrl}" alt="QR Personal" style="width:100%;height:100%;border-radius:12px" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
-              <div style="display:none;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;place-items:center">
-                <span style="font-size:80px">📱</span>
+        <!-- TABS -->
+        <div style="display:flex;gap:4px;padding:0 16px 16px">
+          <button onclick="showQRTab('ident')" id="qrTabIdent" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--blue);color:#fff;font-weight:700;font-size:12px;cursor:pointer">🪪 Identificacion</button>
+          <button onclick="showQRTab('refer')" id="qrTabRefer" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer">🎁 Referidos</button>
+        </div>
+        
+        <!-- QR IDENTIFICACION -->
+        <div id="qrIdentContent" style="padding:0 16px 16px">
+          <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:12px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:20px">🪪</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--ok)">QR de Identificacion</div>
+                <div style="font-size:11px;color:var(--muted)">Para que el admin escanee y te identifique rapidamente</div>
               </div>
-              <!-- Marco decorativo -->
-              <div style="position:absolute;inset:-8px;border:3px dashed rgba(102,126,234,.3);border-radius:24px;pointer-events:none"></div>
             </div>
           </div>
           
-          <!-- Tu ID -->
+          <div style="background:#fff;border-radius:20px;padding:20px;display:inline-block;box-shadow:0 8px 32px rgba(16,185,129,.15)">
+            <img src="${identUrl}" alt="QR Identificacion" style="width:200px;height:200px;border-radius:12px">
+          </div>
+          
           <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:16px;display:flex;align-items:center;gap:10px">
-            <div style="flex:1;text-align:left">
-              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Tu ID unico</div>
-              <div style="font-size:13px;font-weight:700;font-family:monospace;letter-spacing:1px">${u.id||"-"}-${(u.name||"").toUpperCase().replace(/\s/g,"")}</div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:var(--muted)">TU ID</div>
+              <div style="font-size:14px;font-weight:800;letter-spacing:1px">${u.id||"-"}</div>
             </div>
-            <button onclick="copyText('${u.id||u.email}');toast('ID copiado','ok')" style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copiar
-            </button>
+            <button onclick="copyText('${u.id||u.email}');toast('ID copiado','ok')" style="padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">Copiar</button>
           </div>
         </div>
         
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 10px 10px">
-          <button onclick="downloadUserQR('${qrUrl}','${esc(u.name)}')" style="padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='#667eea'" onmouseout="this.style.borderColor='var(--line)'">
+        <!-- QR REFERIDO -->
+        <div id="qrReferContent" style="padding:0 16px 16px;display:none">
+          <div style="background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(102,126,234,.1));border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:12px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span style="font-size:20px">🎁</span>
+              <div>
+                <div style="font-size:12px;font-weight:700">Gana promociones por referir</div>
+                <div style="font-size:11px;color:var(--muted)">Cada persona que se registre con tu codigo</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Beneficios por rangos:</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="padding:3px 8px;background:rgba(205,127,50,.1);border-radius:6px;font-size:10px;color:#cd7f32">🥉 Bronce: 5% extra</span>
+              <span style="padding:3px 8px;background:rgba(192,192,192,.1);border-radius:6px;font-size:10px;color:#c0c0c0">🥈 Plata: 10% extra</span>
+              <span style="padding:3px 8px;background:rgba(255,215,0,.1);border-radius:6px;font-size:10px;color:#ffd700">🥇 Oro: 15% extra</span>
+              <span style="padding:3px 8px;background:rgba(185,242,255,.1);border-radius:6px;font-size:10px;color:#b9f2ff">💎 Diamante: 20% extra</span>
+            </div>
+          </div>
+          
+          <div style="background:#fff;border-radius:20px;padding:20px;display:inline-block;box-shadow:0 8px 32px rgba(245,158,11,.15)">
+            <img src="${refUrl}" alt="QR Referido" style="width:200px;height:200px;border-radius:12px">
+          </div>
+          
+          <!-- Link de registro -->
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:16px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">TU LINK DE REGISTRO</div>
+            <div style="font-size:11px;font-weight:700;word-break:break-all;color:var(--blue);margin-bottom:10px">${registerUrl}</div>
+            <button onclick="copyText('${registerUrl}');toast('Link copiado','ok')" style="width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar enlace
+            </button>
+          </div>
+          
+          <!-- Estadisticas de referidos -->
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px">
+            <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:900;color:#f59e0b">${state.users.filter(x=>x.referred_by===u.id).length}</div>
+              <div style="font-size:10px;color:var(--muted)">Personas referidas</div>
+            </div>
+            <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:900;color:#10b981">${state.orders.filter(o=>{const ref=state.users.find(x=>x.id===o.user_id);return ref&&ref.referred_by===u.id}).length}</div>
+              <div style="font-size:10px;color:var(--muted)">Ventas de referidos</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ACCIONES -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 16px">
+          <button onclick="downloadUserQR(document.querySelector('#qrIdentContent').style.display!=='none'?'${identUrl}':'${refUrl}','${esc(u.name)}')" style="padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descargar
           </button>
-          <button onclick="shareUserQR()" style="padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(102,126,234,.3);transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <button onclick="shareRefLink('${registerUrl}','${esc(u.name)}')" style="padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(102,126,234,.3)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             Compartir
           </button>
         </div>
       `);
+    }
+    
+    function showQRTab(tab){
+      if(tab==='ident'){
+        document.getElementById('qrIdentContent').style.display='block';
+        document.getElementById('qrReferContent').style.display='none';
+        document.getElementById('qrTabIdent').style.background='var(--blue)';
+        document.getElementById('qrTabIdent').style.color='#fff';
+        document.getElementById('qrTabRefer').style.background='var(--panel)';
+        document.getElementById('qrTabRefer').style.color='var(--text)';
+      } else {
+        document.getElementById('qrIdentContent').style.display='none';
+        document.getElementById('qrReferContent').style.display='block';
+        document.getElementById('qrTabRefer').style.background='var(--blue)';
+        document.getElementById('qrTabRefer').style.color='#fff';
+        document.getElementById('qrTabIdent').style.background='var(--panel)';
+        document.getElementById('qrTabIdent').style.color='var(--text)';
+      }
     }
     
     function shareUserQR(){
@@ -6297,6 +6374,16 @@
       } else {
         copyText(`Hola! Soy ${u.name}. Mi ID en Distrito Streaming es: ${u.id||u.email}`);
         toast("Datos copiados para compartir","ok");
+      }
+    }
+    
+    function shareRefLink(url,name){
+      const msg=`🎁 Registrate en Distrito Streaming con mi link y ambos ganamos:\n\n${url}\n\n¡Es gratis y rapide!`;
+      if(navigator.share){
+        navigator.share({title:"Distrito Streaming",text:msg}).catch(()=>{});
+      } else {
+        copyText(msg);
+        toast("Mensaje copiado para compartir","ok");
       }
     }
     function downloadUserQR(url,name){
