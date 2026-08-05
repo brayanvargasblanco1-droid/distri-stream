@@ -1647,32 +1647,27 @@
 
       
       /* ===== USERS SECTION ===== */
-      .users-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-      @media(max-width:800px){.users-stats{grid-template-columns:repeat(2,1fr)!important}}
-      .users-stats .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:center;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;cursor:pointer}
-      .users-stats .stat-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
-      .users-stats .stat-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.12);border-color:transparent}
-      .users-stats .stat-card.client{border-color:rgba(16,185,129,.2);background:linear-gradient(145deg,rgba(16,185,129,.08),var(--panel))}
-      .users-stats .stat-card.client::before{background:linear-gradient(180deg,#10b981,#059669)}
-      .users-stats .stat-card.client:hover{box-shadow:0 20px 40px rgba(16,185,129,.15)}
-      .users-stats .stat-card.reseller{border-color:rgba(102,126,234,.2);background:linear-gradient(145deg,rgba(102,126,234,.08),var(--panel))}
-      .users-stats .stat-card.reseller::before{background:linear-gradient(180deg,#667eea,#764ba2)}
-      .users-stats .stat-card.reseller:hover{box-shadow:0 20px 40px rgba(102,126,234,.15)}
-      .users-stats .stat-card.admin{border-color:rgba(245,158,11,.2);background:linear-gradient(145deg,rgba(245,158,11,.08),var(--panel))}
-      .users-stats .stat-card.admin::before{background:linear-gradient(180deg,#f59e0b,#d97706)}
-      .users-stats .stat-card.admin:hover{box-shadow:0 20px 40px rgba(245,158,11,.15)}
-      .users-stats .stat-card.total{border-color:rgba(139,92,246,.2);background:linear-gradient(145deg,rgba(139,92,246,.08),var(--panel))}
-      .users-stats .stat-card.total::before{background:linear-gradient(180deg,#8b5cf6,#7c3aed)}
-      .users-stats .stat-card.total:hover{box-shadow:0 20px 40px rgba(139,92,246,.15)}
-      .users-stats .stat-icon-wrap{width:52px;height:52px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.12)}
-      .users-stats .stat-icon-wrap svg{width:26px;height:26px}
-      .users-stats .stat-value{font-size:38px;font-weight:900;line-height:1;margin-bottom:8px}
+      /* Users Stats Premium Card */
+      .users-stats{position:relative;margin:0 16px 20px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(102,126,234,.2);animation:balancePulse 4s ease-in-out infinite}
+      .users-stats::before{content:'';position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(139,92,246,.3),transparent 70%);border-radius:50%;animation:balanceGlow 3s ease-in-out infinite alternate}
+      .users-stats-inner{display:grid;grid-template-columns:repeat(4,1fr);position:relative;z-index:1}
+      @media(max-width:800px){.users-stats-inner{grid-template-columns:repeat(2,1fr)!important}}
+      .users-stats .stat-card{padding:20px 16px;text-align:center;position:relative;transition:all .3s}
+      .users-stats .stat-card:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:rgba(255,255,255,.1)}
+      .users-stats .stat-card:hover .stat-value{transform:scale(1.1)}
+      .users-stats .stat-card.client .stat-icon{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 16px rgba(16,185,129,.4)}
+      .users-stats .stat-card.reseller .stat-icon{background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 4px 16px rgba(102,126,234,.4)}
+      .users-stats .stat-card.admin .stat-icon{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 16px rgba(245,158,11,.4)}
+      .users-stats .stat-card.total .stat-icon{background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 4px 16px rgba(139,92,246,.4)}
+      .users-stats .stat-icon{width:44px;height:44px;border-radius:12px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+      .users-stats .stat-icon svg{width:22px;height:22px;stroke:#fff;fill:none}
+      .users-stats .stat-value{font-size:32px;font-weight:900;line-height:1;margin-bottom:4px;transition:transform .3s}
       .users-stats .stat-card.client .stat-value{color:#10b981}
       .users-stats .stat-card.reseller .stat-value{color:#667eea}
       .users-stats .stat-card.admin .stat-value{color:#f59e0b}
       .users-stats .stat-card.total .stat-value{color:#8b5cf6}
-      .users-stats .stat-label{font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px}
-      .users-stats .stat-sublabel{font-size:11px;font-weight:600;color:var(--muted);background:var(--soft);padding:4px 10px;border-radius:20px}
+      .users-stats .stat-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px}
+      body.dark .users-stats{background:linear-gradient(135deg,#1a1a2e,#0f0f1a)}
       
       /* User cards mobile */
       .user-mobile-card{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;flex-direction:column;gap:10px}
@@ -5401,29 +5396,41 @@
       const registered=state.users.filter(u=>(u.status||"Activo")==="Activo").length;
       const blocked=state.users.filter(u=>u.status==="Inactivo").length;
       return `
-            <!-- Stats de Usuarios -->
-      <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div style="background:var(--panel);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('clientes')">
-          <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Clientes</div>
-          <div style="font-size:32px;font-weight:900;color:#10b981;line-height:1">${clients}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Usuarios finales</div>
-        </div>
-        <div style="background:var(--panel);border:1px solid rgba(102,126,234,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('revendedores')">
-          <div style="font-size:10px;font-weight:700;color:#667eea;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Revendedores</div>
-          <div style="font-size:32px;font-weight:900;color:#667eea;line-height:1">${resellers}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Revenden productos</div>
-        </div>
-        <div style="background:var(--panel);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('administradores')">
-          <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Administradores</div>
-          <div style="font-size:32px;font-weight:900;color:#f59e0b;line-height:1">${admins}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Control total</div>
-        </div>
-        <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 16px">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Total</div>
-          <div style="font-size:32px;font-weight:900;color:var(--text);line-height:1">${state.users.length}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">En el sistema</div>
+            <!-- Stats de Usuarios Premium -->
+      <section class="users-stats">
+        <div class="users-stats-inner">
+          <div class="stat-card client" onclick="setUsersTab('clientes')">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="stat-value">${clients}</div>
+            <div class="stat-label">Clientes</div>
+          </div>
+          <div class="stat-card reseller" onclick="setUsersTab('revendedores')">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-value">${resellers}</div>
+            <div class="stat-label">Revendedores</div>
+          </div>
+          <div class="stat-card admin" onclick="setUsersTab('administradores')">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="stat-value">${admins}</div>
+            <div class="stat-label">Administradores</div>
+          </div>
+          <div class="stat-card total">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-value">${state.users.length}</div>
+            <div class="stat-label">Total</div>
+          </div>
         </div>
       </section>
+
+
 
       
       <section class="card" style="padding:0;overflow:hidden">
