@@ -6119,34 +6119,135 @@
       const notifs=[];
       const now=Date.now();
       const h24=24*60*60*1000;
+      const u=state.user;
 
       if(isAdmin()){
-        // Admin: todo lo importante
-        const newUsers=state.users.filter(u=>{const t=new Date(u.created_at).getTime();return now-t<h24}).length;
-        if(newUsers>0) notifs.push({type:"ok",icon:"👤",title:`${newUsers} usuario(s) nuevos`,body:"Se registraron en las ultimas 24h.",action:"setView('users')"});
+        // Admin: todas las estadisticas
+        const newUsers=state.users.filter(user=>{const t=new Date(user.created_at).getTime();return now-t<h24}).length;
+        if(newUsers>0) notifs.push({type:"success",icon:"👤",title:"Nuevos Usuarios",body:`${newUsers} usuario(s) nuevo(s) hoy`,action:"setView('users')",urgent:false});
+        
         const pending=state.topups.filter(t=>t.status==="Pendiente");
-        if(pending.length>0) notifs.push({type:"warn",icon:"💰",title:`${pending.length} recarga(s) por aprobar`,body:`$${pending.reduce((s,t)=>s+Number(t.amount||0),0).toLocaleString("es-CO")} pendiente.`,action:"setView('payments')"});
+        if(pending.length>0) notifs.push({type:"warning",icon:"💰",title:"Recargas Pendientes",body:`${pending.length} recarga(s) - $${pending.reduce((s,t)=>s+Number(t.amount||0),0).toLocaleString("es-CO")}`,action:"setView('payments')",urgent:true});
+        
         const openR=state.reports.filter(r=>r.status!=="Resuelto");
-        if(openR.length>0) notifs.push({type:"danger",icon:"⚠️",title:`${openR.length} reporte(s) abierto(s)`,body:"Clientes esperando respuesta.",action:"setView('reports')"});
+        if(openR.length>0) notifs.push({type:"danger",icon:"🚨",title:"Reportes Abiertos",body:`${openR.length} reporte(s) esperando solucion`,action:"setView('reports')",urgent:true});
+        
         const newOrders=state.orders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
-        if(newOrders>0) notifs.push({type:"info",icon:"🛒",title:`${newOrders} compra(s) hoy`,body:"Operaciones de las ultimas 24h.",action:"setView('admin')"});
+        if(newOrders>0) notifs.push({type:"info",icon:"🛒",title:"Ventas del Dia",body:`${newOrders} compra(s) en las ultimas 24h`,action:"setView('admin')",urgent:false});
+        
         const lowStock=state.products.filter(p=>Number(p.stock||0)<=2&&p.status==="Disponible");
-        if(lowStock.length>0) notifs.push({type:"warn",icon:"📦",title:`${lowStock.length} producto(s) con stock bajo`,body:lowStock.map(p=>p.name).join(", "),action:"setView('store')"});
+        if(lowStock.length>0) notifs.push({type:"warning",icon:"📦",title:"Stock Bajo",body:`${lowStock.length} producto(s) por terminarse`,action:"setView('store')",urgent:true});
+        
+        // Estadisticas adicionales
+        const totalUsers=state.users.length;
+        const totalOrders=state.orders.length;
+        const totalRevenue=state.orders.reduce((s,o)=>s+Number(o.amount||0),0);
+        notifs.push({type:"stats",icon:"📊",title:"Resumen Total",body:`${totalUsers} usuarios | ${totalOrders} ventas | $${totalRevenue.toLocaleString("es-CO")}`,action:null,urgent:false});
+        
+      } else if(isReseller()){
+        // Revendedor: sus ventas y clientes
+        const myOrders=state.orders.filter(o=>o.user_id===u.id||o.email===u.email);
+        const todayOrders=myOrders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
+        if(todayOrders>0) notifs.push({type:"info",icon:"🛒",title:"Ventas de Hoy",body:`${todayOrders} venta(s) hoy`,action:"setView('orders')",urgent:false});
+        
+        const myClients=state.users.filter(x=>x.reseller_id===u.id).length;
+        if(myClients>0) notifs.push({type:"success",icon:"👥",title:"Tu Red",body:`${myClients} cliente(s) registrado(s)`,action:"setView('users')",urgent:false});
+        
+        const myRevenue=myOrders.reduce((s,o)=>s+Number(o.amount||0),0);
+        const pending=state.topups.filter(t=>t.user_id===u.id||t.email===u.email).filter(t=>t.status==="Pendiente");
+        if(pending.length>0) notifs.push({type:"warning",icon:"⏳",title:"Recargas Pendientes",body:`${pending.length} recarga(s) por aprobar`,action:"setView('payments')",urgent:true});
+        
+        const myReports=state.reports.filter(r=>r.user_id===u.id||r.email===u.email);
+        const openR=myReports.filter(r=>r.status!=="Resuelto");
+        if(openR.length>0) notifs.push({type:"danger",icon:"🚨",title:"Reportes Pendientes",body:`${openR.length} reporte(s) en espera`,action:"setView('reports')",urgent:true});
+        
+        const expiring=myOrders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=3}).length;
+        if(expiring>0) notifs.push({type:"warning",icon:"⏰",title:"Por Vencer",body:`${expiring} cuenta(s) vencen pronto`,action:"setView('orders')",urgent:true});
+        
+        // Tu resumen
+        const myTotalOrders=myOrders.length;
+        notifs.push({type:"stats",icon:"💎",title:"Tu Estadisticas",body:`${myTotalOrders} ventas totales | $${myRevenue.toLocaleString("es-CO")}`,action:null,urgent:false});
+        
       } else {
-        // Operador/Revendedor: solo lo suyo
-        const myOrders=state.orders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
-        if(myOrders>0) notifs.push({type:"info",icon:"🛒",title:`${myOrders} compra(s) reciente(s)`,body:"Tus compras de hoy.",action:"setView('orders')"});
-        const myReports=state.reports.filter(r=>r.status!=="Resuelto");
-        if(myReports.length>0) notifs.push({type:"warn",icon:"⚠️",title:`${myReports.length} reporte(s) pendiente(s)`,body:"Esperando respuesta del admin.",action:"setView('reports')"});
-        const expiring=state.orders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=3}).length;
-        if(expiring>0) notifs.push({type:"danger",icon:"⏰",title:`${expiring} cuenta(s) por vencer`,body:"Vencen en 3 dias o menos.",action:"setView('orders')"});
+        // Cliente normal
+        const myOrders=state.orders.filter(o=>o.user_id===u.id||o.email===u.email);
+        const todayOrders=myOrders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
+        if(todayOrders>0) notifs.push({type:"success",icon:"✅",title:"Compra Reciente",body:`${todayOrders} compra(s) hoy`,action:"setView('orders')",urgent:false});
+        
+        const myReports=state.reports.filter(r=>r.user_id===u.id||r.email===u.email);
+        const openR=myReports.filter(r=>r.status!=="Resuelto");
+        if(openR.length>0) notifs.push({type:"warning",icon:"📋",title:"Reportes Pendientes",body:`${openR.length} reporte(s) en proceso`,action:"setView('reports')",urgent:true});
+        
+        const expiring=myOrders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=7}).length;
+        if(expiring>0) notifs.push({type:"danger",icon:"⏰",title:"Cuentas por Vencer",body:`${expiring} cuenta(s) en la proxima semana`,action:"setView('orders')",urgent:true});
+        
+        const active=myOrders.filter(o=>daysLeft(o.expires_at)!==null&&daysLeft(o.expires_at)>=0).length;
+        const totalSpent=myOrders.reduce((s,o)=>s+Number(o.amount||0),0);
+        notifs.push({type:"stats",icon:"🎫",title:"Tu Resumen",body:`${active} cuenta(s) activa(s) | $${totalSpent.toLocaleString("es-CO")} gastado`,action:null,urgent:false});
       }
 
-      const html=notifs.length?notifs.map(n=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;border-radius:10px;border-left:3px solid ${n.type==='danger'?'var(--bad)':n.type==='warn'?'var(--warn)':n.type==='ok'?'var(--ok)':'var(--blue)'};background:var(--soft);transition:background .15s" onclick="${n.action||''};toggleAlerts()" onmouseover="this.style.background='rgba(8,119,255,.06)'" onmouseout="this.style.background='var(--soft)'">
-        <span style="font-size:18px">${n.icon}</span>
-        <div style="flex:1;min-width:0"><b style="font-size:12px">${n.title}</b><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.body}</div></div>
-      </div>`).join(""):"<p class='muted' style='padding:20px;text-align:center'>Todo en orden.</p>";
-      panel.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line)"><b style="font-size:14px">Panel de gestion</b><span style="font-size:11px;color:var(--muted)">${notifs.length} alerta${notifs.length!==1?"s":""}</span></div><div style="display:grid;gap:6px;max-height:360px;overflow-y:auto;padding-top:8px">${html}</div>`;
+      // Colores por tipo
+      const colors={
+        danger:{border:'#ef4444',bg:'rgba(239,68,68,.1)',icon:'#ef4444'},
+        warning:{border:'#f59e0b',bg:'rgba(245,158,11,.1)',icon:'#f59e0b'},
+        success:{border:'#10b981',bg:'rgba(16,185,129,.1)',icon:'#10b981'},
+        info:{border:'#667eea',bg:'rgba(102,126,234,.1)',icon:'#667eea'},
+        stats:{border:'#667eea',bg:'rgba(102,126,234,.1)',icon:'#667eea'}
+      };
+      
+      // Header del panel
+      const roleName=isAdmin()?"Administrador":isReseller()?"Revendedor":"Cliente";
+      const roleIcon=isAdmin()?"👑":isReseller()?"🏷️":"👤";
+      
+      let html=`<div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px 14px 0 0;padding:16px;margin:-12px -12px 12px -12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="font-size:16px">${roleIcon}</span>
+              <span style="font-size:13px;font-weight:800;color:#fff">${roleName}</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.7)">Panel de Notificaciones</div>
+          </div>
+          <div style="background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px">
+            <span style="font-size:12px;font-weight:800;color:#fff">${notifs.filter(n=>n.type!=='stats').length}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.7)"> alertas</span>
+          </div>
+        </div>
+      </div>`;
+      
+      // Lista de notificaciones
+      html+=`<div style="display:grid;gap:8px;max-height:400px;overflow-y:auto">`;
+      
+      if(notifs.length===0){
+        html+=`<div style="text-align:center;padding:30px">
+          <div style="font-size:48px;margin-bottom:12px">✨</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">Todo en orden!</div>
+          <div style="font-size:11px;color:var(--muted)">No tienes notificaciones pendientes</div>
+        </div>`;
+      } else {
+        notifs.forEach(n=>{
+          const c=colors[n.type]||colors.info;
+          const urgentBadge=n.urgent?'<span style="background:#ef4444;color:#fff;font-size:8px;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:6px">URGENTE</span>':'';
+          const actionStyle=n.action?'cursor:pointer':'';
+          html+=`<div onclick="${n.action?n.action+';toggleAlerts()':''}" style="display:flex;gap:12px;padding:12px;background:${c.bg};border-radius:12px;border-left:4px solid ${c.border};${actionStyle};transition:all .2s" onmouseover="this.style.transform='translateX(4px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:44px;height:44px;border-radius:12px;background:${c.border};display:grid;place-items:center;flex-shrink:0">
+              <span style="font-size:22px">${n.icon}</span>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+                <span style="font-size:12px;font-weight:800;color:var(--text)">${n.title}</span>
+                ${urgentBadge}
+              </div>
+              <div style="font-size:11px;color:var(--muted);line-height:1.4">${n.body}</div>
+            </div>
+            ${n.action?'<div style="display:grid;place-items:center;color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></div>':''}
+          </div>`;
+        });
+      }
+      
+      html+=`</div>`;
+      
+      panel.innerHTML=html;
       panel.classList.toggle("show");
     }
     function toggleUserMenu(ev){
