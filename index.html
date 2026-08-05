@@ -5347,16 +5347,61 @@
       const profit = profitFromRecharge(Number(t.amount||0));
       const user = state.users.find(u=>u.id===t.user_id);
       const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "Usuario");
-      const statusColor = t.status==="Aprobada"?"var(--ok)":t.status==="Rechazada"?"var(--bad)":"var(--warn)";
+      const role = user?.role || "Cliente";
+      const roleColor = role==="Administrador"?"#f59e0b":role==="Revendedor"?"#667eea":"#10b981";
+      const avatarBg = role==="Administrador"?"linear-gradient(135deg,#f59e0b,#d97706)":role==="Revendedor"?"linear-gradient(135deg,#667eea,#764ba2)":"linear-gradient(135deg,#10b981,#059669)";
+      const statusColor = t.status==="Aprobada"?"#10b981":t.status==="Rechazada"?"#ef4444":"#f59e0b";
       const statusBg = t.status==="Aprobada"?"rgba(16,185,129,.1)":t.status==="Rechazada"?"rgba(239,68,68,.1)":"rgba(245,158,11,.1)";
-      const statusIcon = t.status==="Aprobada"?"✓":t.status==="Rechazada"?"✗":"●";
-      return `<tr style="border-bottom:1px solid var(--line);transition:background .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background=''">
-        <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--blue)">${(userName[0]||"U").toUpperCase()}</div><div><div style="font-weight:700;font-size:13px">${esc(userName)}</div><div style="font-size:11px;color:var(--muted)">${t.method||"Nequi"} ${t.reference?"· "+esc(t.reference):""}</div></div></div></td>
-        <td style="padding:12px 16px"><span style="font-weight:800;font-size:15px;color:var(--text)">${money(t.amount)}</span></td>
-        <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="14" height="14"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg><span style="font-size:12px;color:var(--muted)">${t.method||"Nequi"}</span></div></td>
-        <td style="padding:12px 16px"><span style="font-size:13px;font-weight:700;color:var(--ok)">${money(profit)}</span></td>
-        <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg}"><span style="font-size:8px">${statusIcon}</span>${t.status}</span></td>
-        <td style="padding:12px 16px;text-align:center">${t.status==="Pendiente"&&isAdmin()?`<div style="display:flex;gap:4px;justify-content:center"><button onclick="approveTopup('${t.id}')" style="padding:6px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">Aprobar</button><button onclick="rejectTopup('${t.id}')" style="padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--bad);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.05)'" onmouseout="this.style.background='var(--panel)'">Rechazar</button></div>`:`<span style="font-size:11px;color:var(--muted)">${t.status==="Aprobada"?"✓ Completado":t.status==="Rechazada"?"✗ Rechazado":""}</span>`}</td>
+      const statusBorder = t.status==="Aprobada"?"rgba(16,185,129,.3)":t.status==="Rechazada"?"rgba(239,68,68,.3)":"rgba(245,158,11,.3)";
+      const date = t.created_at ? new Date(t.created_at).toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) : 'Sin fecha';
+      const time = t.created_at ? new Date(t.created_at).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '';
+      
+      return `<tr style="border-bottom:1px solid var(--line);transition:all .2s" onmouseover="this.style.background='linear-gradient(90deg,rgba(102,126,234,.04),transparent)'" onmouseout="this.style.background=''">
+        <td style="padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:42px;height:42px;border-radius:12px;background:${avatarBg};color:#fff;display:grid;place-items:center;font-weight:900;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.15)">${(userName[0]||"U").toUpperCase()}</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--text)">${esc(userName)}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:${roleColor}20;color:${roleColor};border:1px solid ${roleColor}30">${role}</span>
+                <span style="font-size:10px;color:var(--muted)">${date}${time ? ' · '+time : ''}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px 16px">
+          <span style="font-weight:800;font-size:18px;color:var(--text)">${money(t.amount)}</span>
+        </td>
+        <td style="padding:14px 16px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:12px;font-weight:600;color:var(--text)">${t.method||"Nequi"}</span>
+            ${t.reference ? '<span style="font-size:10px;color:var(--muted);font-family:monospace">'+esc(t.reference.slice(0,15))+(t.reference.length > 15 ? '...' : '')+'</span>' : ''}
+          </div>
+        </td>
+        <td style="padding:14px 16px">
+          <span style="font-size:13px;font-weight:700;color:#10b981">${money(profit)}</span>
+        </td>
+        <td style="padding:14px 16px">
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg};border:1px solid ${statusBorder}">
+            ${t.status==="Aprobada"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>':t.status==="Rechazada"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'}
+            ${t.status}
+          </span>
+        </td>
+        <td style="padding:14px 16px;text-align:center">
+          ${t.status==="Pendiente"&&isAdmin()?`<div style="display:flex;gap:8px;justify-content:center">
+            <button onclick="approveTopup('${t.id}')" style="padding:8px 16px;border:0;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(16,185,129,.25)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,.35)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(16,185,129,.25)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+              Aprobar
+            </button>
+            <button onclick="rejectTopup('${t.id}')" style="padding:8px 16px;border:2px solid rgba(239,68,68,.3);border-radius:10px;background:rgba(239,68,68,.05);color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(239,68,68,.05)';this.style.transform=''">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Rechazar
+            </button>
+          </div>`:`<div style="display:flex;align-items:center;justify-content:center;gap:4px">
+            ${t.status==="Aprobada"?'<svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+            <span style="font-size:11px;font-weight:600;color:${t.status==="Aprobada"?"#10b981":"#ef4444"}">${t.status==="Aprobada"?"Completado":"Rechazado"}</span>
+          </div>`}
+        </td>
       </tr>`;
     }
     async function approveTopup(id){
