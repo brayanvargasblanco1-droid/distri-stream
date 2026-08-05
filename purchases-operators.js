@@ -370,11 +370,49 @@ function openPaymentReport(topupId) {
     return;
   }
   
+  // Verificar si ya tiene un reporte para este pago
+  const existingReport = state.reports?.find(r => 
+    r.topup_id === topupId && 
+    r.status !== "Resuelto" && 
+    r.status !== "Rechazado"
+  );
+  
+  if (existingReport) {
+    // Ya tiene reporte abierto - mostrar mensaje
+    openModal(`
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚠️ Reporte Ya Enviado</h2>
+          <button onclick="closeModal()" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="already-reported">
+            <div class="already-reported-icon">⏳</div>
+            <div class="already-reported-title">Ya tienes un reporte activo</div>
+            <div class="already-reported-text">Este pago ya fue reportado y está siendo atendido por nuestro equipo.</div>
+          </div>
+          <div class="detail-info">
+            <div class="detail-row"><span>Reporte:</span><span>#${(existingReport.code || existingReport.id || '').slice(-6)}</span></div>
+            <div class="detail-row"><span>Estado:</span><span class="status-pending">⏳ En revisión</span></div>
+            <div class="detail-row"><span>Fecha:</span><span>${formatDate(existingReport.created_at)}</span></div>
+          </div>
+          <div class="report-warning">
+            ⚠️ Solo se permite un reporte por pago. Espera la respuesta del soporte.
+          </div>
+          <button onclick="closeModal()" class="order-btn datos" style="width:100%">
+            Entendido
+          </button>
+        </div>
+      </div>
+    `);
+    return;
+  }
+  
   const reasons = [
     { value: 'no_received', label: '💰 El pago no fue reflejado', desc: 'Realicé el pago pero el saldo no aumentó' },
     { value: 'wrong_amount', label: '🔢 El monto es incorrecto', desc: 'Pagué un monto diferente al aprobado' },
     { value: 'no_confirmation', label: '⏳ Sin confirmación', desc: 'El pago fue realizado pero no hay respuesta' },
-    { value: 'other', label: '❓ Otro problema', desc: ' Otro tipo de inconveniente' }
+    { value: 'other', label: '❓ Otro problema', desc: 'Otro tipo de inconveniente' }
   ];
   
   openModal(`
@@ -384,6 +422,10 @@ function openPaymentReport(topupId) {
         <button onclick="closeModal()" class="btn-close">×</button>
       </div>
       <div class="modal-body">
+        <div class="report-warning-top">
+          ⚠️ Solo puedes reportar este pago una sola vez
+        </div>
+        
         <div class="detail-card" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.05));border:2px solid rgba(245,158,11,0.2)">
           <div style="font-size:12px;color:#92400e;text-transform:uppercase;font-weight:700;margin-bottom:8px">Detalles del pago</div>
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -419,7 +461,7 @@ function openPaymentReport(topupId) {
         </div>
         
         <button onclick="submitPaymentReport('${topupId}')" class="order-btn datos" style="width:100%;padding:14px;font-size:15px">
-          📤 Enviar Reporte
+          📤 Enviar Reporte (Una sola vez)
         </button>
       </div>
     </div>
@@ -558,7 +600,13 @@ function showMovementDetail(orderId, isCredit, encodedData) {
   const topupId = isCreditBool && m.orderData?.id ? m.orderData.id : '';
   
   if (isCreditBool) {
-    // Mostrar detalle de recarga con opción de reportar
+    // Verificar si ya tiene reporte
+    const hasReport = state.reports?.some(r => 
+      r.topup_id === topupId && 
+      r.status !== "Resuelto" && 
+      r.status !== "Rechazado"
+    );
+    
     openModal(`
       <div class="modal-content">
         <div class="modal-header">
@@ -577,18 +625,35 @@ function showMovementDetail(orderId, isCredit, encodedData) {
             ${m.orderData?.method ? `<div class="detail-row"><span>Método:</span><span>${m.orderData.method}</span></div>` : ''}
             ${m.orderData?.reference ? `<div class="detail-row"><span>Referencia:</span><span>${m.orderData.reference}</span></div>` : ''}
           </div>
+          
           ${topupId ? `
-          <div class="detail-actions">
-            <button onclick="closeModal();openPaymentReport('${topupId}')" class="order-btn reportar">
-              ⚠️ Reportar Problema con el Pago
-            </button>
+          <div class="report-action-section">
+            ${hasReport ? `
+              <div class="report-already-sent">
+                <div class="report-sent-icon">✅</div>
+                <div class="report-sent-text">Reporte ya enviado para este pago</div>
+                <button onclick="closeModal();openPaymentReport('${topupId}')" class="report-btn-view">
+                  👁️ Ver reporte
+                </button>
+              </div>
+            ` : `
+              <button onclick="closeModal();openPaymentReport('${topupId}')" class="report-btn-main">
+                ⚠️ Reportar Problema con el Pago
+              </button>
+            `}
           </div>
           ` : ''}
         </div>
       </div>
     `);
   } else if (orderId) {
-    // Mostrar opciones para compra
+    // Verificar si ya tiene reporte
+    const hasReport = state.reports?.some(r => 
+      r.order_id === orderId && 
+      r.status !== "Resuelto" && 
+      r.status !== "Rechazado"
+    );
+    
     openModal(`
       <div class="modal-content">
         <div class="modal-header">
@@ -607,13 +672,25 @@ function showMovementDetail(orderId, isCredit, encodedData) {
             <div class="detail-row"><span>Código:</span><span>${m.orderData?.code || '-'}</span></div>
             <div class="detail-row"><span>Estado:</span><span>${m.orderData?.status || '-'}</span></div>
           </div>
-          <div class="detail-actions">
-            <button onclick="closeModal();openAccountModal('${encodeURIComponent(JSON.stringify(m.orderData))}')" class="order-btn datos">
-              🔐 Ver Datos de la Cuenta
-            </button>
-            <button onclick="closeModal();openReport('${orderId}')" class="order-btn reportar">
-              ⚠️ Reportar Problema con la Cuenta
-            </button>
+          
+          <button onclick="closeModal();openAccountModal('${encodeURIComponent(JSON.stringify(m.orderData))}')" class="order-btn datos" style="width:100%;margin-bottom:12px">
+            🔐 Ver Datos de la Cuenta
+          </button>
+          
+          <div class="report-action-section">
+            ${hasReport ? `
+              <div class="report-already-sent">
+                <div class="report-sent-icon">✅</div>
+                <div class="report-sent-text">Reporte ya enviado para esta cuenta</div>
+                <button onclick="closeModal();openReport('${orderId}')" class="report-btn-view">
+                  👁️ Ver reporte
+                </button>
+              </div>
+            ` : `
+              <button onclick="closeModal();openReport('${orderId}')" class="report-btn-main-red">
+                ⚠️ Reportar Problema con la Cuenta
+              </button>
+            `}
           </div>
         </div>
       </div>
@@ -883,6 +960,25 @@ function injectPurchaseStyles() {
     .reason-content { flex: 1; }
     .reason-label { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 3px; }
     .reason-desc { font-size: 12px; color: #6b7280; }
+    
+    .report-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 12px; font-size: 12px; color: #92400e; text-align: center; margin-bottom: 12px; }
+    .report-warning-top { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #92400e; text-align: center; margin-bottom: 16px; font-weight: 700; }
+    
+    .report-action-section { margin-top: 8px; }
+    .report-btn-main { width: 100%; padding: 16px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+    .report-btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(245,158,11,0.4); }
+    .report-btn-main-red { width: 100%; padding: 16px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+    .report-btn-main-red:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(220,38,38,0.4); }
+    .report-already-sent { background: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; text-align: center; }
+    .report-sent-icon { font-size: 36px; margin-bottom: 8px; }
+    .report-sent-text { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 12px; }
+    .report-btn-view { padding: 10px 20px; background: #22c55e; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .report-btn-view:hover { background: #16a34a; }
+    .status-pending { color: #d97706; font-weight: 700; }
+    .already-reported { text-align: center; padding: 20px; }
+    .already-reported-icon { font-size: 48px; margin-bottom: 12px; }
+    .already-reported-title { font-size: 18px; font-weight: 800; color: #166534; margin-bottom: 8px; }
+    .already-reported-text { font-size: 13px; color: #4b5563; }
     
     .modal-content { min-width: 320px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
