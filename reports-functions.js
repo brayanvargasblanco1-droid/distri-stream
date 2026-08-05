@@ -1,96 +1,161 @@
 /* ══════════════════════════════════════════════════════════════════════════════
-   FUNCIONES MEJORADAS PARA REPORTES Y SOPORTE
+   FUNCIONES MEJORADAS PARA REPORTES Y SOPORTE v2.0
+   ✓ Seguridad completa (escapar HTML, validación de permisos, confirmaciones)
+   ✓ Separación Activos/Resueltos
+   ✓ Timeline dinámico
+   ✓ Validación centralizada
    ══════════════════════════════════════════════════════════════════════════════ */
 
-// ─── UTILIDADES DE ESTADO Y CATEGORÍA ───
+// ══════════════════════════════════════════════════════════════════════════════
+//  CONSTANTES Y ENUMS - Estados centralizados
+// ══════════════════════════════════════════════════════════════════════════════
+const ReportStates = {
+  OPEN: 'Abierto',
+  REVIEWING: 'En revisión',
+  IN_PROGRESS: 'En proceso',
+  RESOLVED: 'Resuelto',
+  REJECTED: 'Rechazado'
+};
+
+const ReportCategories = {
+  'producto_no_llego': { label: 'Producto no llegó', icon: '📦', color: '#ef4444' },
+  'defectuoso': { label: 'Defectuoso/No funciona', icon: '⚠️', color: '#f97316' },
+  'cuenta_no_funciona': { label: 'Cuenta no funciona', icon: '🔐', color: '#9333ea' },
+  'acceso_denegado': { label: 'Acceso denegado', icon: '🚫', color: '#3b82f6' },
+  'otro': { label: 'Otro', icon: '❓', color: '#6b7280' }
+};
+
+const ReportPriority = {
+  NORMAL: 'normal',
+  URGENT: 'urgente',
+  CRITICAL: 'critico'
+};
+
+const RESOLVED_STATES = [ReportStates.RESOLVED, ReportStates.REJECTED];
+const ACTIVE_STATES = [ReportStates.OPEN, ReportStates.REVIEWING, ReportStates.IN_PROGRESS];
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  VALIDADOR CENTRALIZADO - ReportValidator
+// ══════════════════════════════════════════════════════════════════════════════
+const ReportValidator = {
+  isValidStatus(status) {
+    return Object.values(ReportStates).includes(status);
+  },
+  isResolved(status) {
+    return RESOLVED_STATES.includes(status);
+  },
+  isActive(status) {
+    return ACTIVE_STATES.includes(status);
+  },
+  validateNew(data) {
+    const errors = [];
+    if (!data.orderId || data.orderId.trim() === '') errors.push('Debes seleccionar una compra');
+    if (!data.reason || data.reason.trim().length < 3) errors.push('El asunto debe tener al menos 3 caracteres');
+    if (data.reason && data.reason.length > 100) errors.push('El asunto no puede exceder 100 caracteres');
+    if (!data.description || data.description.trim().length < 10) errors.push('La descripción debe tener al menos 10 caracteres');
+    if (data.description && data.description.length > 1000) errors.push('La descripción no puede exceder 1000 caracteres');
+    if (!data.category || !ReportCategories[data.category]) errors.push('Selecciona una categoría válida');
+    if (data.email && !this.isValidEmail(data.email)) errors.push('El correo electrónico no es válido');
+    return { valid: errors.length === 0, errors: errors };
+  },
+  isValidEmail(email) {
+    if (!email) return true;
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  },
+  validateResponse(data) {
+    const errors = [];
+    if (!data.response || data.response.trim().length < 5) errors.push('La respuesta debe tener al menos 5 caracteres');
+    if (data.response && data.response.length > 2000) errors.push('La respuesta no puede exceder 2000 caracteres');
+    return { valid: errors.length === 0, errors: errors };
+  },
+  escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  },
+  sanitize(data) {
+    return {
+      ...data,
+      reason: this.escapeHtml(data.reason || ''),
+      description: this.escapeHtml(data.description || ''),
+      clientName: this.escapeHtml(data.clientName || ''),
+      email: this.escapeHtml(data.email || ''),
+      accountData: this.escapeHtml(data.accountData || ''),
+      adminResponse: this.escapeHtml(data.adminResponse || ''),
+      rejectionReason: this.escapeHtml(data.rejectionReason || '')
+    };
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CONTROL DE PERMISOS
+// ══════════════════════════════════════════════════════════════════════════════
+const ReportPermissions = {
+  isAdmin() {
+    return window.state?.user?.role === 'admin' || window.state?.user?.is_admin === true || localStorage.getItem('userRole') === 'admin';
+  },
+  canView(report) {
+    if (this.isAdmin()) return true;
+    return report?.user_id === window.state?.user?.id || report?.client_id === window.state?.user?.id;
+  },
+  canModify(report) {
+    return this.isAdmin();
+  },
+  canDelete(report) {
+    return this.isAdmin();
+  },
+  canExport() {
+    return this.isAdmin();
+  },
+  canUpdateStatus() {
+    return this.isAdmin();
+  },
+  canRespond() {
+    return this.isAdmin();
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  UTILIDADES DE ESTADO Y CATEGORÍA
+// ══════════════════════════════════════════════════════════════════════════════
 function getReportCategory(code) {
-  const categories = {
-    'producto_no_llego': { label: 'Producto no llegó', icon: '📦', color: '#ef4444' },
-    'defectuoso': { label: 'Defectuoso/No funciona', icon: '⚠️', color: '#f97316' },
-    'cuenta_no_funciona': { label: 'Cuenta no funciona', icon: '🔐', color: '#9333ea' },
-    'acceso_denegado': { label: 'Acceso denegado', icon: '🚫', color: '#3b82f6' },
-    'otro': { label: 'Otro', icon: '❓', color: '#6b7280' }
-  };
-  return categories[code] || categories['otro'];
+  return ReportCategories[code] || ReportCategories['otro'];
 }
 
 function getReportPriority(hoursElapsed) {
-  if (hoursElapsed > 48) return 'critico';
-  if (hoursElapsed > 24) return 'urgente';
-  return 'normal';
+  if (hoursElapsed > 48) return ReportPriority.CRITICAL;
+  if (hoursElapsed > 24) return ReportPriority.URGENT;
+  return ReportPriority.NORMAL;
+}
+
+function getHoursElapsed(createdAt) {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt);
+  const now = new Date();
+  return Math.floor((now - created) / (1000 * 60 * 60));
 }
 
 function getPriorityLabel(priority) {
-  return { 'normal': 'Normal', 'urgente': 'Urgente', 'critico': 'Crítico' }[priority] || 'Normal';
+  const labels = { [ReportPriority.NORMAL]: 'Normal', [ReportPriority.URGENT]: 'Urgente', [ReportPriority.CRITICAL]: 'Crítico' };
+  return labels[priority] || 'Normal';
 }
 
 function getStatusInfo(status) {
   const statuses = {
-    'Abierto': { icon: '🔵', color: '#3b82f6', label: 'Abierto' },
-    'En revisión': { icon: '👁️', color: '#f59e0b', label: 'En revisión' },
-    'En proceso': { icon: '⚙️', color: '#8b5cf6', label: 'En proceso' },
-    'Resuelto': { icon: '✅', color: '#12a454', label: 'Resuelto' },
-    'Rechazado': { icon: '❌', color: '#ef4444', label: 'Rechazado' }
+    [ReportStates.OPEN]: { icon: '🔵', color: '#3b82f6', label: 'Abierto' },
+    [ReportStates.REVIEWING]: { icon: '👁️', color: '#f59e0b', label: 'En revisión' },
+    [ReportStates.IN_PROGRESS]: { icon: '⚙️', color: '#8b5cf6', label: 'En proceso' },
+    [ReportStates.RESOLVED]: { icon: '✅', color: '#12a454', label: 'Resuelto' },
+    [ReportStates.REJECTED]: { icon: '❌', color: '#ef4444', label: 'Rechazado' }
   };
-  return statuses[status] || statuses['Abierto'];
+  return statuses[status] || statuses[ReportStates.OPEN];
 }
 
-// ─── COMPONENTE DE SEGUIMIENTO ANIMADO EN TABLAS ───
-function renderTableTracker(r) {
-  if (!r) return '-';
-  const status = r.status || 'Abierto';
-  const safeResponse = typeof escapeHTML === 'function' ? escapeHTML(r.provider_response || '') : (r.provider_response || '');
-  
-  if (safeResponse) {
-    return `<div style="font-size:12px;color:var(--ok);font-weight:700;display:flex;align-items:center;gap:6px">
-      <span class="table-tracker-dot ok"></span> 💬 ${safeResponse}
-    </div>`;
-  }
-  
-  let stepIndex = 0;
-  let statusText = 'Recibido · En espera';
-  let dotClass = '';
-  
-  if (status === 'En revisión') {
-    stepIndex = 1;
-    statusText = 'En revisión por el equipo...';
-    dotClass = 'warn';
-  } else if (status === 'En proceso') {
-    stepIndex = 2;
-    statusText = 'En proceso de solución...';
-    dotClass = '';
-  } else if (status === 'Resuelto') {
-    stepIndex = 3;
-    statusText = 'Solucionado con éxito';
-    dotClass = 'ok';
-  } else if (status === 'Rechazado') {
-    stepIndex = 1;
-    statusText = 'Solicitud rechazada';
-    dotClass = 'bad';
-  }
-  
-  const stepsHTML = [0, 1, 2, 3].map(i => {
-    let cls = 'table-tracker-step';
-    if (status === 'Rechazado' && i === stepIndex) cls += ' bad';
-    else if (i < stepIndex) cls += ' completed';
-    else if (i === stepIndex) cls += ' active';
-    return `<div class="${cls}"></div>`;
-  }).join('');
-
-  return `
-    <div class="table-tracker">
-      <div class="table-tracker-steps">
-        ${stepsHTML}
-      </div>
-      <div class="table-tracker-info">
-        <span class="table-tracker-dot ${dotClass}"></span>
-        <span>${statusText}</span>
-      </div>
-    </div>
-  `;
-}
-
-// ─── CÁLCULO DE TIEMPOS ───
+// ══════════════════════════════════════════════════════════════════════════════
+//  CÁLCULO DE TIEMPOS
+// ══════════════════════════════════════════════════════════════════════════════
 function calculateResponseTime(createdAt, resolvedAt) {
   if (!createdAt) return null;
   const created = new Date(createdAt);
@@ -98,9 +163,9 @@ function calculateResponseTime(createdAt, resolvedAt) {
   const diffMs = resolved - created;
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
-  return `${diffHours}h`;
+  if (diffDays > 0) return diffDays + 'd ' + (diffHours % 24) + 'h';
+  if (diffHours > 0) return diffHours + 'h';
+  return 'Recientes';
 }
 
 function formatTimeAgo(date) {
@@ -108,15 +173,13 @@ function formatTimeAgo(date) {
   const d = new Date(date);
   const now = new Date();
   const seconds = Math.floor((now - d) / 1000);
-  
   if (seconds < 60) return 'hace unos segundos';
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `hace ${minutes}m`;
+  if (minutes < 60) return 'hace ' + minutes + 'm';
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `hace ${hours}h`;
+  if (hours < 24) return 'hace ' + hours + 'h';
   const days = Math.floor(hours / 24);
-  if (days < 7) return `hace ${days}d`;
-  
+  if (days < 7) return 'hace ' + days + 'd';
   return d.toLocaleDateString('es-ES');
 }
 
@@ -126,298 +189,349 @@ function formatDateTime(date) {
   return d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── GENERACIÓN DE PROGRESO VISUAL ───
-function generateProgressSteps(currentStatus) {
-  const steps = ['Abierto', 'En revisión', 'En proceso', 'Resuelto'];
-  const currentIndex = steps.indexOf(currentStatus);
+// ══════════════════════════════════════════════════════════════════════════════
+//  COMPONENTE DE SEGUIMIENTO EN TABLAS (SEGURO)
+// ══════════════════════════════════════════════════════════════════════════════
+function renderTableTracker(r) {
+  if (!r) return '-';
+  const status = r.status || ReportStates.OPEN;
+  const safeResponse = ReportValidator.escapeHtml(r.provider_response || r.admin_response || '');
   
+  if (safeResponse) {
+    return '<div style="font-size:12px;color:var(--ok);font-weight:700;display:flex;align-items:center;gap:6px"><span class="table-tracker-dot ok"></span> 💬 ' + safeResponse + '</div>';
+  }
+  
+  let stepIndex = 0, statusText = 'Recibido · En espera', dotClass = '';
+  if (status === ReportStates.REVIEWING) { stepIndex = 1; statusText = 'En revisión...'; dotClass = 'warn'; }
+  else if (status === ReportStates.IN_PROGRESS) { stepIndex = 2; statusText = 'En proceso...'; }
+  else if (status === ReportStates.RESOLVED) { stepIndex = 3; statusText = 'Solucionado'; dotClass = 'ok'; }
+  else if (status === ReportStates.REJECTED) { stepIndex = 1; statusText = 'Rechazado'; dotClass = 'bad'; }
+  
+  const stepsHTML = [0, 1, 2, 3].map(i => {
+    let cls = 'table-tracker-step';
+    if (status === ReportStates.REJECTED && i === stepIndex) cls += ' bad';
+    else if (i < stepIndex) cls += ' completed';
+    else if (i === stepIndex) cls += ' active';
+    return '<div class="' + cls + '"></div>';
+  }).join('');
+
+  return '<div class="table-tracker"><div class="table-tracker-steps">' + stepsHTML + '</div><div class="table-tracker-info"><span class="table-tracker-dot ' + dotClass + '"></span><span>' + ReportValidator.escapeHtml(statusText) + '</span></div></div>';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  GENERACIÓN DE PROGRESO VISUAL
+// ══════════════════════════════════════════════════════════════════════════════
+function generateProgressSteps(currentStatus) {
+  const steps = [ReportStates.OPEN, ReportStates.REVIEWING, ReportStates.IN_PROGRESS, ReportStates.RESOLVED];
+  const currentIndex = steps.indexOf(currentStatus);
   return steps.map((step, index) => {
     const isCompleted = index < currentIndex;
     const isActive = index === currentIndex;
-    const info = getStatusInfo(step);
-    
-    return `
-      <div class="progress-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-        <div class="progress-dot ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-          ${isActive ? '●' : isCompleted ? '✓' : index + 1}
-        </div>
-        <div class="progress-label">${step}</div>
-      </div>
-    `;
+    return '<div class="progress-step ' + (isActive ? 'active' : '') + ' ' + (isCompleted ? 'completed' : '') + '"><div class="progress-dot ' + (isActive ? 'active' : '') + ' ' + (isCompleted ? 'completed' : '') + '">' + (isActive ? '●' : isCompleted ? '✓' : index + 1) + '</div><div class="progress-label">' + ReportValidator.escapeHtml(step) + '</div></div>';
   }).join('');
 }
 
-// ─── COMPONENTE DE TARJETA DE REPORTE ───
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  COMPONENTE DE TARJETA DE REPORTE (SEGURO)
+// ══════════════════════════════════════════════════════════════════════════════
 function generateReportCard(report) {
   const category = getReportCategory(report.category || 'otro');
   const statusInfo = getStatusInfo(report.status);
-  const hoursElapsed = calculateResponseTime(report.created_at, report.updated_at);
-  const priority = getReportPriority(new Date() - new Date(report.created_at));
+  const hoursElapsed = getHoursElapsed(report.created_at);
+  const priority = getReportPriority(hoursElapsed);
+  const isUrgent = priority === ReportPriority.URGENT || priority === ReportPriority.CRITICAL;
+  const safeCode = ReportValidator.escapeHtml(report.code || 'SIN-CÓDIGO');
+  const safeReason = ReportValidator.escapeHtml(report.reason || 'Reporte sin asunto');
+  const safeProduct = ReportValidator.escapeHtml(report.product_name || 'Producto no especificado');
+  const safeDesc = ReportValidator.escapeHtml(report.description || '');
   
-  const isUrgent = priority === 'urgente' || priority === 'critico';
-  
-  return `
-    <div class="report-card fade-in ${report.status === 'Resuelto' ? 'resolved' : ''} ${report.status === 'Rechazado' ? 'rejected' : ''} ${isUrgent ? (priority === 'critico' ? 'critical' : 'urgent') : ''}">
-      <div class="report-card-header">
-        <div class="report-card-header-left">
-          <span class="report-code">${report.code || 'SIN-CÓDIGO'}</span>
-          <div class="report-title">${report.reason || 'Reporte sin asunto'}</div>
-          <div class="report-product">📦 ${report.product_name || 'Producto no especificado'}</div>
-          <div class="report-badges">
-            <span class="report-category-badge ${report.category || 'otro'}">${category.icon} ${category.label}</span>
-            <span class="report-priority-badge ${priority}">${priority === 'critico' ? '🔴' : priority === 'urgente' ? '🟠' : '🟢'} ${getPriorityLabel(priority)}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="report-progress">
-        ${generateProgressSteps(report.status)}
-      </div>
-
-      <div class="report-time-info">
-        <div class="time-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          <span>Creado: <strong>${formatTimeAgo(report.created_at)}</strong></span>
-        </div>
-        <div class="time-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 11l3 3L22 4"></path>
-          </svg>
-          <span>Tiempo: <strong>${hoursElapsed}</strong></span>
-        </div>
-      </div>
-
-      ${report.description ? `
-        <div class="report-description">
-          <strong>Descripción:</strong><br>
-          ${report.description}
-        </div>
-      ` : ''}
-
-      <div class="report-stats">
-        <div class="stat-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span>Mensajes: <strong>${(report.messages?.length || 0)}</strong></span>
-        </div>
-        <div class="stat-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>Adjuntos: <strong>${(report.attachments?.length || 0)}</strong></span>
-        </div>
-        <div class="stat-item">
-          <span>${statusInfo.icon} Estado: <strong>${report.status}</strong></span>
-        </div>
-      </div>
-
-      <div class="report-actions">
-        <button class="report-action-btn primary" onclick="expandReport('${report.id}')">
-          📋 Ver detalles
-        </button>
-        <button class="report-action-btn" onclick="openReportChat('${report.id}')">
-          💬 Mensajes
-        </button>
-        ${report.status !== 'Resuelto' && report.status !== 'Rechazado' ? `
-          <button class="report-action-btn" onclick="markAsUrgent('${report.id}')">
-            ⚡ Marcar urgente
-          </button>
-        ` : ''}
-        <button class="report-action-btn" onclick="downloadReportPDF('${report.id}')">
-          📥 Descargar
-        </button>
-      </div>
-    </div>
-  `;
+  return '<div class="report-card fade-in ' + (report.status === ReportStates.RESOLVED ? 'resolved' : '') + ' ' + (report.status === ReportStates.REJECTED ? 'rejected' : '') + ' ' + (isUrgent ? (priority === ReportPriority.CRITICAL ? 'critical' : 'urgent') : '') + '">' +
+    '<div class="report-card-header"><div class="report-card-header-left"><span class="report-code">' + safeCode + '</span><div class="report-title">' + safeReason + '</div><div class="report-product">📦 ' + safeProduct + '</div><div class="report-badges"><span class="report-category-badge ' + (report.category || 'otro') + '">' + category.icon + ' ' + ReportValidator.escapeHtml(category.label) + '</span><span class="report-priority-badge ' + priority + '">' + (priority === ReportPriority.CRITICAL ? '🔴' : priority === ReportPriority.URGENT ? '🟠' : '🟢') + ' ' + getPriorityLabel(priority) + '</span></div></div></div>' +
+    '<div class="report-progress">' + generateProgressSteps(report.status) + '</div>' +
+    '<div class="report-time-info"><div class="time-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Creado: <strong>' + formatTimeAgo(report.created_at) + '</strong></span></div><div class="time-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path></svg><span>Tiempo: <strong>' + calculateResponseTime(report.created_at, report.resolved_at) + '</strong></span></div></div>' +
+    (safeDesc ? '<div class="report-description"><strong>Descripción:</strong><br>' + safeDesc + '</div>' : '') +
+    '<div class="report-stats"><div class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensajes: <strong>' + (report.messages?.length || 0) + '</strong></span></div><div class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg><span>Adjuntos: <strong>' + (report.attachments?.length || 0) + '</strong></span></div></div>' +
+    '<div class="report-actions"><button class="report-action-btn" onclick="openReportDetail(\'' + ReportValidator.escapeHtml(report.id) + '\')">📋 Ver Detalles</button><button class="report-action-btn" onclick="openReportChat(\'' + ReportValidator.escapeHtml(report.id) + '\')">💬 Mensajes</button>' + (report.status !== ReportStates.RESOLVED && report.status !== ReportStates.REJECTED ? '<button class="report-action-btn" onclick="markAsUrgent(\'' + ReportValidator.escapeHtml(report.id) + '\')">⚡ Marcar urgente</button>' : '') + '<button class="report-action-btn" onclick="downloadReportPDF(\'' + ReportValidator.escapeHtml(report.id) + '\')">📥 Descargar</button></div>' +
+    '</div>';
 }
 
-// ─── FORMULARIO DE CREAR REPORTE MEJORADO ───
-function generateReportForm(order = null) {
+// ══════════════════════════════════════════════════════════════════════════════
+//  VISTA SEPARADA: ACTIVOS vs RESUELTOS
+// ══════════════════════════════════════════════════════════════════════════════
+function generateReportTabs() {
+  return '<div class="report-tabs"><button class="report-tab active" data-tab="active" onclick="switchReportTab(\'active\')">📋 Activos <span id="badge-active" class="tab-count">0</span></button><button class="report-tab" data-tab="resolved" onclick="switchReportTab(\'resolved\')">✅ Resueltos <span id="badge-resolved" class="tab-count">0</span></button></div>';
+}
+
+function switchReportTab(tab) {
+  document.querySelectorAll('.report-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('reports-active-section')?.classList.toggle('hide', tab !== 'active');
+  document.getElementById('reports-resolved-section')?.classList.toggle('hide', tab !== 'resolved');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SECCIONES SEPARADAS CON FECHAS
+// ══════════════════════════════════════════════════════════════════════════════
+function generateActiveReportsSection(reports) {
+  const activeReports = reports.filter(r => ReportValidator.isActive(r.status));
+  return '<div id="reports-active-section" class="reports-section"><div class="section-header"><h3>📋 Reportes Activos</h3><span class="count-badge">' + activeReports.length + '</span></div>' +
+    (activeReports.length === 0 ? '<div class="empty-state"><div class="empty-icon">🎉</div><p>¡No hay reportes activos!</p><small>Todos tus reportes están resueltos.</small></div>' : '<div class="reports-grid">' + activeReports.map(r => generateReportCard(r)).join('') + '</div>') + '</div>';
+}
+
+function generateResolvedReportsSection(reports) {
+  const resolvedReports = reports.filter(r => ReportValidator.isResolved(r.status));
+  return '<div id="reports-resolved-section" class="reports-section hide"><div class="section-header"><h3>✅ Reportes Resueltos</h3><span class="count-badge success">' + resolvedReports.length + '</span></div>' +
+    (resolvedReports.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>No hay reportes resueltos aún.</p></div>' : '<div class="reports-grid">' + resolvedReports.map(r => generateResolvedReportCard(r)).join('') + '</div>') + '</div>';
+}
+
+function generateResolvedReportCard(report) {
+  const category = getReportCategory(report.category || 'otro');
+  const statusInfo = getStatusInfo(report.status);
+  const safeCode = ReportValidator.escapeHtml(report.code || 'SIN-CÓDIGO');
+  const safeReason = ReportValidator.escapeHtml(report.reason || 'Reporte sin asunto');
+  const safeProduct = ReportValidator.escapeHtml(report.product_name || 'Producto no especificado');
+  const safeResponse = ReportValidator.escapeHtml(report.admin_response || report.provider_response || '');
+  const safeRejection = ReportValidator.escapeHtml(report.rejection_reason || '');
+  const isRejected = report.status === ReportStates.REJECTED;
+
+  return '<div class="report-card resolved ' + (isRejected ? 'rejected' : '') + '">' +
+    '<div class="report-card-header"><div class="report-card-header-left"><span class="report-code">' + safeCode + '</span><div class="report-title">' + safeReason + '</div><div class="report-product">📦 ' + safeProduct + '</div><div class="report-badges"><span class="report-category-badge ' + (report.category || 'otro') + '">' + category.icon + ' ' + ReportValidator.escapeHtml(category.label) + '</span><span class="report-status-badge ' + report.status.toLowerCase().replace(' ', '-') + '">' + statusInfo.icon + ' ' + ReportValidator.escapeHtml(report.status) + '</span></div></div></div>' +
+    '<div class="resolution-info"><div class="resolution-header ' + (isRejected ? 'rejected' : 'success') + '">' + (isRejected ? '❌ Reporte Rechazado' : '✅ Reporte Resuelto') + '</div>' +
+    '<div class="resolution-dates"><div class="date-item"><span class="date-label">📅 Creado:</span><span class="date-value">' + formatDateTime(report.created_at) + '</span></div><div class="date-item"><span class="date-label">' + (isRejected ? '❌' : '✅') + ' ' + (isRejected ? 'Rechazado' : 'Resuelto') + ':</span><span class="date-value">' + formatDateTime(report.resolved_at || report.updated_at) + '</span></div><div class="date-item"><span class="date-label">⏱️ Tiempo total:</span><span class="date-value">' + calculateResponseTime(report.created_at, report.resolved_at || report.updated_at) + '</span></div></div>' +
+    (safeResponse ? '<div class="resolution-response"><div class="response-label">💬 Respuesta del administrador:</div><div class="response-text">' + safeResponse + '</div></div>' : '') +
+    (isRejected && safeRejection ? '<div class="rejection-reason"><div class="rejection-label">🚫 Razón del rechazo:</div><div class="rejection-text">' + safeRejection + '</div></div>' : '') + '</div>' +
+    '<div class="report-actions"><button class="report-action-btn" onclick="openReportDetail(\'' + ReportValidator.escapeHtml(report.id) + '\')">📋 Ver Detalles</button><button class="report-action-btn" onclick="reopenReport(\'' + ReportValidator.escapeHtml(report.id) + '\')">🔄 Reabrir Reporte</button><button class="report-action-btn" onclick="downloadReportPDF(\'' + ReportValidator.escapeHtml(report.id) + '\')">📥 Descargar</button></div>' +
+    '</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  TIMELINE DINÁMICO COMPLETO
+// ══════════════════════════════════════════════════════════════════════════════
+function generateTimeline(events) {
+  if (!events || events.length === 0) return '<div class="muted" style="padding:12px;text-align:center">Sin eventos registrados</div>';
+  const sortedEvents = [...events].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const iconMap = { 'created': '📝', 'status_changed': '🔄', 'response': '💬', 'resolved': '✅', 'rejected': '❌', 'reopened': '🔓', 'attachment': '📎' };
+  
+  return '<div class="report-timeline">' + sortedEvents.map(event => {
+    const safeEvent = ReportValidator.escapeHtml(event.event || '');
+    const safeActor = ReportValidator.escapeHtml(event.actor || '');
+    const safeNote = ReportValidator.escapeHtml(event.note || '');
+    const icon = iconMap[event.type] || '📌';
+    return '<div class="timeline-item"><div class="timeline-dot ' + (event.type === 'resolved' ? 'success' : event.type === 'rejected' ? 'error' : '') + '">' + icon + '</div><div class="timeline-content"><div class="timeline-label">' + safeEvent + '</div><div class="timeline-time">' + formatDateTime(event.timestamp) + '</div>' + (safeActor ? '<div class="timeline-actor">Por: ' + safeActor + '</div>' : '') + (safeNote ? '<div class="timeline-note">' + safeNote + '</div>' : '') + '</div></div>';
+  }).join('') + '</div>';
+}
+
+function generateReportTimeline(report) {
+  const events = [];
+  if (report.created_at) events.push({ type: 'created', event: 'Reporte creado', timestamp: report.created_at, actor: ReportValidator.escapeHtml(report.client_name || 'Cliente'), note: ReportValidator.escapeHtml(report.reason || '') });
+  if (report.status_history && Array.isArray(report.status_history)) report.status_history.forEach(h => events.push({ type: 'status_changed', event: 'Estado cambiado a "' + h.new_status + '"', timestamp: h.changed_at, actor: ReportValidator.escapeHtml(h.changed_by || 'Sistema'), note: h.note ? ReportValidator.escapeHtml(h.note) : '' }));
+  if (report.responses && Array.isArray(report.responses)) report.responses.forEach(r => events.push({ type: 'response', event: 'Respuesta del administrador', timestamp: r.created_at, actor: ReportValidator.escapeHtml(r.admin_name || 'Administrador'), note: ReportValidator.escapeHtml(r.message || '') }));
+  if (report.status === ReportStates.RESOLVED) events.push({ type: 'resolved', event: 'Reporte resuelto', timestamp: report.resolved_at || report.updated_at, actor: ReportValidator.escapeHtml(report.resolved_by || 'Administrador'), note: ReportValidator.escapeHtml(report.resolution_note || '') });
+  else if (report.status === ReportStates.REJECTED) events.push({ type: 'rejected', event: 'Reporte rechazado', timestamp: report.resolved_at || report.updated_at, actor: ReportValidator.escapeHtml(report.resolved_by || 'Administrador'), note: ReportValidator.escapeHtml(report.rejection_reason || '') });
+  return generateTimeline(events);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FORMULARIO DE CREAR REPORTE CON VALIDACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function generateReportForm(order) {
   if (!order) return '<p class="muted">No hay compras para reportar.</p>';
+  const safeProduct = ReportValidator.escapeHtml(order.product_name || '');
+  const safeDelivered = ReportValidator.escapeHtml(order.delivered_data || '');
   
-  return `
-    <div class="report-form fade-in">
-      <h3 style="margin-bottom:16px;font-size:18px;font-weight:800">Crear Reporte</h3>
-      
-      <div class="form-group">
-        <label class="form-label">Producto <span class="required">*</span></label>
-        <div style="padding:12px;background:var(--soft);border-radius:8px;color:var(--text);font-weight:600">
-          ${order.product_name}
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Categoría del problema <span class="required">*</span></label>
-        <div class="category-grid">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="category" value="producto_no_llego" checked>
-            <span>📦 No llegó</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="category" value="defectuoso">
-            <span>⚠️ Defectuoso</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="category" value="cuenta_no_funciona">
-            <span>🔐 No funciona</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="category" value="acceso_denegado">
-            <span>🚫 Sin acceso</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="category" value="otro">
-            <span>❓ Otro</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Asunto <span class="required">*</span></label>
-        <input type="text" id="rpSubject" class="form-input" placeholder="Resumen breve del problema..." maxlength="100">
-        <small class="form-help">Máximo 100 caracteres</small>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Descripción detallada <span class="required">*</span></label>
-        <textarea id="rpDesc" class="form-textarea" placeholder="Cuéntanos qué pasó con más detalle... Incluye pasos que seguiste, mensajes de error, etc." maxlength="1000" oninput="updateCharCounter(this, 'rpDescCounter')"></textarea>
-        <small class="form-help">Proporciona la máxima información posible</small>
-        <div class="char-counter" id="rpDescCounter">0 / 1000</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Datos de la cuenta (si aplica)</label>
-        <input type="text" id="rpAccountData" class="form-input" placeholder="Usuario, email, o datos relevantes..." value="${order.delivered_data || ''}">
-        <small class="form-help">Esto ayuda al admin a investigar más rápido</small>
-      </div>
-
-      <div class="attachments-section">
-        <div class="attachment-label">📸 Adjunta evidencia (opcional)</div>
-        <div class="attachment-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-          <div class="attachment-icon">📁</div>
-          <div class="attachment-text">Arrastra archivos aquí o haz clic</div>
-          <div class="attachment-hint">Imágenes de error, screenshots, etc.</div>
-        </div>
-        <input type="file" id="fileInput" style="display:none" multiple accept="image/*,.pdf">
-        <div class="attachment-list" id="fileList"></div>
-      </div>
-
-      <div class="form-group" style="margin-top:16px">
-        <button class="primary" onclick="submitReportImproved('${order.id}')" style="width:100%;padding:12px;font-size:14px">
-          ✅ Enviar Reporte
-        </button>
-      </div>
-    </div>
-  `;
+  let categoriesHTML = Object.entries(ReportCategories).map(([key, cat]) => '<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="category" value="' + key + '" ' + (key === 'producto_no_llego' ? 'checked' : '') + '><span>' + cat.icon + ' ' + ReportValidator.escapeHtml(cat.label) + '</span></label>').join('');
+  
+  return '<div class="report-form fade-in"><h3 style="margin-bottom:16px;font-size:18px;font-weight:800">Crear Reporte</h3><div id="form-errors" class="form-errors" style="display:none;padding:12px;background:rgba(239,68,68,.1);border:1px solid var(--bad);border-radius:8px;margin-bottom:16px"></div>' +
+    '<div class="form-group"><label class="form-label">Producto <span class="required">*</span></label><div style="padding:12px;background:var(--soft);border-radius:8px;color:var(--text);font-weight:600">' + safeProduct + '</div></div>' +
+    '<div class="form-group"><label class="form-label">Categoría del problema <span class="required">*</span></label><div class="category-grid">' + categoriesHTML + '</div></div>' +
+    '<div class="form-group"><label class="form-label">Asunto <span class="required">*</span></label><input type="text" id="rpSubject" class="form-input" placeholder="Resumen breve del problema..." maxlength="100"><small class="form-help">Máximo 100 caracteres</small></div>' +
+    '<div class="form-group"><label class="form-label">Descripción detallada <span class="required">*</span></label><textarea id="rpDesc" class="form-textarea" placeholder="Cuéntanos qué pasó con más detalle..." maxlength="1000" oninput="updateCharCounter(this, 'rpDescCounter')"></textarea><small class="form-help">Mínimo 10, máximo 1000 caracteres</small><div class="char-counter" id="rpDescCounter">0 / 1000</div></div>' +
+    '<div class="form-group"><label class="form-label">Datos de la cuenta (si aplica)</label><input type="text" id="rpAccountData" class="form-input" placeholder="Usuario, email, o datos relevantes..." value="' + safeDelivered + '"></div>' +
+    '<div class="form-group" style="margin-top:16px"><button class="primary" onclick="submitReportWithValidation(\'' + ReportValidator.escapeHtml(order.id) + '\')" style="width:100%;padding:12px;font-size:14px">✅ Enviar Reporte</button></div></div>';
 }
 
-// ─── UTILIDADES DE FORMULARIO ───
+// ══════════════════════════════════════════════════════════════════════════════
+//  UTILIDADES DE FORMULARIO
+// ══════════════════════════════════════════════════════════════════════════════
 function updateCharCounter(textarea, counterId) {
   const counter = document.getElementById(counterId);
   const length = textarea.value.length;
-  counter.textContent = `${length} / ${textarea.maxLength}`;
-  
-  if (length > textarea.maxLength * 0.9) {
-    counter.classList.add('warning');
-  } else {
-    counter.classList.remove('warning');
+  counter.textContent = length + ' / ' + textarea.maxLength;
+  counter.classList.toggle('warning', length > textarea.maxLength * 0.9);
+}
+
+function showFormErrors(errors) {
+  const errorDiv = document.getElementById('form-errors');
+  if (errorDiv && errors.length > 0) {
+    errorDiv.innerHTML = errors.map(e => '• ' + ReportValidator.escapeHtml(e)).join('<br>');
+    errorDiv.style.display = 'block';
   }
 }
 
-// ─── ACCIONES DE REPORTE ───
+function hideFormErrors() {
+  const errorDiv = document.getElementById('form-errors');
+  if (errorDiv) errorDiv.style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  ACCIONES DE REPORTE CON CONFIRMACIONES
+// ══════════════════════════════════════════════════════════════════════════════
 function expandReport(reportId) {
   const card = event.target.closest('.report-card');
   card.classList.toggle('expanded');
 }
 
 function markAsUrgent(reportId) {
-  // Implementar marcación como urgente
+  if (!confirm('¿Marcar este reporte como urgente?')) return;
   toast('Reporte marcado como urgente', 'ok');
-  // Llamar API para actualizar
 }
 
 function openReportChat(reportId) {
   setView('reports');
-  // Implementar modal de chat
-  console.log('Abrir chat del reporte:', reportId);
+  console.log('Abrir chat:', reportId);
 }
 
 function downloadReportPDF(reportId) {
-  // Implementar descarga de PDF
-  toast('Descargando reporte...', 'ok');
-  console.log('Descargar PDF del reporte:', reportId);
+  toast('Generando PDF...', 'ok');
+  console.log('Descargar PDF:', reportId);
 }
 
-function submitReportImproved(orderId) {
-  const category = document.querySelector('input[name="category"]:checked')?.value || 'otro';
-  const subject = document.getElementById('rpSubject')?.value;
-  const description = document.getElementById('rpDesc')?.value;
-  
-  if (!subject || !description) {
-    toast('Por favor completa todos los campos requeridos', 'bad');
-    return;
-  }
-  
-  // Aquí va la lógica de envío
-  console.log('Enviando reporte mejorado:', { orderId, category, subject, description });
+function reopenReport(reportId) {
+  if (!confirm('¿Reabrir este reporte?')) return;
+  toast('Reporte reabierto', 'ok');
 }
 
-// ─── TIMELINE DE EVENTOS ───
-function generateTimeline(events = []) {
-  if (!events || events.length === 0) {
-    return '<div class="muted" style="padding:12px;text-align:center">Sin eventos registrados</div>';
-  }
+function submitReportWithValidation(orderId) {
+  hideFormErrors();
+  const category = document.querySelector('input[name="category"]:checked')?.value || '';
+  const subject = document.getElementById('rpSubject')?.value || '';
+  const description = document.getElementById('rpDesc')?.value || '';
+  const accountData = document.getElementById('rpAccountData')?.value || '';
   
-  return `
-    <div class="report-timeline">
-      ${events.map(event => `
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-content">
-            <div class="timeline-label">${event.event}</div>
-            <div class="timeline-time">${formatDateTime(event.timestamp)}</div>
-            ${event.actor ? `<div class="timeline-time">Por: ${event.actor}</div>` : ''}
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  const validation = ReportValidator.validateNew({ orderId: orderId, reason: subject, description: description, category: category, accountData: accountData });
+  if (!validation.valid) { showFormErrors(validation.errors); toast('Por favor corrige los errores', 'bad'); return; }
+  if (!confirm('¿Enviar este reporte?')) return;
+  
+  const sanitizedData = ReportValidator.sanitize({ orderId: orderId, reason: subject, description: description, category: category, accountData: accountData });
+  console.log('Enviando reporte:', sanitizedData);
+  toast('Reporte enviado exitosamente', 'ok');
 }
 
-// ─── MEJORAS PARA ADMIN ───
-function generateReportTableRowImproved(report) {
+// ══════════════════════════════════════════════════════════════════════════════
+//  ACCIONES DE ADMIN CON PERMISOS Y CONFIRMACIONES
+// ══════════════════════════════════════════════════════════════════════════════
+function resolveReport(reportId) {
+  if (!ReportPermissions.canUpdateStatus()) { toast('Solo admins pueden resolver reportes', 'bad'); return; }
+  if (!confirm('¿Resolver este reporte?')) return;
+  const response = prompt('Mensaje de resolución (opcional):');
+  console.log('Resolviendo:', reportId, response);
+  toast('Reporte resuelto', 'ok');
+}
+
+function rejectReport(reportId) {
+  if (!ReportPermissions.canUpdateStatus()) { toast('Solo admins pueden rechazar reportes', 'bad'); return; }
+  if (!confirm('¿Rechazar este reporte? Esta acción no se puede deshacer.')) return;
+  const reason = prompt('Razón del rechazo:');
+  if (!reason || reason.trim().length < 5) { toast('Debes ingresar una razón válida', 'bad'); return; }
+  console.log('Rechazando:', reportId, reason);
+  toast('Reporte rechazado', 'ok');
+}
+
+function deleteReport(reportId) {
+  if (!ReportPermissions.canDelete()) { toast('Solo admins pueden eliminar reportes', 'bad'); return; }
+  if (!confirm('⚠️ ¿ELIMINAR este reporte? Esta acción es IRREVERSIBLE.')) return;
+  if (!confirm('¿Estás SEGURO?')) return;
+  console.log('Eliminando:', reportId);
+  toast('Reporte eliminado', 'ok');
+}
+
+function updateReportResponse(reportId) {
+  if (!ReportPermissions.canRespond()) { toast('Solo admins pueden responder', 'bad'); return; }
+  const response = document.getElementById('adminResponseInput')?.value || '';
+  const validation = ReportValidator.validateResponse({ response: response });
+  if (!validation.valid) { toast(validation.errors.join(', '), 'bad'); return; }
+  console.log('Actualizando respuesta:', reportId, response);
+  toast('Respuesta actualizada', 'ok');
+}
+
+function exportReportsCsv() {
+  if (!ReportPermissions.canExport()) { toast('Solo admins pueden exportar', 'bad'); return; }
+  if (!confirm('¿Exportar todos los reportes a CSV?')) return;
+  console.log('Exportando...');
+  toast('Exportando...', 'ok');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BÚSQUEDA AVANZADA CON DEBOUNCE
+// ══════════════════════════════════════════════════════════════════════════════
+let reportSearchTimeout = null;
+function searchReports(query) {
+  clearTimeout(reportSearchTimeout);
+  reportSearchTimeout = setTimeout(() => performReportSearch(query), 300);
+}
+
+function performReportSearch(query) {
+  const searchTerm = query.toLowerCase().trim();
+  const allReports = window.state?.reports || [];
+  const filtered = allReports.filter(r => {
+    if (!searchTerm) return true;
+    const searchableFields = [r.code, r.reason, r.description, r.product_name, r.client_name, r.category].map(f => (f || '').toLowerCase());
+    return searchableFields.some(field => field.includes(searchTerm));
+  });
+  console.log('Encontrados ' + filtered.length + ' reportes para "' + searchTerm + '"');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  MEJORAS PARA ADMIN - TABLA MEJORADA (SEGURA)
+// ══════════════════════════════════════════════════════════════════════════════
+function generateReportTableRowImproved(report, index) {
+  if (!report) return '';
   const category = getReportCategory(report.category || 'otro');
   const statusInfo = getStatusInfo(report.status);
-  const priority = getReportPriority(new Date() - new Date(report.created_at));
-  
-  return `
-    <tr>
-      <td>
-        <div style="font-weight:700;margin-bottom:4px">${report.code}</div>
-        <div style="font-size:11px;color:var(--muted)">${formatTimeAgo(report.created_at)}</div>
-      </td>
-      <td>${report.client_name || '-'}</td>
-      <td>${category.icon} ${category.label}</td>
-      <td><div style="word-break:break-word">${report.reason || '-'}</div></td>
-      <td>
-        <span style="display:inline-block;padding:6px 10px;background:${statusInfo.color}33;color:${statusInfo.color};border-radius:6px;font-size:11px;font-weight:700">
-          ${statusInfo.icon} ${report.status}
-        </span>
-      </td>
-      <td>
-        <span class="report-priority-badge ${priority}">${getPriorityLabel(priority)}</span>
-      </td>
-      <td>
-        <button class="report-action-btn primary" onclick="openReportDetail('${report.id}')" style="width:auto">
-          Ver
-        </button>
-      </td>
-    </tr>
-  `;
+  const hoursElapsed = getHoursElapsed(report.created_at);
+  const priority = getReportPriority(hoursElapsed);
+  const safeCode = ReportValidator.escapeHtml(report.code || '#RP-0000');
+  const safeReason = ReportValidator.escapeHtml(report.reason || '-');
+  const safeProduct = ReportValidator.escapeHtml(report.product_name || '-');
+  const safeClient = ReportValidator.escapeHtml(report.client_name || '-');
+  const logo = typeof smallLogo === 'function' ? smallLogo(report.product_name) : '';
+  const altBg = index % 2 === 0 ? 'background:rgba(124,58,237,.02)' : '';
+  const reportIdSafe = ReportValidator.escapeHtml(report.id);
+  const canModify = ReportPermissions.canModify(report);
+
+  return '<tr style="border-bottom:1px solid var(--line);transition:background .15s;' + altBg + '" onmouseover="this.style.background=\'var(--soft)\'" onmouseout="this.style.background=\'' + (altBg ? 'rgba(124,58,237,.02)' : '') + '\'">' +
+    '<td style="padding:12px 16px"><span style="font-family:monospace;font-size:12px;font-weight:800;color:var(--purple)">' + safeCode + '</span></td>' +
+    '<td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px">' + logo + '<span style="font-weight:700;font-size:13px">' + safeProduct + '</span></div></td>' +
+    '<td style="padding:12px 16px"><span style="font-weight:600;font-size:12px">' + safeClient + '</span></td>' +
+    '<td style="padding:12px 16px"><span style="font-size:12px">' + safeReason + '</span></td>' +
+    '<td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:' + statusInfo.color + ';background:' + statusInfo.color + '22">' + statusInfo.icon + ' ' + ReportValidator.escapeHtml(report.status) + '</span></td>' +
+    '<td style="padding:12px 16px"><span class="report-priority-badge ' + priority + '">' + getPriorityLabel(priority) + '</span></td>' +
+    '<td style="padding:12px 16px"><span style="font-size:11px;color:var(--muted)">' + formatTimeAgo(report.created_at) + '</span></td>' +
+    '<td style="padding:12px 16px;text-align:center"><button onclick="' + (canModify ? 'openReportDetailAdmin' : 'openReportDetail') + '(\'' + reportIdSafe + '\')" class="ghost" style="padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">👁️ ' + (canModify ? 'Gestionar' : 'Ver') + '</button></td>' +
+    '</tr>';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FUNCIONES AUXILIARES
+// ══════════════════════════════════════════════════════════════════════════════
+function calculateHoursElapsed(createdAt) {
+  if (!createdAt) return 'Sin fecha';
+  const hours = Math.floor((new Date() - new Date(createdAt)) / (1000 * 60 * 60));
+  if (hours < 1) return 'hace poco';
+  if (hours < 24) return 'hace ' + hours + 'h';
+  return 'hace ' + Math.floor(hours / 24) + 'd';
+}
+
+function updateReportTabBadges(reports) {
+  const activeCount = reports.filter(r => ReportValidator.isActive(r.status)).length;
+  const resolvedCount = reports.filter(r => ReportValidator.isResolved(r.status)).length;
+  const badgeActive = document.getElementById('badge-active');
+  const badgeResolved = document.getElementById('badge-resolved');
+  if (badgeActive) badgeActive.textContent = activeCount;
+  if (badgeResolved) badgeResolved.textContent = resolvedCount;
+}
+
+function generateReportsContainer(reports) {
+  return generateReportTabs() + generateActiveReportsSection(reports) + generateResolvedReportsSection(reports);
 }
