@@ -436,7 +436,7 @@
     .profile-card .logout-btn:hover{background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)}
 
     .main{padding:22px;min-width:0;overflow-y:auto}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:20;padding-top:8px}
     .top h1{margin-bottom:3px;font-size:26px}
     .top p{font-size:13px;color:var(--muted)}
     .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
@@ -452,7 +452,7 @@
     .header-balance .bal-label{font-size:10px;color:var(--muted);font-weight:600}
     .user-avatar-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;display:grid;place-items:center;cursor:pointer;border:2px solid transparent;transition:all .18s;font-weight:1000;font-size:15px}
     .user-avatar-btn:hover{border-color:rgba(8,119,255,.4);box-shadow:0 4px 12px rgba(8,119,255,.25)}
-    .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.12);z-index:50;display:none;overflow:hidden}
+    .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.12);z-index:60;display:none;overflow:hidden}
     .user-dropdown.show{display:block;animation:dropdownIn .2s cubic-bezier(.2,.8,.2,1)}
     @keyframes dropdownIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
     .user-dropdown-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s;border:0;background:transparent;width:100%;text-align:left}
@@ -626,17 +626,17 @@
     .client-data{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
     .client-data span{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .copy-box{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px;font-weight:800;word-break:break-word;font-size:13px}
-    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(15,23,42,.5);backdrop-filter:blur(12px);z-index:30;padding:14px}
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(15,23,42,.5);backdrop-filter:blur(12px);z-index:100;padding:14px}
     .modal.show{display:grid}
     .dialog{width:min(580px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow2);padding:20px;animation:pop .25s cubic-bezier(.2,.8,.2,1)}
     .dialog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
     .dialog-head h2{margin:0;font-size:20px}
     .close{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--soft);color:var(--text);font-weight:1000;font-size:16px;transition:all .18s}
     .close:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
-    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#071526;color:#fff;border-radius:var(--radius);padding:12px 18px;box-shadow:0 14px 28px rgba(0,0,0,.25);transition:all .25s cubic-bezier(.2,.8,.2,1);z-index:50;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#071526;color:#fff;border-radius:var(--radius);padding:12px 18px;box-shadow:0 14px 28px rgba(0,0,0,.25);transition:all .25s cubic-bezier(.2,.8,.2,1);z-index:150;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .toast.ok{background:#075c32}.toast.ok::before{content:"✓"}.toast.bad{background:#8b1c1c}.toast.bad::before{content:"✕"}
-    .alerts-panel{position:fixed;right:18px;top:68px;width:min(380px,calc(100vw - 20px));background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);padding:12px;z-index:25;display:none}
+    .alerts-panel{position:fixed;right:18px;top:68px;width:min(380px,calc(100vw - 20px));background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);padding:12px;z-index:55;display:none}
     .alerts-panel.show{display:grid;gap:8px;animation:pop .15s ease}
     .success-pulse{display:grid;place-items:center;margin:6px auto 14px;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#e8fff2,#c7f7db);color:var(--ok);font-size:34px;animation:pulse 1s ease-out 2}
     .admin-action{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);padding:11px;transition:all .18s ease}
@@ -5782,77 +5782,216 @@
     // ─── UTILIDADES ────────────────────────────────────
     function openProfile(){
       const u=state.user;
-      const roleColor=u.role==="Administrador"?"#f59e0b":u.role==="Revendedor"?"#0877ff":"#10b981";
-      const roleBg=u.role==="Administrador"?"rgba(245,158,11,.12)":u.role==="Revendedor"?"rgba(8,119,255,.12)":"rgba(16,185,129,.12)";
       const bal=Number(u.balance||0);
       const avatar=getUserAvatar();
       const avatarBg=avatar?avatar.color.bg:"linear-gradient(135deg,#667eea,#764ba2)";
+      
+      // Calculate stats
+      const myOrders = state.orders.filter(o => o.user_id === u.id || o.email === u.email);
+      const myReports = state.reports.filter(r => r.user_id === u.id || r.email === u.email);
+      const myTopups = state.topups.filter(t => t.user_id === u.id || t.email === u.email);
+      const totalSpent = myOrders.reduce((s,o) => s + Number(o.amount||0), 0);
+      const totalRecharged = myTopups.reduce((s,t) => s + Number(t.amount||0), 0);
+      const openReports = myReports.filter(r => r.status !== "Resuelto").length;
+      const activeOrders = myOrders.filter(o => daysLeft(o.expires_at) !== null && daysLeft(o.expires_at) >= 0).length;
+      
+      // Recent activity
+      const recentOrders = [...myOrders].sort((a,b) => (b.created_at||"").localeCompare(a.created_at||"")).slice(0,3);
+      const recentActivity = recentOrders.map(o => ({
+        type: 'order',
+        icon: '🛒',
+        title: `Compra ${o.service}`,
+        time: timeAgo(o.created_at),
+        amount: money(o.amount)
+      }));
+      
       openModal(`
-        <div style="background:linear-gradient(135deg,#4c1d95,#0877ff);border-radius:16px;padding:28px 20px;text-align:center;margin:-20px -20px 24px;position:relative;overflow:hidden">
+        <div style="background:linear-gradient(135deg,#4c1d95,#0877ff);border-radius:16px;padding:24px 20px;text-align:center;margin:-20px -20px 20px;position:relative;overflow:hidden">
           <div style="position:absolute;top:-40%;right:-20%;width:160px;height:160px;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);border-radius:50%"></div>
-          <div style="position:absolute;bottom:-30%;left:-15%;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);border-radius:50%"></div>
-          <div style="position:relative;width:80px;height:80px;border-radius:50%;background:${avatarBg};margin:0 auto 14px;display:grid;place-items:center;border:3px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.2);transition:all .3s">
-            <span style="font-size:32px">${avatar?avatar.emoji:initials(u.name)}</span>
-            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--blue);border:3px solid #fff;color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:all .15s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:16px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px)">&times;</button>
+          
+          <div style="position:relative;width:72px;height:72px;border-radius:50%;background:${avatarBg};margin:0 auto 12px;display:grid;place-items:center;border:3px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.2)">
+            <span style="font-size:28px">${avatar?avatar.emoji:initials(u.name)}</span>
+            <button onclick="event.stopPropagation();closeModal();setTimeout(()=>openAvatarPicker(),300)" style="position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:var(--blue);border:2px solid #fff;color:#fff;font-size:11px;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             </button>
           </div>
-          <h2 style="margin:0 0 4px;color:#fff;font-size:20px;font-weight:900">${u.name}</h2>
-          <p style="margin:0 0 10px;color:rgba(255,255,255,.7);font-size:12px">${u.email}</p>
-          <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(8px)">${publicRole()}</span>
-          <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:14px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px);transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.3)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">&times;</button>
+          <h2 style="margin:0 0 4px;color:#fff;font-size:18px;font-weight:900">${u.name}</h2>
+          <p style="margin:0 0 8px;color:rgba(255,255,255,.7);font-size:11px">${u.email}</p>
+          <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:16px;font-size:10px;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.2);color:#fff">${publicRole()}</span>
         </div>
-        ${!isAdmin()?`
-        <div style="background:linear-gradient(135deg,rgba(8,119,255,.06),rgba(8,119,255,.02));border:1.5px solid rgba(8,119,255,.15);border-radius:14px;padding:18px;margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Saldo Disponible</span>
-            <span style="font-size:28px;font-weight:1000;color:var(--blue);letter-spacing:-.02em">${money(bal)}</span>
+        
+        <!-- Stats Grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:var(--blue)">${myOrders.length}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Compras</div>
           </div>
-          <button onclick="closeModal();openTopup()" style="width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-weight:800;font-size:13px;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(8,119,255,.25)" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(8,119,255,.35)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(8,119,255,.25)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="16" height="16" style="vertical-align:middle;margin-right:6px"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#10b981">${activeOrders}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Activas</div>
+          </div>
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#f59e0b">${openReports}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700">Reportes</div>
+          </div>
+        </div>
+        
+        <!-- Balance & Actions -->
+        ${!isAdmin()?`
+        <div style="background:linear-gradient(135deg,rgba(8,119,255,.08),rgba(8,119,255,.02));border:1.5px solid rgba(8,119,255,.2);border-radius:14px;padding:16px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:2px">Saldo</div>
+              <div style="font-size:24px;font-weight:900;color:var(--blue)">${money(bal)}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:9px;color:var(--muted)">Total gastado</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${money(totalSpent)}</div>
+            </div>
+          </div>
+          <button onclick="closeModal();openTopup()" style="width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Recargar Saldo
           </button>
         </div>`:""}
-        <div style="display:grid;gap:10px;margin-bottom:16px">
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--soft);border:1px solid var(--line);border-radius:12px">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(8,119,255,.1);display:grid;place-items:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Telefono</div>
-              <div style="font-size:14px;font-weight:700;color:var(--text)">${u.phone||"3102765347"}</div>
-            </div>
-            <button onclick="copyText('${u.phone||"3102765347"}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='rgba(8,119,255,.3)'" onmouseout="this.style.borderColor='var(--line)'">Copiar</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--soft);border:1px solid var(--line);border-radius:12px">
-            <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,.1);display:grid;place-items:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="20" height="20"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Ubicacion</div>
-              <div style="font-size:14px;font-weight:700;color:var(--text)">Bogota, Colombia</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--soft);border:1px solid var(--line);border-radius:12px">
-            <div style="width:40px;height:40px;border-radius:10px;background:${roleBg};display:grid;place-items:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="${roleColor}" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Estado</div>
-              <div style="font-size:14px;font-weight:700;color:${roleColor}">${u.status||"Activo"}</div>
-            </div>
+        
+        <!-- Quick Actions -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Acciones rapidas</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+            <button onclick="closeModal();setView('orders')" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:20px">🛒</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Mis Compras</span>
+            </button>
+            <button onclick="closeModal();setView('reports')" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:20px">📋</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Reportes</span>
+            </button>
+            <button onclick="closeModal();openAvatarPicker()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:20px">😊</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Avatar</span>
+            </button>
+            <button onclick="openEditProfile()" style="padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line)'">
+              <span style="font-size:20px">✏️</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text)">Editar</span>
+            </button>
           </div>
         </div>
+        
+        <!-- Recent Activity -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Actividad reciente</div>
+          <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+            ${recentActivity.length > 0 ? recentActivity.map(a => `
+              <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--line)">
+                <span style="font-size:18px">${a.icon}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12px;font-weight:700;color:var(--text)">${a.title}</div>
+                  <div style="font-size:10px;color:var(--muted)">${a.time}</div>
+                </div>
+                <div style="font-size:12px;font-weight:800;color:var(--text)">${a.amount}</div>
+              </div>
+            `).join('') : `
+              <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">
+                Sin actividad reciente
+              </div>
+            `}
+          </div>
+        </div>
+        
+        <!-- Settings -->
+        <div style="display:flex;gap:8px">
+          <button onclick="toggleDark()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"/></svg>
+            Tema
+          </button>
+          <button onclick="logout()" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Salir
+          </button>
+        </div>
+      `, { showClose: false });
+    }
+    
+    function openEditProfile(){
+      const u = state.user;
+      openModal(`
+        <div style="text-align:center;margin-bottom:20px">
+          <h2 style="margin:0;font-size:20px;font-weight:900">Editar Perfil</h2>
+          <p style="margin:4px 0 0;color:var(--muted);font-size:12px">Actualiza tu informacion personal</p>
+        </div>
+        
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Nombre completo</label>
+          <input type="text" id="editName" value="${u.name||''}" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:var(--panel);color:var(--text);box-sizing:border-box" placeholder="Tu nombre">
+        </div>
+        
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Telefono</label>
+          <input type="tel" id="editPhone" value="${u.phone||''}" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:var(--panel);color:var(--text);box-sizing:border-box" placeholder="3001234567">
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Correo electronico</label>
+          <input type="email" id="editEmail" value="${u.email||''}" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;background:var(--panel);color:var(--text);box-sizing:border-box" placeholder="tu@email.com">
+        </div>
+        
         <div style="display:flex;gap:10px">
-          <button onclick="toggleDark()" style="flex:1;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:800;font-size:13px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.borderColor='rgba(8,119,255,.3)'" onmouseout="this.style.borderColor='var(--line)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"/></svg>
-            Cambiar tema
-          </button>
-          <button onclick="logout()" style="flex:1;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-weight:800;font-size:13px;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(239,68,68,.35)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(239,68,68,.25)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Cerrar sesion
-          </button>
-        </div>`);
+          <button onclick="closeModal()" style="flex:1;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:800;font-size:13px;cursor:pointer">Cancelar</button>
+          <button onclick="saveProfile()" style="flex:1;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-weight:800;font-size:13px;cursor:pointer">Guardar cambios</button>
+        </div>
+      `, { showClose: false });
+    }
+    
+    function saveProfile(){
+      const u = state.user;
+      const newName = document.getElementById('editName').value.trim();
+      const newPhone = document.getElementById('editPhone').value.trim();
+      const newEmail = document.getElementById('editEmail').value.trim();
+      
+      if(!newName || newName.length < 2){
+        toast("El nombre es requerido", "bad");
+        return;
+      }
+      if(!newPhone || newPhone.length < 7){
+        toast("Telefono invalido", "bad");
+        return;
+      }
+      if(!newEmail || !newEmail.includes('@')){
+        toast("Correo invalido", "bad");
+        return;
+      }
+      
+      // Update user
+      u.name = newName;
+      u.phone = newPhone;
+      u.email = newEmail;
+      
+      // Save to localStorage
+      localStorage.dsUser = JSON.stringify(u);
+      
+      // Update in users array
+      const idx = state.users.findIndex(x => x.id === u.id);
+      if(idx >= 0){
+        state.users[idx] = {...u};
+        localStorage.dsUsers = JSON.stringify(state.users);
+      }
+      
+      closeModal();
+      renderApp();
+      toast("Perfil actualizado", "ok");
+    }
+    
+    function timeAgo(dateStr) {
+      if (!dateStr) return "";
+      const now = new Date();
+      const date = new Date(dateStr);
+      const diff = Math.floor((now - date) / 1000);
+      if (diff < 60) return "Hace un momento";
+      if (diff < 3600) return `Hace ${Math.floor(diff/60)} min`;
+      if (diff < 86400) return `Hace ${Math.floor(diff/3600)}h`;
+      return `Hace ${Math.floor(diff/86400)} dias`;
     }
     function toggleDark(){localStorage.dsDark=localStorage.dsDark==="1"?"0":"1";const icon=document.getElementById('appleTouchIcon');if(icon)icon.href=localStorage.dsDark==="1"?"assets/distrito-angel-blue-v1.png":"assets/distrito-angel-white.png";renderApp()}
     function toggleAlerts(ev){
