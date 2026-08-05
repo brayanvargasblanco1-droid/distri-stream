@@ -272,8 +272,18 @@ async function doBulkRenewal() {
 
 function improvedReportsView() {
   const myReports = state.reports || [];
+  // Limpiar reportes resueltos hace más de 2 meses
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  
   const active = myReports.filter(r => r.status !== "Resuelto" && r.status !== "Rechazado");
-  const resolved = myReports.filter(r => r.status === "Resuelto" || r.status === "Rechazado");
+  const resolved = myReports.filter(r => {
+    if (r.status === "Resuelto" || r.status === "Rechazado") {
+      const reportDate = new Date(r.updated_at || r.created_at);
+      return reportDate > twoMonthsAgo;
+    }
+    return false;
+  });
   
   return `
     <div class="reports-container">
@@ -297,7 +307,7 @@ function improvedReportsView() {
         <div class="report-stat-card total">
           <div class="report-stat-icon">📋</div>
           <div class="report-stat-info">
-            <div class="report-stat-num">${myReports.length}</div>
+            <div class="report-stat-num">${active.length + resolved.length}</div>
             <div class="report-stat-label">Total</div>
           </div>
         </div>
@@ -315,15 +325,31 @@ function improvedReportsView() {
       <div class="reports-list" id="reportsList">
         ${renderReportsList(active.length > 0 ? active : resolved, active.length > 0 ? 'active' : 'resolved')}
       </div>
+      
+      <div class="reports-info">
+        <div class="reports-info-icon">ℹ️</div>
+        <div class="reports-info-text">
+          Los reportes resueltos se eliminan automáticamente después de 2 meses.
+        </div>
+      </div>
     </div>
   `;
 }
 
 function switchReportsTab(tab) {
   const myReports = state.reports || [];
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  
   const filtered = tab === 'active' 
     ? myReports.filter(r => r.status !== "Resuelto" && r.status !== "Rechazado")
-    : myReports.filter(r => r.status === "Resuelto" || r.status === "Rechazado");
+    : myReports.filter(r => {
+      if (r.status === "Resuelto" || r.status === "Rechazado") {
+        const reportDate = new Date(r.updated_at || r.created_at);
+        return reportDate > twoMonthsAgo;
+      }
+      return false;
+    });
   
   document.getElementById('tab_reports_active').classList.toggle('active', tab === 'active');
   document.getElementById('tab_reports_resolved').classList.toggle('active', tab === 'resolved');
@@ -345,10 +371,10 @@ function renderReportsList(reports, tab) {
     `;
   }
   
-  return reports.map(r => renderReportCard(r)).join('<div style="height:12px"></div>');
+  return reports.map(r => renderReportCard(r, tab)).join('<div style="height:16px"></div>');
 }
 
-function renderReportCard(r) {
+function renderReportCard(r, tab) {
   const statusConfig = {
     'En proceso': { icon: '🔄', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', text: 'En Proceso' },
     'En revisión': { icon: '👁️', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', text: 'En Revisión' },
@@ -379,6 +405,24 @@ function renderReportCard(r) {
       </div>
     </div>
   `;
+}
+
+async function deleteMyReport(reportId) {
+  if (!confirm('¿Estás seguro de eliminar este reporte? Si fue un error, podrás crear uno nuevo.')) {
+    return;
+  }
+  
+  try {
+    showLoading('Eliminando reporte...');
+    await api('reports?id=' + reportId, { method: 'DELETE' });
+    toast('✅ Reporte eliminado', 'ok');
+    closeModal();
+    await boot();
+  } catch (e) {
+    toast('❌ Error: ' + e.message, 'bad');
+  } finally {
+    hideLoading();
+  }
 }
 
 function getReasonLabel(reason) {
@@ -475,7 +519,13 @@ function showReportDetail(reportId) {
           ` : ''}
         </div>
         
-        <button onclick="closeModal()" class="order-btn datos" style="width:100%;margin-top:16px">
+        <div class="report-actions">
+          <button onclick="deleteMyReport('${report.id}')" class="btn-delete-report">
+            🗑️ Eliminar Reporte
+          </button>
+        </div>
+        
+        <button onclick="closeModal()" class="btn-close-final">
           Cerrar
         </button>
       </div>
@@ -1370,6 +1420,16 @@ function injectPurchaseStyles() {
     .reports-empty-icon { font-size: 64px; margin-bottom: 16px; }
     .reports-empty-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #1f2937; }
     .reports-empty-text { font-size: 14px; color: #6b7280; }
+    
+    .reports-info { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.04)); border: 1px solid rgba(59,130,246,0.15); border-radius: 12px; margin-top: 20px; }
+    .reports-info-icon { font-size: 24px; flex-shrink: 0; }
+    .reports-info-text { font-size: 13px; color: #1e40af; line-height: 1.5; }
+    
+    .report-actions { margin-bottom: 12px; }
+    .btn-delete-report { width: 100%; padding: 14px; background: #fff; color: #dc2626; border: 2px solid #fecaca; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-delete-report:hover { background: #fef2f2; border-color: #dc2626; }
+    .btn-close-final { width: 100%; padding: 16px; background: #7c3aed; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
+    .btn-close-final:hover { background: #6d28d9; }
     
     .report-item { background: #fff; border: 2px solid #e5e7eb; border-radius: 14px; padding: 18px; cursor: pointer; transition: all 0.2s; }
     .report-item:hover { border-color: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,0.15); transform: translateY(-3px); }
