@@ -5712,152 +5712,104 @@
 
 
     function openEditUser(id){
-      const u=state.users.find(x=>x.id===id); if(!u) return;
-      const isProtected=u.email==="vargasblancobrayan@gmail.com";
-      const uid=u.id.replace(/'/g,"\\'");
+      var u=state.users.find(function(x){return x.id===id});
+      if(!u) return;
+      var role=u.role||"Cliente";
+      var balance=u.balance||0;
+      var margin=u.margin||0;
+      var status=u.status||"Activo";
       
-      const role=u.role||"Cliente";
-      const balance=u.balance||0;
-      const margin=u.margin||0;
-      const status=u.status||"Activo";
-      
-      const roleCliente=role==="Cliente";
-      const roleRevendedor=role==="Revendedor";
-      const roleAdmin=role==="Administrador";
-      const statusActivo=status==="Activo";
-      
-      let html='<div style="font-family:system-ui,-apple-system,sans-serif">';
+      var html='<div style="font-family:system-ui;padding:0">';
       
       // Header
-      html+='<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:24px 20px 18px;text-align:center;border-radius:16px 16px 0 0;position:relative">';
-      html+='<button onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>';
-      html+='<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff;border:3px solid rgba(255,255,255,.3)">'+(u.name||"?").charAt(0).toUpperCase()+'</div>';
-      html+='<h2 style="margin:0 0 2px;color:#fff;font-size:18px;font-weight:700">EDITAR USUARIO</h2>';
-      html+='<p style="margin:0;color:rgba(255,255,255,.8);font-size:11px">'+(u.name||"Usuario")+'</p>';
+      html+='<div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;text-align:center;border-radius:12px 12px 0 0">';
+      html+='<button onclick="closeModal()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:16px;cursor:pointer">×</button>';
+      html+='<div style="width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.2);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff">'+(u.name||"?").charAt(0).toUpperCase()+'</div>';
+      html+='<h2 style="margin:0;color:#fff;font-size:16px;font-weight:700">EDITAR USUARIO</h2>';
+      html+='<p style="margin:4px 0 0;color:rgba(255,255,255,.8);font-size:11px">'+(u.name||"Usuario")+'</p>';
       html+='</div>';
       
       // Contenido
-      html+='<div style="padding:16px;background:var(--panel)">';
+      html+='<div style="padding:16px">';
       
       // Roles
       html+='<div style="margin-bottom:16px">';
-      html+='<label style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">📋 Cambiar Rol</label>';
-      html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
-      
-      // Cliente
-      html+='<button id="btnCliente" onclick="setRole(\x27Cliente\x27)" style="padding:12px 8px;background:'+(roleCliente?'rgba(16,185,129,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleCliente?'#10b981':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
-      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleCliente?'#10b981':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-      html+='<span style="font-size:10px;font-weight:700;color:'+(roleCliente?'#10b981':'var(--muted)')+'">Cliente</span></button>';
-      
-      // Revendedor
-      html+='<button id="btnRevendedor" onclick="setRole(\x27Revendedor\x27)" style="padding:12px 8px;background:'+(roleRevendedor?'rgba(102,126,234,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleRevendedor?'#667eea':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
-      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleRevendedor?'#667eea':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
-      html+='<span style="font-size:10px;font-weight:700;color:'+(roleRevendedor?'#667eea':'var(--muted)')+'">Revendedor</span></button>';
-      
-      // Admin
-      html+='<button id="btnAdministrador" onclick="setRole(\x27Administrador\x27)" style="padding:12px 8px;background:'+(roleAdmin?'rgba(245,158,11,.15)':'rgba(255,255,255,.05)')+';border:2px solid '+(roleAdmin?'#f59e0b':'var(--line)')+';border-radius:10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px">';
-      html+='<svg viewBox="0 0 24 24" fill="none" stroke="'+(roleAdmin?'#f59e0b':'var(--muted)')+'" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-      html+='<span style="font-size:10px;font-weight:700;color:'+(roleAdmin?'#f59e0b':'var(--muted)')+'">Admin</span></button>';
+      html+='<div style="font-size:10px;font-weight:800;color:#888;margin-bottom:8px;text-transform:uppercase">ROL</div>';
+      html+='<div style="display:flex;gap:8px">';
+      html+='<button id="btnRol0" onclick="cambiarRol(0)" style="flex:1;padding:12px 8px;border:2px solid '+(role==='Cliente'?'#10b981':'#ddd')+';border-radius:10px;background:'+(role==='Cliente'?'rgba(16,185,129,.15)':'#fff')+';cursor:pointer">';
+      html+='<div style="font-size:18px;text-align:center">👤</div><div style="font-size:10px;font-weight:700;color:'+(role==='Cliente'?'#10b981':'#888')+'">Cliente</div></button>';
+      html+='<button id="btnRol1" onclick="cambiarRol(1)" style="flex:1;padding:12px 8px;border:2px solid '+(role==='Revendedor'?'#667eea':'#ddd')+';border-radius:10px;background:'+(role==='Revendedor'?'rgba(102,126,234,.15)':'#fff')+';cursor:pointer">';
+      html+='<div style="font-size:18px;text-align:center">👥</div><div style="font-size:10px;font-weight:700;color:'+(role==='Revendedor'?'#667eea':'#888')+'">Revendedor</div></button>';
+      html+='<button id="btnRol2" onclick="cambiarRol(2)" style="flex:1;padding:12px 8px;border:2px solid '+(role==='Administrador'?'#f59e0b':'#ddd')+';border-radius:10px;background:'+(role==='Administrador'?'rgba(245,158,11,.15)':'#fff')+';cursor:pointer">';
+      html+='<div style="font-size:18px;text-align:center">🛡️</div><div style="font-size:10px;font-weight:700;color:'+(role==='Administrador'?'#f59e0b':'#888')+'">Admin</div></button>';
       html+='</div></div>';
       
       // Saldo
-      html+='<div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:14px;margin-bottom:14px">';
+      html+='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-      html+='<label style="font-size:10px;font-weight:800;color:#10b981;text-transform:uppercase">💰 Saldo Actual</label>';
-      html+='<span style="background:#10b981;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">$'+balance.toLocaleString('es-CO')+'</span>';
+      html+='<span style="font-size:10px;font-weight:800;color:#166534;text-transform:uppercase">💰 SALDO</span>';
+      html+='<span id="saldoActual" style="background:#16a34a;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">$'+balance.toLocaleString('es-CO')+'</span>';
       html+='</div>';
-      html+='<p style="margin:0 0 8px;font-size:10px;color:var(--muted)">¿Cuánto quieres agregar o quitar?</p>';
       html+='<div style="display:flex;gap:8px;align-items:center">';
-      html+='<button onclick="saldoOp=\x27add\x27;updateSaldoUI()" id="btnAddSaldo" style="padding:8px 12px;background:rgba(16,185,129,.15);border:2px solid #10b981;border-radius:8px;color:#10b981;font-size:10px;font-weight:700;cursor:pointer">+ Agregar</button>';
-      html+='<button onclick="saldoOp=\x27sub\x27;updateSaldoUI()" id="btnSubSaldo" style="padding:8px 12px;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:10px;font-weight:700;cursor:pointer">- Quitar</button>';
-      html+='<input id="saldoInput" type="number" placeholder="0" oninput="calcNewSaldo()" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;text-align:center">';
-      html+='<span style="font-size:11px;color:var(--muted)">=</span>';
-      html+='<span id="newSaldoDisplay" style="padding:8px 12px;background:rgba(102,126,234,.1);border-radius:8px;font-size:13px;font-weight:800;color:#667eea">$'+balance.toLocaleString('es-CO')+'</span>';
-      html+='</div>';
-      html+='<div id="saldoWarn" style="display:none;margin-top:8px;padding:8px;background:rgba(239,68,68,.1);border-radius:6px;font-size:10px;color:#ef4444;text-align:center">⚠️ No puede ser negativo</div>';
-      html+='</div>';
+      html+='<button id="btnAddSaldo" onclick="setSaldoOp(1)" style="padding:8px 12px;background:#dcfce7;border:2px solid #16a34a;border-radius:8px;color:#16a34a;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      html+='<button id="btnSubSaldo" onclick="setSaldoOp(-1)" style="padding:8px 12px;background:#fee2e2;border:2px solid #ef4444;border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
+      html+='<input id="inputSaldo" type="number" placeholder="0" oninput="calcSaldo()" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:700;text-align:center">';
+      html+='<span style="font-size:18px;color:#888">=</span>';
+      html+='<span id="resultadoSaldo" style="background:#e0e7ff;padding:8px 12px;border-radius:8px;font-size:14px;font-weight:800;color:#4338ca">$'+balance.toLocaleString('es-CO')+'</span>';
+      html+='</div></div>';
       
       // Margen
-      html+='<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:14px;margin-bottom:14px">';
+      html+='<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:14px;margin-bottom:14px">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-      html+='<label style="font-size:10px;font-weight:800;color:#8b5cf6;text-transform:uppercase">📈 Margen Actual</label>';
-      html+='<span style="background:#8b5cf6;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">'+margin+'%</span>';
+      html+='<span style="font-size:10px;font-weight:800;color:#6b21a8;text-transform:uppercase">📈 MARGEN</span>';
+      html+='<span id="margenActual" style="background:#9333ea;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:800">'+margin+'%</span>';
       html+='</div>';
-      html+='<p style="margin:0 0 8px;font-size:10px;color:var(--muted)">¿Cuánto quieres ajustar?</p>';
       html+='<div style="display:flex;gap:8px;align-items:center">';
-      html+='<button onclick="margenOp=\x27add\x27;updateMargenUI()" id="btnAddMargen" style="padding:8px 12px;background:rgba(139,92,246,.15);border:2px solid #8b5cf6;border-radius:8px;color:#8b5cf6;font-size:10px;font-weight:700;cursor:pointer">+ Agregar</button>';
-      html+='<button onclick="margenOp=\x27sub\x27;updateMargenUI()" id="btnSubMargen" style="padding:8px 12px;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:10px;font-weight:700;cursor:pointer">- Quitar</button>';
-      html+='<input id="margenInput" type="number" placeholder="0" oninput="calcNewMargen()" style="flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;text-align:center">';
-      html+='<span style="font-size:11px;color:var(--muted)">=</span>';
-      html+='<span id="newMargenDisplay" style="padding:8px 12px;background:rgba(139,92,246,.1);border-radius:8px;font-size:13px;font-weight:800;color:#8b5cf6">'+margin+'%</span>';
-      html+='</div>';
-      html+='<div id="margenWarn" style="display:none;margin-top:8px;padding:8px;background:rgba(239,68,68,.1);border-radius:6px;font-size:10px;color:#ef4444;text-align:center">⚠️ Debe estar entre 0% y 100%</div>';
-      html+='</div>';
+      html+='<button id="btnAddMargen" onclick="setMargenOp(1)" style="padding:8px 12px;background:#f3e8ff;border:2px solid #9333ea;border-radius:8px;color:#9333ea;font-size:11px;font-weight:700;cursor:pointer">+ Agregar</button>';
+      html+='<button id="btnSubMargen" onclick="setMargenOp(-1)" style="padding:8px 12px;background:#fee2e2;border:2px solid #ef4444;border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">- Quitar</button>';
+      html+='<input id="inputMargen" type="number" placeholder="0" oninput="calcMargen()" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:700;text-align:center">';
+      html+='<span style="font-size:18px;color:#888">=</span>';
+      html+='<span id="resultadoMargen" style="background:#f3e8ff;padding:8px 12px;border-radius:8px;font-size:14px;font-weight:800;color:#9333ea">'+margin+'%</span>';
+      html+='</div></div>';
       
       // Estado
       html+='<div style="margin-bottom:16px">';
-      html+='<label style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">🔘 Estado</label>';
-      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-      html+='<button id="btnActivo" onclick="setStatus(\x27Activo\x27)" style="padding:12px;border:2px solid '+(statusActivo?'#10b981':'var(--line)')+';border-radius:10px;background:'+(statusActivo?'rgba(16,185,129,.15)':'rgba(255,255,255,.05)')+';cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px">';
-      html+='<span style="width:8px;height:8px;border-radius:50%;background:'+(statusActivo?'#10b981':'var(--muted)')+'"></span>';
-      html+='<span style="font-size:12px;font-weight:700;color:'+(statusActivo?'#10b981':'var(--muted)')+'">✅ Activo</span></button>';
-      html+='<button id="btnBloqueado" onclick="setStatus(\x27Bloqueado\x27)" style="padding:12px;border:2px solid '+(status==='Bloqueado'?'#8b5cf6':'var(--line)')+';border-radius:10px;background:'+(status==='Bloqueado'?'rgba(139,92,246,.15)':'rgba(255,255,255,.05)')+';cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px">';
-      html+='<span style="width:8px;height:8px;border-radius:50%;background:'+(status==='Bloqueado'?'#8b5cf6':'var(--muted)')+'"></span>';
-      html+='<span style="font-size:12px;font-weight:700;color:'+(status==='Bloqueado'?'#8b5cf6':'var(--muted)')+'">🔒 Bloqueado</span></button>';
+      html+='<div style="font-size:10px;font-weight:800;color:#888;margin-bottom:8px;text-transform:uppercase">ESTADO</div>';
+      html+='<div style="display:flex;gap:8px">';
+      html+='<button id="btnEstado0" onclick="cambiarEstado(0)" style="flex:1;padding:12px;border:2px solid '+(status==='Activo'?'#10b981':'#ddd')+';border-radius:10px;background:'+(status==='Activo'?'rgba(16,185,129,.15)':'#fff')+';cursor:pointer">';
+      html+='<div style="font-size:11px;font-weight:700;color:'+(status==='Activo'?'#10b981':'#888')+'">✅ Activo</div></button>';
+      html+='<button id="btnEstado1" onclick="cambiarEstado(1)" style="flex:1;padding:12px;border:2px solid '+(status==='Bloqueado'?'#8b5cf6':'#ddd')+';border-radius:10px;background:'+(status==='Bloqueado'?'rgba(139,92,246,.15)':'#fff')+';cursor:pointer">';
+      html+='<div style="font-size:11px;font-weight:700;color:'+(status==='Bloqueado'?'#8b5cf6':'#888')+'">🔒 Bloqueado</div></button>';
       html+='</div></div>';
       
       // Guardar
-      html+='<button onclick="doSaveUser(\''+uid+'\')" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(102,126,234,.3)">💾 GUARDAR CAMBIOS</button>';
+      html+='<button onclick="guardarUsuario(\''+u.id.replace(/'/g,"\\'")+'\')" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(102,126,234,.3)">💾 GUARDAR CAMBIOS</button>';
       
       html+='</div></div>';
       
-      // Script interno
+      // Script
       html+='<script>';
-      html+='var currentRole="'+role+'";var currentStatus="'+status+'";';
-      html+='var saldoOp="add";var margenOp="add";';
-      html+='var origSaldo='+balance+';var origMargen='+margin+';';
-      html+='function setRole(r){currentRole=r;';
-      html+='var colors={Cliente:"#10b981",Revendedor:"#667eea",Administrador:"#f59e0b"};';
-      html+='var roles=["Cliente","Revendedor","Administrador"];';
-      html+='for(var i=0;i<roles.length;i++){';
-      html+='var btn=document.getElementById("btn"+roles[i]);';
-      html+='if(btn){var isSelected=r===roles[i];';
-      html+='btn.style.borderColor=isSelected?colors[roles[i]]:"var(--line)";';
-      html+='btn.style.background=isSelected?colors[roles[i]]+"25":"rgba(255,255,255,.05)";';
-      html+='btn.querySelector("svg").style.stroke=isSelected?colors[roles[i]]:"var(--muted)";';
-      html+='btn.querySelector("span:last-child").style.color=isSelected?colors[roles[i]]:"var(--muted)";}}}';
-      html+='function setStatus(s){currentStatus=s;';
-      html+='var isActivo=s==="Activo";';
-      html+='var aBtn=document.getElementById("btnActivo");';
-      html+='var bBtn=document.getElementById("btnBloqueado");';
-      html+='if(aBtn){aBtn.style.borderColor=isActivo?"#10b981":"var(--line)";';
-      html+='aBtn.style.background=isActivo?"rgba(16,185,129,.15)":"rgba(255,255,255,.05)";';
-      html+='aBtn.querySelector("span").style.background=isActivo?"#10b981":"var(--muted)";';
-      html+='aBtn.querySelector("span:last-child").style.color=isActivo?"#10b981":"var(--muted)";}';
-      html+='if(bBtn){bBtn.style.borderColor=!isActivo?"#8b5cf6":"var(--line)";';
-      html+='bBtn.style.background=!isActivo?"rgba(139,92,246,.15)":"rgba(255,255,255,.05)";';
-      html+='bBtn.querySelector("span").style.background=!isActivo?"#8b5cf6":"var(--muted)";';
-      html+='bBtn.querySelector("span:last-child").style.color=!isActivo?"#8b5cf6":"var(--muted)";}}';
-      html+='function updateSaldoUI(){var addBtn=document.getElementById("btnAddSaldo");var subBtn=document.getElementById("btnSubSaldo");';
-      html+='if(addBtn){addBtn.style.background=saldoOp==="add"?"rgba(16,185,129,.3)":"rgba(16,185,129,.15)";addBtn.style.borderColor=saldoOp==="add"?"#10b981":"rgba(16,185,129,.3)";}';
-      html+='if(subBtn){subBtn.style.background=saldoOp==="sub"?"rgba(239,68,68,.3)":"rgba(239,68,68,.1)";subBtn.style.borderColor=saldoOp==="sub"?"#ef4444":"rgba(239,68,68,.3)";}calcNewSaldo();}';
-      html+='function calcNewSaldo(){var amt=Number(document.getElementById("saldoInput")?.value)||0;var newSaldo=saldoOp==="add"?origSaldo+amt:origSaldo-amt;';
-      html+='var warn=document.getElementById("saldoWarn");var disp=document.getElementById("newSaldoDisplay");';
-      html+='if(newSaldo<0){warn.style.display="block";newSaldo=0;}else{warn.style.display="none";}';
-      html+='if(disp)disp.textContent="$"+newSaldo.toLocaleString("es-CO");}';
-      html+='function updateMargenUI(){var addBtn=document.getElementById("btnAddMargen");var subBtn=document.getElementById("btnSubMargen");';
-      html+='if(addBtn){addBtn.style.background=margenOp==="add"?"rgba(139,92,246,.3)":"rgba(139,92,246,.15)";addBtn.style.borderColor=margenOp==="add"?"#8b5cf6":"rgba(139,92,246,.3)";}';
-      html+='if(subBtn){subBtn.style.background=margenOp==="sub"?"rgba(239,68,68,.3)":"rgba(239,68,68,.1)";subBtn.style.borderColor=margenOp==="sub"?"#ef4444":"rgba(239,68,68,.3)";}calcNewMargen();}';
-      html+='function calcNewMargen(){var amt=Number(document.getElementById("margenInput")?.value)||0;var newMargen=margenOp==="add"?origMargen+amt:origMargen-amt;';
-      html+='var warn=document.getElementById("margenWarn");var disp=document.getElementById("newMargenDisplay");';
-      html+='if(newMargen<0||newMargen>100){warn.style.display="block";newMargen=Math.max(0,Math.min(100,newMargen));}else{warn.style.display="none";}';
-      html+='if(disp)disp.textContent=newMargen+"%";}';
-      html+='function doSaveUser(uid){var amtSaldo=Number(document.getElementById("saldoInput")?.value)||0;var newSaldo=saldoOp==="add"?origSaldo+amtSaldo:origSaldo-amtSaldo;';
-      html+='if(newSaldo<0){toast("Saldo no puede ser negativo","bad");return;}';
-      html+='var amtMargen=Number(document.getElementById("margenInput")?.value)||0;var newMargen=margenOp==="add"?origMargen+amtMargen:origMargen-amtMargen;';
-      html+='newMargen=Math.max(0,Math.min(100,newMargen));';
+      html+='var rolActual="'+role+'";var estadoActual="'+status+'";';
+      html+='var saldoOrig='+balance+';var margenOrig='+margin+';';
+      html+='var saldoOp=1;var margenOp=1;';
+      html+='var roles=["Cliente","Revendedor","Administrador"];var estados=["Activo","Bloqueado"];';
+      html+='function cambiarRol(i){rolActual=roles[i];';
+      html+='for(var j=0;j<3;j++){var b=document.getElementById("btnRol"+j);';
+      html+='if(b){b.style.borderColor=j===i?(j===0?"#10b981":j===1?"#667eea":"#f59e0b"):"#ddd";';
+      html+='b.style.background=j===i?(j===0?"rgba(16,185,129,.15)":j===1?"rgba(102,126,234,.15)":"rgba(245,158,11,.15)"):"#fff";}}}';
+      html+='function cambiarEstado(i){estadoActual=estados[i];';
+      html+='for(var j=0;j<2;j++){var b=document.getElementById("btnEstado"+j);';
+      html+='if(b){b.style.borderColor=j===i?(j===0?"#10b981":"#8b5cf6"):"#ddd";';
+      html+='b.style.background=j===i?(j===0?"rgba(16,185,129,.15)":"rgba(139,92,246,.15)"):"#fff";}}}';
+      html+='function setSaldoOp(op){saldoOp=op;document.getElementById("btnAddSaldo").style.background=op===1?"#dcfce7":"#f5f5f5";document.getElementById("btnSubSaldo").style.background=op===-1?"#fee2e2":"#f5f5f5";calcSaldo();}';
+      html+='function setMargenOp(op){margenOp=op;document.getElementById("btnAddMargen").style.background=op===1?"#f3e8ff":"#f5f5f5";document.getElementById("btnSubMargen").style.background=op===-1?"#fee2e2":"#f5f5f5";calcMargen();}';
+      html+='function calcSaldo(){var amt=Number(document.getElementById("inputSaldo").value)||0;var nuevo=saldoOp===1?saldoOrig+amt:saldoOrig-amt;';
+      html+='if(nuevo<0)nuevo=0;document.getElementById("resultadoSaldo").textContent="$"+nuevo.toLocaleString("es-CO");return nuevo;}';
+      html+='function calcMargen(){var amt=Number(document.getElementById("inputMargen").value)||0;var nuevo=margenOp===1?margenOrig+amt:margenOrig-amt;';
+      html+='if(nuevo<0)nuevo=0;if(nuevo>100)nuevo=100;document.getElementById("resultadoMargen").textContent=nuevo+"%";return nuevo;}';
+      html+='function guardarUsuario(uid){var nuevoSaldo=calcSaldo();var nuevoMargen=calcMargen();';
       html+='showLoading("Guardando...");';
-      html+='api("users",{method:"PATCH",body:JSON.stringify({id:uid,role:currentRole,balance:newSaldo,margin:newMargen,status:currentStatus})})';
+      html+='api("users",{method:"PATCH",body:JSON.stringify({id:uid,role:rolActual,balance:nuevoSaldo,margin:nuevoMargen,status:estadoActual})})';
       html+='.then(function(){closeModal();toast("Usuario actualizado","ok");boot();})';
       html+='.catch(function(e){toast(e.message,"bad");})';
       html+='.finally(function(){hideLoading();});}';
@@ -5865,7 +5817,7 @@
       
       openModal(html);
     }
-
+    
     async function saveEditUser(id){
       try{
         // Obtener valores calculados de las funciones JS
