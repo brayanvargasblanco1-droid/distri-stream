@@ -492,27 +492,68 @@
     .quick-btn.primary-q svg{stroke:#fff}
     .quick-btn span{position:relative;z-index:1}
 
-    .store-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
-    .product{padding:0;overflow:hidden;border-radius:20px;position:relative;transition:.3s cubic-bezier(.2,.8,.2,1);background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 6px rgba(0,0,0,.04)}
-    .product:hover{transform:translateY(-8px);box-shadow:0 20px 40px rgba(8,119,255,.15),0 0 20px rgba(8,119,255,.08);border-color:rgba(8,119,255,.2)}
-    .poster{height:130px;padding:16px 12px 8px;overflow:hidden;position:relative;background:linear-gradient(180deg,rgba(8,119,255,.03),transparent);display:flex;align-items:center;justify-content:center}
-    .poster:before,.poster:after,.poster .svc,.poster .shine,.poster .brandmark{display:none}
-    .poster .logo-word{position:relative;left:auto;right:auto;bottom:auto;margin:0 auto;width:fit-content;display:flex;align-items:center;justify-content:center;height:100%;transform:scale(.95)}
-    .poster .stock{position:absolute;right:12px;top:12px;z-index:2;border-radius:20px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:5px 10px;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,.3)}
-    .poster .stock.low{background:linear-gradient(135deg,#f59e0b,#d97706)}
-    .poster .stock.out{background:linear-gradient(135deg,#ef4444,#dc2626)}
-    .product-body{padding:8px 16px 16px;text-align:center}
-    .product .mini{color:#6b7280;font-size:11px;margin-bottom:6px;display:block}
-    .product h3{font-size:15px;font-weight:700;color:#1f2937;margin:0 0 4px}
-    .product .price{font-size:28px;font-weight:900;color:#0877ff;margin:8px 0 12px;text-shadow:0 2px 8px rgba(8,119,255,.15)}
-    .product .divider{height:1px;background:linear-gradient(90deg,transparent,#e5e7eb,transparent);margin:0 0 12px}
-    .product .primary{width:100%;background:linear-gradient(135deg,#0891ff,#0066dd);border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;color:#fff;box-shadow:0 4px 12px rgba(8,119,255,.25);transition:all .2s}
-    .product .primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(8,119,255,.35)}
-    .product.unavailable{opacity:.5;filter:saturate(.4)}
-    .product.unavailable::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.3);z-index:1}
-    .product.unavailable .poster .stock{display:none}
-    .product .tag{position:absolute;left:12px;top:12px;z-index:2;background:linear-gradient(135deg,rgba(8,119,255,.9),rgba(0,102,221,.9));color:#fff;border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;box-shadow:0 2px 8px rgba(8,119,255,.2)}
-    body.dark .product .tag{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.1)}
+    /* ─── TIENDA MODERNA ─── */
+    .store-section{margin-bottom:24px}
+    .store-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+    .store-header h2{font-size:20px;font-weight:800;margin:0}
+    .store-header p{font-size:13px;color:var(--muted);margin:4px 0 0}
+    .store-count{background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700}
+    
+    .store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+    .product{background:#fff;border-radius:16px;overflow:hidden;transition:.3s cubic-bezier(.2,.8,.2,1);border:1px solid #f0f0f5;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .product:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(8,119,255,.12)}
+    
+    /* Poster con gradiente de marca */
+    .poster{height:110px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .poster::before{content:"";position:absolute;inset:0;opacity:.05}
+    .poster::after{content:"";position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to top,rgba(0,0,0,.1),transparent)}
+    .poster .logo-word{position:relative;z-index:1;transform:scale(.9);transition:transform .3s}
+    .product:hover .poster .logo-word{transform:scale(1)}
+    
+    /* Badges */
+    .poster .stock{position:absolute;right:10px;top:10px;z-index:2;padding:5px 10px;border-radius:12px;font-size:10px;font-weight:800;color:#fff;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 2px 8px rgba(16,185,129,.3)}
+    .poster .stock.low{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 2px 8px rgba(245,158,11,.3)}
+    .poster .stock.out{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 2px 8px rgba(239,68,68,.3)}
+    .poster .tag{position:absolute;left:10px;top:10px;z-index:2;padding:4px 8px;border-radius:8px;font-size:9px;font-weight:800;color:#fff;background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+    
+    /* Cuerpo del producto */
+    .product-body{padding:12px 14px 14px}
+    .product h3{font-size:14px;font-weight:700;color:#1f2937;margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .product .price-wrap{display:flex;align-items:baseline;justify-content:center;gap:4px;margin-bottom:12px}
+    .product .price{font-size:24px;font-weight:900;color:#0877ff;line-height:1}
+    .product .price-currency{font-size:12px;font-weight:600;color:#6b7280}
+    .product .divider{height:1px;background:linear-gradient(90deg,transparent,#e5e7eb,transparent);margin-bottom:12px}
+    .product .primary{width:100%;padding:11px 16px;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:.2s;background:linear-gradient(135deg,#0877ff,#0057dc);box-shadow:0 4px 12px rgba(8,119,255,.25)}
+    .product .primary:hover{box-shadow:0 6px 16px rgba(8,119,255,.35);transform:translateY(-1px)}
+    .product .primary:disabled{background:#e5e7eb;color:#9ca3af;cursor:not-allowed;box-shadow:none}
+    .product .primary:disabled:hover{transform:none}
+    
+    /* Estados */
+    .product.unavailable{opacity:.6}
+    .product.unavailable .poster::before{background:#6b7280}
+    .product.unavailable h3{color:#9ca3af}
+    
+    /* Oscuro tienda */
+    body.dark .product{background:var(--panel);border-color:var(--line)}
+    body.dark .product h3{color:var(--text)}
+    body.dark .product .price{color:#60a5fa}
+    body.dark .product .divider{background:linear-gradient(90deg,transparent,var(--line),transparent)}
+    body.dark .product .price-currency{color:var(--muted)}
+    
+    /* Grid responsivo */
+    @media(max-width:640px){
+      .store-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+      .product{border-radius:14px}
+      .poster{height:90px}
+      .product h3{font-size:13px}
+      .product .price{font-size:20px}
+      .product-body{padding:10px 12px 12px}
+      .product .primary{padding:10px;font-size:12px}
+    }
+    @media(max-width:380px){
+      .store-grid{grid-template-columns:1fr;gap:10px}
+    }
+    
     .netflix{--accent:#ef1437}.prime{--accent:#00b8ff}.max{--accent:#0877ff}
     .disney{--accent:#0a74ff}.spotify{--accent:#1db954}.youtube{--accent:#ff0033}.other{--accent:#7aa6c8}
     .tag{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;background:#e9f9f0;color:#087a35;font-size:11px;font-weight:1000;transition:all .15s ease}
@@ -700,14 +741,6 @@
       .btn{padding:10px 16px;font-size:13px;border-radius:10px}
       .order-btn{padding:10px 14px;font-size:12px}
       .primary{padding:12px 20px;font-size:14px}
-      .store-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-      .product{border-radius:16px}
-      .poster{height:100px;padding:12px 8px 6px}
-      .poster .logo-word{transform:scale(.85)}
-      .product h3{font-size:13px}
-      .product .price{font-size:22px}
-      .product-body{padding:6px 12px 12px}
-      .product .primary{padding:10px;font-size:12px;border-radius:10px}
     }
     
     /* Móvil: Modales */
@@ -2824,18 +2857,18 @@
 
       if(!isAdmin()){
         // Operador: solo ve productos para comprar
-        return `<section class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><b>Productos disponibles</b><p class="muted" style="margin:3px 0 0">Solo ves productos con stock para comprar.</p></div><span class="tag">${available.length} disponibles</span></div></section><section class="grid store-grid section">${available.map(productCard).join("")||"<p class='muted'>No hay productos disponibles ahora.</p>"}</section>`;
+        return `<div class="store-section"><div class="store-header"><div><h2>Productos disponibles</h2><p>Solo ves productos con stock para comprar</p></div><span class="store-count">${available.length} disponibles</span></div></div><section class="store-grid">${available.map(productCard).join("")||"<div style='text-align:center;padding:40px'><p class='muted'>No hay productos disponibles ahora.</p></div>"}</section>`;
       }
 
       // Admin: tabs Productos + Cuentas
-      let tabs=`<div style="display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:16px">`;
-      tabs+=`<button onclick="storeTab='productos';renderApp()" style="flex:1;padding:12px 8px;border:0;border-bottom:2px solid ${storeTab==="productos"?"var(--blue)":"transparent"};margin-bottom:-2px;background:transparent;color:${storeTab==="productos"?"var(--blue)":"var(--muted)"};font-weight:800;font-size:13px;cursor:pointer;transition:all .15s">Productos</button>`;
-      tabs+=`<button onclick="storeTab='cuentas';renderApp()" style="flex:1;padding:12px 8px;border:0;border-bottom:2px solid ${storeTab==="cuentas"?"var(--blue)":"transparent"};margin-bottom:-2px;background:transparent;color:${storeTab==="cuentas"?"var(--blue)":"var(--muted)"};font-weight:800;font-size:13px;cursor:pointer;transition:all .15s">Cuentas</button>`;
+      let tabs=`<div style="display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:20px">`;
+      tabs+=`<button onclick="storeTab='productos';renderApp()" style="flex:1;padding:14px 8px;border:0;border-bottom:3px solid ${storeTab==="productos"?"var(--blue)":"transparent"};margin-bottom:-2px;background:transparent;color:${storeTab==="productos"?"var(--blue)":"var(--muted)"};font-weight:800;font-size:14px;cursor:pointer;transition:all .15s">Productos</button>`;
+      tabs+=`<button onclick="storeTab='cuentas';renderApp()" style="flex:1;padding:14px 8px;border:0;border-bottom:3px solid ${storeTab==="cuentas"?"var(--blue)":"transparent"};margin-bottom:-2px;background:transparent;color:${storeTab==="cuentas"?"var(--blue)":"var(--muted)"};font-weight:800;font-size:14px;cursor:pointer;transition:all .15s">Cuentas</button>`;
       tabs+=`</div>`;
       let content="";
       if(storeTab==="productos"){
-        content=`<section class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><b>Inventario del proveedor</b><p class="muted" style="margin:3px 0 0">Administra stock, precios y tipo de pantalla.</p></div><span class="tag">${available.length} disponibles</span></div></section><section class="grid store-grid section">${visible.map(productCard).join("")||"<p class='muted'>No hay productos disponibles ahora.</p>"}</section>`;
-        if(unavailable.length) content+=`<section class="card section"><h2>Agotados o pausados</h2><div class="grid store-grid section">${unavailable.map(productCard).join("")}</div></section>`;
+        content=`<div class="store-section"><div class="store-header"><div><h2>Inventario del proveedor</h2><p>Administra stock, precios y tipo de pantalla</p></div><span class="store-count">${available.length} disponibles</span></div></div><section class="store-grid">${visible.map(productCard).join("")||"<div style='text-align:center;padding:40px'><p class='muted'>No hay productos disponibles ahora.</p></div>"}</section>`;
+        if(unavailable.length) content+=`<div class="store-section" style="margin-top:24px"><div class="store-header"><h2>Agotados o pausados</h2></div><section class="store-grid">${unavailable.map(productCard).join("")}</section></div>`;
       } else {
         content=`<div class="card section"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#4105ab,#6b21a8);display:grid;place-items:center;flex-shrink:0"><span style="color:#fff;font-weight:1000;font-size:14px">STG</span></div><div><h2 style="margin:0">Importar desde STGLIAK</h2><p class="muted" style="margin:2px 0 0">Copia la tabla de STGLIAK y pegala aqui</p></div></div><div class="form"><label>Producto destino<select id="importProduct">${products.map(p=>`<option value="${p.id}">${p.name}</option>`).join("")}</select></label><label>Datos de STGLIAK (pega la tabla)</label><textarea id="importData" rows="6" placeholder="Pega aqui el contenido..." style="width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:12px;font-family:monospace;background:var(--panel);color:var(--text);resize:vertical"></textarea><div style="display:flex;gap:8px"><button class="primary" onclick="importFromSTGLIAK()" style="flex:1">Importar</button><button class="ghost" onclick="previewImport()" style="flex:1">Vista previa</button></div></div><div id="importPreview" style="display:none;margin-top:12px"></div></div>`;
         content+=`<div class="card section"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><h2>Cuentas en inventario</h2><p class="muted">Gestiona las cuentas disponibles para entregar.</p></div></div><div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"><button class="ghost" onclick="filterInventory('all')" style="font-size:12px">Todas (${inv.length})</button><button class="ghost" onclick="filterInventory('Disponible')" style="font-size:12px;color:var(--ok)">Disponibles (${invAvailable})</button><button class="ghost" onclick="filterInventory('Entregada')" style="font-size:12px;color:var(--blue)">Entregadas (${invDelivered})</button></div><div id="inventoryList">${inv.length?inv.map(i=>{const product=products.find(p=>p.id===i.product_id);const sc=i.status==="Disponible"?"var(--ok)":i.status==="Entregada"?"var(--blue)":"var(--bad)";return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;border-left:4px solid ${sc}"><div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><div style="flex:1"><b style="font-size:12px">${product?.name||"Producto"}</b> <span class="tag ${i.status==='Disponible'?'':'warn'}" style="font-size:9px">${i.status}</span><div style="font-size:12px;margin-top:4px">📧 ${i.email}</div><div style="font-size:11px;color:var(--muted)">🔑 ${i.password}</div></div><div style="display:flex;gap:4px;flex-shrink:0"><button onclick="editInventoryItem('${i.id}')" style="padding:4px 8px;border:0;border-radius:6px;background:rgba(8,119,255,.1);color:var(--blue);font-size:10px;cursor:pointer;font-weight:700">Editar</button>${i.status==="Disponible"?`<button onclick="deleteInventory('${i.id}')" style="padding:4px 8px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:var(--bad);font-size:10px;cursor:pointer">Eliminar</button>`:""}</div></div></div>`}).join(""):`<div style="text-align:center;padding:30px"><p class="muted">Sin cuentas en inventario.</p></div>`}</div></div>`;
@@ -2848,29 +2881,33 @@
       const cls=serviceClass(p.name), price=salePrice(p);
       const isPersonal = p.shared === false || String(p.share_type||"").toLowerCase() === "personal";
       const ops = operatorCount(p.id);
+      const stockClass = available ? (Number(p.stock) <= 2 ? 'low' : '') : 'out';
+      const stockText = available ? (Number(p.stock) <= 2 ? `¡Solo ${p.stock}!` : `${p.stock} disponibles`) : 'Agotado';
       const logos = {
-        netflix:`<div style="width:72px;height:72px;background:#E50914;border-radius:14px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:48px;font-weight:700;color:#fff;line-height:1">N</span></div>`,
-        spotify:`<div style="width:72px;height:72px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="38" height="38" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
-        max:`<div style="width:96px;height:56px;background:#000;border-radius:10px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:4px">max</span></div>`,
-        prime:`<div style="width:96px;height:64px;background:#00A8E1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:700;color:#fff;letter-spacing:2px">prime</span><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#fff;letter-spacing:3px;margin-top:-2px">video</span><svg width="48" height="5" viewBox="0 0 48 5" style="margin-top:3px"><path d="M2 3.5 Q24 -1 46 3.5" stroke="#FF9900" stroke-width="1.8" fill="none"/></svg></div>`,
-        disney:`<div style="width:96px;height:56px;background:#0E1A40;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:0"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:700;color:#fff">Disney</span><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:700;color:#00A8E1;margin-left:1px">+</span></div>`,
-        youtube:`<div style="width:72px;height:52px;background:#FF0000;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>`,
-        other:`<div style="width:64px;height:64px;background:#5A86A8;border-radius:50%;display:flex;align-items:center;justify-content:center"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:700;color:#fff">?</span></div>`
+        netflix:`<div style="width:64px;height:64px;background:#E50914;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(229,9,20,.3)"><span style="font-family:Arial,sans-serif;font-size:40px;font-weight:700;color:#fff;line-height:1">N</span></div>`,
+        spotify:`<div style="width:64px;height:64px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(29,185,84,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
+        max:`<div style="width:80px;height:48px;background:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3)"><span style="font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#fff;letter-spacing:3px">max</span></div>`,
+        prime:`<div style="width:80px;height:54px;background:linear-gradient(135deg,#00A8E1,#0077b6);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,168,225,.3)"><span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:1px">prime</span><span style="font-family:Arial,sans-serif;font-size:9px;color:rgba(255,255,255,.8);letter-spacing:1px">video</span></div>`,
+        disney:`<div style="width:80px;height:48px;background:linear-gradient(135deg,#0E1A40,#1a2966);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(14,26,64,.4)"><span style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:#fff">Disney</span><span style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:#00A8E1;margin-left:1px">+</span></div>`,
+        youtube:`<div style="width:64px;height:48px;background:#FF0000;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,0,0,.3)"><svg width:24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>`,
+        other:`<div style="width:56px;height:56px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(99,102,241,.3)"><span style="font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:#fff">?</span></div>`
       };
       const logo = logos[cls] || logos.other;
       return `<article class="product ${available?"":"unavailable"}">
         <div class="poster ${cls}">
           <span class="tag">${isPersonal?"Personal":"1 Mes"}</span>
-          <span class="stock">${available?p.stock+" disp.":"Agotado"}</span>
+          <span class="stock ${stockClass}">${stockText}</span>
           <div class="logo-word">${logo}</div>
         </div>
         <div class="product-body">
           <h3>${serviceName(p.name)}</h3>
-          <div class="price">${money(price)}</div>
+          <div class="price-wrap">
+            <span class="price">${money(price)}</span>
+          </div>
           <div class="divider"></div>
-          ${available && canBuy?`<button class="primary" onclick="openBuy('${p.id}')">Comprar pantalla</button>`:
-            available && !canBuy?`<button class="primary" disabled style="opacity:.5">Limite alcanzado</button>`:
-            `<button class="primary" disabled style="opacity:.5">Agotado</button>`}
+          ${available && canBuy?`<button class="primary" onclick="openBuy('${p.id}')">Comprar</button>`:
+            available && !canBuy?`<button class="primary" disabled>Limite alcanzado</button>`:
+            `<button class="primary" disabled>Agotado</button>`}
         </div>
       </article>`;
     }
