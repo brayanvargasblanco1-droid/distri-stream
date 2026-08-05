@@ -314,10 +314,10 @@ function improvedReportsView() {
       </div>
       
       <div class="reports-tabs">
-        <button onclick="switchReportsTab('active')" id="tab_reports_active" class="reports-tab active">
+        <button onclick="switchReportsTab('active')" id="tab_reports_active" class="reports-tab ${active.length > 0 ? 'active' : ''}">
           🔵 En Proceso <span class="tab-count">${active.length}</span>
         </button>
-        <button onclick="switchReportsTab('resolved')" id="tab_reports_resolved" class="reports-tab">
+        <button onclick="switchReportsTab('resolved')" id="tab_reports_resolved" class="reports-tab ${active.length === 0 && resolved.length > 0 ? 'active' : ''}">
           ✅ Resueltos <span class="tab-count">${resolved.length}</span>
         </button>
       </div>
@@ -427,9 +427,15 @@ async function deleteMyReport(reportId) {
 
 function getReasonLabel(reason) {
   const labels = {
+    // Pagos
     'no_received': '💰 Pago no reflejado',
     'wrong_amount': '🔢 Monto incorrecto',
     'no_confirmation': '⏳ Sin confirmación',
+    // Quejas/Reclamos
+    'wrong_charge': '💰 Desacuerdo con el cobro',
+    'unrecognized': '❓ Movimiento no reconocido',
+    'service_issue': '⚠️ Problema con el servicio',
+    // Cuentas
     'account_issue': '🔐 Problema con la cuenta',
     'invalid_data': '❌ Datos inválidos',
     'expired_soon': '⏰ Cuenta por vencer',
@@ -836,6 +842,37 @@ async function submitPaymentReportNew(topupId, encodedMovement) {
   }
 }
 
+async function submitComplaintReport(orderId, encodedMovement) {
+  const reasonEl = document.querySelector('input[name="complaintReason"]:checked');
+  const reason = reasonEl ? reasonEl.value : '';
+  const description = document.getElementById('complaintDescription')?.value || '';
+  
+  if (!reason) {
+    toast('⚠️ Selecciona el tipo de queja o reclamo', 'warn');
+    return;
+  }
+  
+  try {
+    showLoading('Enviando queja o reclamo...');
+    await api('reports', {
+      method: 'POST',
+      body: JSON.stringify({
+        order_id: orderId,
+        reason: reason,
+        description: description,
+        type: 'complaint'
+      })
+    });
+    toast('✅ Queja o reclamo enviado', 'ok');
+    closeModal();
+    await boot();
+  } catch (e) {
+    toast('❌ Error: ' + e.message, 'bad');
+  } finally {
+    hideLoading();
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 📊 VISTA MEJORADA DE MOVIMIENTOS
 // ═══════════════════════════════════════════════════════════════
@@ -1054,53 +1091,131 @@ function showMovementDetail(orderId, isCredit, encodedData) {
     }
   } else if (orderId) {
     // Verificar si ya tiene reporte
-    const hasReport = state.reports?.some(r => 
+    const existingReport = state.reports?.find(r => 
       r.order_id === orderId && 
       r.status !== "Resuelto" && 
       r.status !== "Rechazado"
     );
     
-    openModal(`
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>🛒 Detalle de Compra</h2>
-          <button onclick="closeModal()" class="btn-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-card">
-            <div class="detail-icon purple">🛒</div>
-            <div class="detail-amount negative">-${formatMoney(Math.abs(m.amount))}</div>
-            <div class="detail-type debit">Compra</div>
+    if (existingReport) {
+      // Ya tiene reporte abierto - mostrar info
+      const reasonLabel = getReasonLabel(existingReport.reason);
+      openModal(`
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>⚠️ Queja Enviada</h2>
+            <button onclick="closeModal()" class="btn-close">×</button>
           </div>
-          <div class="detail-info">
-            <div class="detail-row"><span>Fecha:</span><span>${formatDate(m.date)}</span></div>
-            <div class="detail-row"><span>Producto:</span><span>${m.orderData?.product_name || '-'}</span></div>
-            <div class="detail-row"><span>Código:</span><span>${m.orderData?.code || '-'}</span></div>
-            <div class="detail-row"><span>Estado:</span><span>${m.orderData?.status || '-'}</span></div>
-          </div>
-          
-          <button onclick="closeModal();openAccountModal('${encodeURIComponent(JSON.stringify(m.orderData))}')" class="order-btn datos" style="width:100%;margin-bottom:12px">
-            🔐 Ver Datos de la Cuenta
-          </button>
-          
-          <div class="report-action-section">
-            ${hasReport ? `
-              <div class="report-already-sent">
-                <div class="report-sent-icon">✅</div>
-                <div class="report-sent-text">Reporte ya enviado para esta cuenta</div>
-                <button onclick="closeModal();openReport('${orderId}')" class="report-btn-view">
-                  👁️ Ver reporte
-                </button>
+          <div class="modal-body">
+            <div class="existing-report-card">
+              <div class="existing-report-icon">⏳</div>
+              <div class="existing-report-title">Tu queja está siendo atendida</div>
+              <div class="existing-report-subtitle">Reportaste el ${formatDate(m.date)}</div>
+            </div>
+            
+            <div class="existing-report-problem">
+              <div class="existing-report-problem-label">📋 Tu queja:</div>
+              <div class="existing-report-problem-value">${reasonLabel}</div>
+              ${existingReport.description ? `<div class="existing-report-description">"${existingReport.description}"</div>` : ''}
+            </div>
+            
+            <div class="existing-report-status">
+              <div class="status-badge-large ${existingReport.status === 'En proceso' ? 'pending' : existingReport.status === 'Resuelto' ? 'success' : ''}">
+                ${existingReport.status === 'En proceso' ? '🔄 En Proceso' : 
+                  existingReport.status === 'Resuelto' ? '✅ Resuelto' : 
+                  existingReport.status === 'Rechazado' ? '❌ Rechazado' : 
+                  '👁️ ' + existingReport.status}
               </div>
+            </div>
+            
+            ${existingReport.provider_response ? `
+            <div class="support-response-box">
+              <div class="support-response-label">💬 Respuesta del soporte:</div>
+              <div class="support-response-text">${existingReport.provider_response}</div>
+            </div>
             ` : `
-              <button onclick="closeModal();openReport('${orderId}')" class="report-btn-main-red">
-                ⚠️ Reportar Problema con la Cuenta
-              </button>
+            <div class="waiting-response">
+              <div class="waiting-icon">⏰</div>
+              <div class="waiting-text">Estamos revisando tu queja. Te responderemos pronto.</div>
+            </div>
             `}
+            
+            <div class="only-one-notice">
+              ⚠️ Solo puedes reportar cada movimiento una vez
+            </div>
+            
+            <button onclick="closeModal()" class="btn-close-report">
+              Entendido, esperaré la respuesta
+            </button>
           </div>
         </div>
-      </div>
-    `);
+      `);
+    } else {
+      // No tiene reporte - mostrar formulario de queja/reclamo
+      const complaintReasons = [
+        { value: 'wrong_charge', label: '💰 Desacuerdo con el cobro', desc: 'Creo que me cobraron de más o incorrectamente' },
+        { value: 'unrecognized', label: '❓ Movimiento no reconocido', desc: 'No reconozco este movimiento en mi cuenta' },
+        { value: 'wrong_amount', label: '🔢 Monto incorrecto', desc: 'El monto cobrado no corresponde al servicio' },
+        { value: 'service_issue', label: '⚠️ Problema con el servicio', desc: 'El servicio no funcionó correctamente' },
+        { value: 'other', label: '📝 Otro problema', desc: 'Otro tipo de inconveniente' }
+      ];
+      
+      openModal(`
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>⚠️ Presentar Queja o Reclamo</h2>
+            <button onclick="closeModal()" class="btn-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="report-warning-top" style="background:#fef3c7;border-color:#f59e0b">
+              ⚠️ Solo puedes reportar este movimiento una sola vez
+            </div>
+            
+            <div class="detail-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(139,92,246,0.05));border:2px solid rgba(139,92,246,0.2)">
+              <div style="font-size:12px;color:#6b21a8;text-transform:uppercase;font-weight:700;margin-bottom:8px">Datos del movimiento</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#6b7280">Tipo:</span>
+                <span style="font-weight:600">Compra</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#6b7280">Monto:</span>
+                <span style="font-weight:800;color:#dc2626">-${formatMoney(Math.abs(m.amount))}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#6b7280">Fecha:</span>
+                <span style="font-weight:600">${formatDate(m.date)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#6b7280">Producto:</span>
+                <span style="font-weight:600">${m.orderData?.product_name || '-'}</span>
+              </div>
+            </div>
+            
+            <div style="margin-bottom:16px">
+              <div style="font-size:14px;font-weight:700;margin-bottom:10px">¿Cuál es tu queja o reclamo?</div>
+              ${complaintReasons.map(r => `
+                <label class="report-reason-option" onclick="selectReportReason(this, '${r.value}')">
+                  <input type="radio" name="complaintReason" value="${r.value}" style="display:none">
+                  <div class="reason-radio"></div>
+                  <div class="reason-content">
+                    <div class="reason-label">${r.label}</div>
+                    <div class="reason-desc">${r.desc}</div>
+                  </div>
+                </label>
+              `).join('')}
+            </div>
+            
+            <div style="margin-bottom:16px">
+              <textarea id="complaintDescription" placeholder="Describe tu queja o reclamo con más detalle" rows="3" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;resize:none;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>
+            
+            <button onclick="submitComplaintReport('${orderId}', '${encodeURIComponent(JSON.stringify(m))}')" class="order-btn datos" style="width:100%;padding:16px;font-size:15px;background:linear-gradient(135deg,#dc2626,#b91c1c)">
+              📤 Presentar Queja o Reclamo
+            </button>
+          </div>
+        </div>
+      `);
+    }
   }
 }
 
