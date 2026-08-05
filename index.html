@@ -812,6 +812,9 @@
     .premium-card.red{background:linear-gradient(135deg,#1a0a0a 0%,#2e0d0d 50%,#200a0a 100%)}
     .premium-card.red::before{background:radial-gradient(circle at 50% 60%,rgba(239,68,68,.4) 0%,transparent 70%)}
     .premium-card.red::after{background:radial-gradient(circle,rgba(239,68,68,.3),transparent 70%);animation-delay:1.5s}
+    .premium-card.purple{background:linear-gradient(135deg,#1a0a1e 0%,#2d0d47 50%,#200a32 100%)}
+    .premium-card.purple::before{background:radial-gradient(circle at 50% 60%,rgba(124,58,237,.4) 0%,transparent 70%)}
+    .premium-card.purple::after{background:radial-gradient(circle,rgba(124,58,237,.3),transparent 70%);animation-delay:2s}
     @keyframes premiumPulse{0%,100%{opacity:.05;transform:translate(-50%,-50%) scale(1)}50%{opacity:.15;transform:translate(-50%,-50%) scale(1.2)}}
 
     /* Orb container */
@@ -821,6 +824,7 @@
     .premium-card.green .premium-orb{border-top-color:rgba(16,185,129,.6);border-right-color:rgba(16,185,129,.3);filter:drop-shadow(0 0 8px rgba(16,185,129,.5))}
     .premium-card.orange .premium-orb{border-top-color:rgba(245,158,11,.6);border-right-color:rgba(245,158,11,.3);filter:drop-shadow(0 0 8px rgba(245,158,11,.5))}
     .premium-card.red .premium-orb{border-top-color:rgba(239,68,68,.6);border-right-color:rgba(239,68,68,.3);filter:drop-shadow(0 0 8px rgba(239,68,68,.5))}
+    .premium-card.purple .premium-orb{border-top-color:rgba(124,58,237,.6);border-right-color:rgba(124,58,237,.3);filter:drop-shadow(0 0 8px rgba(124,58,237,.5))}
     .premium-orb.r2{inset:8px;animation-direction:reverse;animation-duration:1.5s;opacity:.5}
     .premium-orb.r3{inset:16px;animation-duration:2.5s;opacity:.3}
     @keyframes orbSpin{to{transform:rotate(360deg)}}
@@ -5246,96 +5250,428 @@
       `);
     }
 
-    // ─── PAGOS ─────────────────────────────────────────
-     function payments(){
-       const pending=state.topups.filter(t=>t.status==="Pendiente");
-       const approved=state.topups.filter(t=>t.status==="Aprobada");
-       const rejected=state.topups.filter(t=>t.status==="Rechazada");
-       const totalApproved = approved.reduce((s,t)=>s+Number(t.amount||0),0);
-       const totalProfit = approved.reduce((s,t)=>s+profitFromRecharge(Number(t.amount||0)),0);
-       const filteredTopups = topupFilter==="all"?state.topups:state.topups.filter(t=>t.status===topupFilter);
-       const paginatedTopups = paginate(filteredTopups, topupPage, 20);
-       return `<section class="premium-metrics">
-         <div class="premium-card orange" style="cursor:default">
-           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-           <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${pending.length}</span></div></div>
-           <div class="premium-label">Pendientes</div>
-         </div>
-         <div class="premium-card green" style="cursor:default">
-           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-           <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${approved.length}</span></div></div>
-           <div class="premium-label">Aprobadas</div>
-         </div>
-         <div class="premium-card blue" style="cursor:default">
-           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-           <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:20px">${money(totalApproved)}</span></div></div>
-           <div class="premium-label">Total recibido</div>
-         </div>
-         <div class="premium-card blue" style="cursor:default">
-           <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
-           <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:20px">${money(totalProfit)}</span></div></div>
-           <div class="premium-label">Ganancia 20%</div>
-         </div>
-       </section>
-       <section class="section">
-         <div class="card" style="overflow:hidden">
-           <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)">
-             <div>
-               <h2 style="margin:0;font-size:16px">Historial de recargas</h2>
-               <p class="muted" style="margin:4px 0 0;font-size:12px">${pending.length} pendiente${pending.length!==1?"s":""} · ${approved.length} aprobada${approved.length!==1?"s":""} · ${rejected.length} rechazada${rejected.length!==1?"s":""}</p>
-             </div>
-             <div style="display:flex;gap:6px;flex-wrap:wrap">
-               <button onclick="filterTopups('all')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='all'?'var(--blue)':''}var(--line);border-radius:8px;background:${topupFilter==='all'?'rgba(8,119,255,.1)':'var(--panel)'};color:${topupFilter==='all'?'var(--blue)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Todas</button>
-               <button onclick="filterTopups('Pendiente')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Pendiente'?'var(--warn)':''}var(--line);border-radius:8px;background:${topupFilter==='Pendiente'?'rgba(245,158,11,.1)':'var(--panel)'};color:${topupFilter==='Pendiente'?'var(--warn)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Pendientes</button>
-               <button onclick="filterTopups('Aprobada')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Aprobada'?'var(--ok)':''}var(--line);border-radius:8px;background:${topupFilter==='Aprobada'?'rgba(16,185,129,.1)':'var(--panel)'};color:${topupFilter==='Aprobada'?'var(--ok)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Aprobadas</button>
-               <button onclick="filterTopups('Rechazada')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Rechazada'?'var(--bad)':''}var(--line);border-radius:8px;background:${topupFilter==='Rechazada'?'rgba(239,68,68,.1)':'var(--panel)'};color:${topupFilter==='Rechazada'?'var(--bad)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Rechazadas</button>
-             </div>
-           </div>
-           <div style="overflow-x:auto">
-             <table style="width:100%;border-collapse:collapse;font-size:13px">
-               <thead>
-                 <tr style="background:var(--soft);border-bottom:1px solid var(--line)">
-                   <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Usuario</th>
-                   <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Monto</th>
-                   <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px"> Metodo</th>
-                   <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Ganancia</th>
-                   <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Estado</th>
-                   <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Accion</th>
-                 </tr>
-               </thead>
-               <tbody id="topupsBody">
-                 ${paginatedTopups.items.length?paginatedTopups.items.map(topupRow).join(""):`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin recargas</div><div style="font-size:12px">Las recargas apareceran aqui</div></td></tr>`}
-               </tbody>
-             </table>
-           </div>
-           ${paginationHTML(filteredTopups, topupPage, 20, "renderTopupsPage")}
-         </div>
-       </section>`;
-     }
-     function filterTopups(filter){
-       topupFilter = filter;
-       topupPage = 1;
-       renderApp();
-     }
-     function renderTopupsPage(page){
-       topupPage = page;
-       renderApp();
-     }
-    function topupRow(t){
-      const profit = profitFromRecharge(Number(t.amount||0));
-      const user = state.users.find(u=>u.id===t.user_id);
+    // ─── PAGOS (RECARGAS) ─────────────────────────────────────────
+    // Variables globales para la sección de pagos
+    let topupFilter = 'all';
+    let topupPage = 1;
+    let topupSearch = '';
+    let topupSortBy = 'created_at';
+    let topupSortOrder = 'desc';
+    let topupRefreshInterval = null;
+    
+    function payments(){
+      // Calcular estadísticas
+      const pending = state.topups.filter(t => t.status === "Pendiente");
+      const approved = state.topups.filter(t => t.status === "Aprobada");
+      const rejected = state.topups.filter(t => t.status === "Rechazada");
+      const totalApproved = approved.reduce((s, t) => s + Number(t.amount || 0), 0);
+      const totalProfit = approved.reduce((s, t) => s + profitFromRecharge(Number(t.amount || 0)), 0);
+      const totalRejected = rejected.reduce((s, t) => s + Number(t.amount || 0), 0);
+      const avgTopup = approved.length > 0 ? totalApproved / approved.length : 0;
+      
+      // Iniciar auto-refresh si no existe
+      if (!topupRefreshInterval) {
+        startTopupAutoRefresh();
+      }
+      
+      // Filtrar y buscar
+      let filteredTopups = state.topups.filter(t => {
+        if (topupFilter !== 'all' && t.status !== topupFilter) return false;
+        if (topupSearch) {
+          const search = topupSearch.toLowerCase();
+          const user = state.users.find(u => u.id === t.user_id);
+          const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "");
+          const matchesUser = userName.toLowerCase().includes(search);
+          const matchesRef = (t.reference || "").toLowerCase().includes(search);
+          const matchesMethod = (t.method || "").toLowerCase().includes(search);
+          if (!matchesUser && !matchesRef && !matchesMethod) return false;
+        }
+        return true;
+      });
+      
+      // Ordenar
+      filteredTopups.sort((a, b) => {
+        let valA, valB;
+        switch (topupSortBy) {
+          case 'amount': valA = Number(a.amount || 0); valB = Number(b.amount || 0); break;
+          case 'user': 
+            const userA = state.users.find(u => u.id === a.user_id);
+            const userB = state.users.find(u => u.id === b.user_id);
+            valA = (userA ? (userA.name || userA.email) : (a.user_name || "")).toLowerCase();
+            valB = (userB ? (userB.name || userB.email) : (b.user_name || "")).toLowerCase();
+            break;
+          case 'status': valA = a.status; valB = b.status; break;
+          case 'method': valA = a.method || ""; valB = b.method || ""; break;
+          default: valA = new Date(a.created_at || 0).getTime(); valB = new Date(b.created_at || 0).getTime();
+        }
+        if (topupSortOrder === 'asc') {
+          return valA > valB ? 1 : -1;
+        } else {
+          return valA < valB ? 1 : -1;
+        }
+      });
+      
+      const paginatedTopups = paginate(filteredTopups, topupPage, 15);
+      const sortIcon = (col) => topupSortBy === col ? (topupSortOrder === 'asc' ? ' ↑' : ' ↓') : '';
+      
+      return `<section class="premium-metrics">
+        <div class="premium-card orange" style="cursor:pointer" onclick="filterTopups('Pendiente')">
+          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
+          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${pending.length}</span></div></div>
+          <div class="premium-label">Pendientes</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">Por aprobar</div>
+        </div>
+        <div class="premium-card green" style="cursor:pointer" onclick="filterTopups('Aprobada')">
+          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
+          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${approved.length}</span></div></div>
+          <div class="premium-label">Aprobadas</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">${money(totalApproved)} total</div>
+        </div>
+        <div class="premium-card red" style="cursor:default">
+          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
+          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num">${rejected.length}</span></div></div>
+          <div class="premium-label">Rechazadas</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">${money(totalRejected)}</div>
+        </div>
+        <div class="premium-card purple" style="cursor:default">
+          <div class="premium-particles"><span></span><span></span><span></span><span></span></div>
+          <div class="premium-orb-wrap"><div class="premium-orb"></div><div class="premium-orb r2"></div><div class="premium-center"><span class="premium-num" style="font-size:16px">${money(totalProfit)}</span></div></div>
+          <div class="premium-label">Ganancia 20%</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:4px">Promedio: ${money(avgTopup)}</div>
+        </div>
+      </section>
+      
+      <section class="section">
+        <div class="card" style="overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px">
+            <div>
+              <h2 style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px">
+                Historial de recargas
+                <span id="topupRefreshBadge" style="display:none;width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.5s infinite"></span>
+              </h2>
+              <p class="muted" style="margin:4px 0 0;font-size:12px">${pending.length} pendientes · ${approved.length} aprobadas · ${rejected.length} rechazadas</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <!-- Búsqueda -->
+              <div style="position:relative">
+                <input type="text" id="topupSearchInput" placeholder="Buscar usuario, referencia..." value="${esc(topupSearch)}" 
+                  oninput="topupSearch=this.value;topupPage=1;renderApp()" 
+                  style="padding:8px 12px 8px 32px;border:1px solid var(--line);border-radius:8px;font-size:12px;width:200px;background:var(--soft)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="14" height="14" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              </div>
+              <!-- Filtros de estado -->
+              <button onclick="filterTopups('all')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='all'?'var(--blue)':''}var(--line);border-radius:8px;background:${topupFilter==='all'?'rgba(8,119,255,.1)':'var(--panel)'};color:${topupFilter==='all'?'var(--blue)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Todas</button>
+              <button onclick="filterTopups('Pendiente')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Pendiente'?'var(--warn)':''}var(--line);border-radius:8px;background:${topupFilter==='Pendiente'?'rgba(245,158,11,.1)':'var(--panel)'};color:${topupFilter==='Pendiente'?'var(--warn)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Pendientes</button>
+              <button onclick="filterTopups('Aprobada')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Aprobada'?'var(--ok)':''}var(--line);border-radius:8px;background:${topupFilter==='Aprobada'?'rgba(16,185,129,.1)':'var(--panel)'};color:${topupFilter==='Aprobada'?'var(--ok)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Aprobadas</button>
+              <button onclick="filterTopups('Rechazada')" style="padding:6px 14px;border:1.5px solid ${topupFilter==='Rechazada'?'var(--bad)':''}var(--line);border-radius:8px;background:${topupFilter==='Rechazada'?'rgba(239,68,68,.1)':'var(--panel)'};color:${topupFilter==='Rechazada'?'var(--bad)':'var(--muted)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">Rechazadas</button>
+              <button onclick="exportTopupsCsv()" style="padding:6px 14px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:var(--soft);border-bottom:1px solid var(--line)">
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="sortTopups('user')">Usuario${sortIcon('user')}</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="sortTopups('amount')">Monto${sortIcon('amount')}</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="sortTopups('method')">Método${sortIcon('method')}</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Referencia</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="sortTopups('created_at')">Fecha${sortIcon('created_at')}</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="sortTopups('status')">Estado${sortIcon('status')}</th>
+                  <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="topupsBody">
+                ${paginatedTopups.items.length ? paginatedTopups.items.map(t => topupRow(t)).join("") : `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin recargas</div><div style="font-size:12px">Las recargas aparecerán aquí</div></td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          ${filteredTopups.length > 15 ? paginationHTML(filteredTopups, topupPage, 15, "renderTopupsPage") : ''}
+        </div>
+      </section>`;
+    }
+    
+    function sortTopups(column) {
+      if (topupSortBy === column) {
+        topupSortOrder = topupSortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        topupSortBy = column;
+        topupSortOrder = column === 'created_at' ? 'desc' : 'asc';
+      }
+      topupPage = 1;
+      renderApp();
+    }
+    
+    function filterTopups(filter) {
+      topupFilter = filter;
+      topupPage = 1;
+      renderApp();
+    }
+    
+    function renderTopupsPage(page) {
+      topupPage = page;
+      renderApp();
+    }
+    
+    function startTopupAutoRefresh() {
+      if (topupRefreshInterval) clearInterval(topupRefreshInterval);
+      topupRefreshInterval = setInterval(async () => {
+        if (state.view !== 'payments') return;
+        try {
+          const data = await api('topups');
+          if (data && Array.isArray(data)) {
+            const oldCount = state.topups.filter(t => t.status === "Pendiente").length;
+            state.topups = data;
+            const newCount = state.topups.filter(t => t.status === "Pendiente").length;
+            if (newCount > oldCount) {
+              // Mostrar badge de nuevas recargas
+              const badge = document.getElementById('topupRefreshBadge');
+              if (badge) {
+                badge.style.display = 'block';
+                setTimeout(() => badge.style.display = 'none', 5000);
+              }
+            }
+            // Solo re-renderizar si estamos en la vista de pagos
+            if (state.view === 'payments') renderApp();
+          }
+        } catch (e) {
+          // Silenciar errores de refresh automático
+        }
+      }, 30000); // Cada 30 segundos
+    }
+    
+    function exportTopupsCsv() {
+      const rows = [["Fecha", "Usuario", "Email", "Monto", "Método", "Referencia", "Estado", "Ganancia"]];
+      state.topups.forEach(t => {
+        const user = state.users.find(u => u.id === t.user_id);
+        const userName = user ? (user.name || user.email) : (t.user_name || "Usuario");
+        const email = user ? user.email : (t.user_email || "");
+        const profit = profitFromRecharge(Number(t.amount || 0));
+        rows.push([
+          t.created_at || "",
+          userName,
+          email,
+          t.amount || 0,
+          t.method || "Nequi",
+          t.reference || "-",
+          t.status || "Pendiente",
+          profit
+        ]);
+      });
+      
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `recargas_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast("Recargas exportadas exitosamente", "ok");
+    }
+    
+    function topupRow(t) {
+      const profit = profitFromRecharge(Number(t.amount || 0));
+      const user = state.users.find(u => u.id === t.user_id);
       const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "Usuario");
-      const statusColor = t.status==="Aprobada"?"var(--ok)":t.status==="Rechazada"?"var(--bad)":"var(--warn)";
-      const statusBg = t.status==="Aprobada"?"rgba(16,185,129,.1)":t.status==="Rechazada"?"rgba(239,68,68,.1)":"rgba(245,158,11,.1)";
-      const statusIcon = t.status==="Aprobada"?"✓":t.status==="Rechazada"?"✗":"●";
-      return `<tr style="border-bottom:1px solid var(--line);transition:background .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background=''">
-        <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--blue)">${(userName[0]||"U").toUpperCase()}</div><div><div style="font-weight:700;font-size:13px">${esc(userName)}</div><div style="font-size:11px;color:var(--muted)">${t.method||"Nequi"} ${t.reference?"· "+esc(t.reference):""}</div></div></div></td>
+      const statusColor = t.status === "Aprobada" ? "var(--ok)" : t.status === "Rechazada" ? "var(--bad)" : "var(--warn)";
+      const statusBg = t.status === "Aprobada" ? "rgba(16,185,129,.1)" : t.status === "Rechazada" ? "rgba(239,68,68,.1)" : "rgba(245,158,11,.1)";
+      const statusIcon = t.status === "Aprobada" ? "✓" : t.status === "Rechazada" ? "✗" : "●";
+      const date = t.created_at ? new Date(t.created_at) : new Date();
+      const dateStr = date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: '2-digit' });
+      const timeStr = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+      
+      return `<tr style="border-bottom:1px solid var(--line);transition:background .15s;cursor:pointer" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background=''" onclick="openTopupDetail('${t.id}')">
+        <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple-light));display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff">${(userName[0] || "U").toUpperCase()}</div><div><div style="font-weight:700;font-size:13px">${esc(userName)}</div><div style="font-size:11px;color:var(--muted)">${esc(t.user_email || user?.email || "")}</div></div></div></td>
         <td style="padding:12px 16px"><span style="font-weight:800;font-size:15px;color:var(--text)">${money(t.amount)}</span></td>
-        <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="14" height="14"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg><span style="font-size:12px;color:var(--muted)">${t.method||"Nequi"}</span></div></td>
-        <td style="padding:12px 16px"><span style="font-size:13px;font-weight:700;color:var(--ok)">${money(profit)}</span></td>
+        <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--soft)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>${t.method || "Nequi"}</span></td>
+        <td style="padding:12px 16px"><code style="font-size:11px;background:var(--soft);padding:3px 8px;border-radius:4px;color:var(--text)">${esc(t.reference || "-")}</code></td>
+        <td style="padding:12px 16px"><div style="font-size:12px;color:var(--text)">${dateStr}</div><div style="font-size:10px;color:var(--muted)">${timeStr}</div></td>
         <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg}"><span style="font-size:8px">${statusIcon}</span>${t.status}</span></td>
-        <td style="padding:12px 16px;text-align:center">${t.status==="Pendiente"&&isAdmin()?`<div style="display:flex;gap:4px;justify-content:center"><button onclick="approveTopup('${t.id}')" style="padding:6px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">Aprobar</button><button onclick="rejectTopup('${t.id}')" style="padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--bad);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.05)'" onmouseout="this.style.background='var(--panel)'">Rechazar</button></div>`:`<span style="font-size:11px;color:var(--muted)">${t.status==="Aprobada"?"✓ Completado":t.status==="Rechazada"?"✗ Rechazado":""}</span>`}</td>
+        <td style="padding:12px 16px;text-align:center" onclick="event.stopPropagation()">${t.status === "Pendiente" && isAdmin() ? `<div style="display:flex;gap:4px;justify-content:center"><button onclick="confirmApproveTopup('${t.id}')" style="padding:6px 12px;border:0;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">✓ Aprobar</button><button onclick="confirmRejectTopup('${t.id}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--bad);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(239,68,68,.05)'" onmouseout="this.style.background='var(--panel)'">✗ Rechazar</button></div>` : `<button onclick="openTopupDetail('${t.id}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer">Ver</button>`}</td>
       </tr>`;
+    }
+    
+    function openTopupDetail(id) {
+      const t = state.topups.find(topup => topup.id === id);
+      if (!t) return toast("Recarga no encontrada", "bad");
+      
+      const user = state.users.find(u => u.id === t.user_id);
+      const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "Usuario");
+      const profit = profitFromRecharge(Number(t.amount || 0));
+      const statusColor = t.status === "Aprobada" ? "var(--ok)" : t.status === "Rechazada" ? "var(--bad)" : "var(--warn)";
+      const statusBg = t.status === "Aprobada" ? "rgba(16,185,129,.1)" : t.status === "Rechazada" ? "rgba(239,68,68,.1)" : "rgba(245,158,11,.1)";
+      const date = t.created_at ? new Date(t.created_at) : new Date();
+      const dateStr = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+      
+      const html = `
+        <div class="dialog-head">
+          <div>
+            <small class="muted">Detalle de Recarga</small>
+            <h2>${esc(userName)}</h2>
+          </div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <!-- Estado -->
+          <div style="text-align:center;padding:20px;background:${statusBg};border-radius:12px;margin-bottom:16px">
+            <div style="font-size:32px;font-weight:900;color:${statusColor}">${t.status}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">ID: ${esc(t.id)}</div>
+          </div>
+          
+          <!-- Monto -->
+          <div style="background:var(--soft);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Monto de la recarga</div>
+            <div style="font-size:28px;font-weight:900;color:var(--text)">${money(t.amount)}</div>
+            <div style="font-size:12px;color:var(--ok);margin-top:4px">+ Ganancia: ${money(profit)}</div>
+          </div>
+          
+          <!-- Detalles -->
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Usuario</span>
+              <span style="font-weight:600;font-size:12px">${esc(userName)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Email</span>
+              <span style="font-weight:600;font-size:12px">${esc(t.user_email || user?.email || "-")}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Método</span>
+              <span style="font-weight:600;font-size:12px">${esc(t.method || "Nequi")}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Referencia</span>
+              <code style="font-size:12px;background:var(--panel);padding:2px 8px;border-radius:4px">${esc(t.reference || "-")}</code>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Fecha</span>
+              <span style="font-weight:600;font-size:12px">${dateStr}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--soft);border-radius:8px">
+              <span style="color:var(--muted);font-size:12px">Hora</span>
+              <span style="font-weight:600;font-size:12px">${timeStr}</span>
+            </div>
+          </div>
+          
+          ${t.notes ? `<div style="margin-top:12px;padding:12px;background:var(--warn);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:8px"><div style="font-size:11px;font-weight:700;color:var(--warn);margin-bottom:4px">Nota de rechazo</div><div style="font-size:12px;color:var(--text)">${esc(t.notes)}</div></div>` : ''}
+          
+          <!-- Acciones -->
+          <div style="display:flex;gap:8px;margin-top:20px">
+            ${t.status === "Pendiente" && isAdmin() ? `
+              <button onclick="confirmRejectTopup('${t.id}');closeModal()" style="flex:1;padding:12px;border:1px solid var(--bad);border-radius:10px;background:var(--panel);color:var(--bad);font-size:13px;font-weight:700;cursor:pointer">Rechazar</button>
+              <button onclick="confirmApproveTopup('${t.id}');closeModal()" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Aprobar</button>
+            ` : `<button onclick="closeModal()" style="flex:1;padding:12px;border:0;border-radius:10px;background:var(--soft);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">Cerrar</button>`}
+          </div>
+        </div>
+      `;
+      openModal(html);
+    }
+    
+    function confirmApproveTopup(id) {
+      const t = state.topups.find(topup => topup.id === id);
+      if (!t) return toast("Recarga no encontrada", "bad");
+      
+      const user = state.users.find(u => u.id === t.user_id);
+      const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "Usuario");
+      
+      const html = `
+        <div class="dialog-head">
+          <div>
+            <small class="muted">Confirmar Acción</small>
+            <h2>Aprobar Recarga</h2>
+          </div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="font-size:11px;color:var(--ok);font-weight:700;margin-bottom:8px">MONTO A APROBAR</div>
+            <div style="font-size:28px;font-weight:900;color:var(--ok)">${money(t.amount)}</div>
+          </div>
+          
+          <div style="background:var(--soft);border-radius:8px;padding:12px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--muted);font-size:12px">Usuario</span>
+              <span style="font-weight:600;font-size:12px">${esc(userName)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--muted);font-size:12px">Método</span>
+              <span style="font-weight:600;font-size:12px">${esc(t.method || "Nequi")}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--muted);font-size:12px">Referencia</span>
+              <code style="font-size:12px;background:var(--panel);padding:2px 6px;border-radius:4px">${esc(t.reference || "-")}</code>
+            </div>
+          </div>
+          
+          <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px">¿Estás seguro de aprobar esta recarga? El saldo del usuario será acreditado.</p>
+          
+          <div style="display:flex;gap:8px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>
+            <button onclick="approveTopup('${id}');closeModal()" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Sí, Aprobar</button>
+          </div>
+        </div>
+      `;
+      openModal(html);
+    }
+    
+    function confirmRejectTopup(id) {
+      const t = state.topups.find(topup => topup.id === id);
+      if (!t) return toast("Recarga no encontrada", "bad");
+      
+      const user = state.users.find(u => u.id === t.user_id);
+      const userName = user ? (user.name || user.email) : (t.user_name || t.user_email || "Usuario");
+      
+      const html = `
+        <div class="dialog-head">
+          <div>
+            <small class="muted">Confirmar Acción</small>
+            <h2>Rechazar Recarga</h2>
+          </div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="font-size:11px;color:var(--bad);font-weight:700;margin-bottom:8px">MONTO A RECHAZAR</div>
+            <div style="font-size:28px;font-weight:900;color:var(--bad)">${money(t.amount)}</div>
+          </div>
+          
+          <div style="background:var(--soft);border-radius:8px;padding:12px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--muted);font-size:12px">Usuario</span>
+              <span style="font-weight:600;font-size:12px">${esc(userName)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:var(--muted);font-size:12px">Método</span>
+              <span style="font-weight:600;font-size:12px">${esc(t.method || "Nequi")}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--muted);font-size:12px">Referencia</span>
+              <code style="font-size:12px;background:var(--panel);padding:2px 6px;border-radius:4px">${esc(t.reference || "-")}</code>
+            </div>
+          </div>
+          
+          <div style="margin-bottom:16px">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Motivo del rechazo (opcional)</label>
+            <textarea id="rejectReason" placeholder="Ej: Referencia no coincide con el pago" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:12px;min-height:60px;resize:none"></textarea>
+          </div>
+          
+          <div style="display:flex;gap:8px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>
+            <button onclick="rejectTopupWithReason('${id}')" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Sí, Rechazar</button>
+          </div>
+        </div>
+      `;
+      openModal(html);
+    }
+    
+    function rejectTopupWithReason(id) {
+      const reason = document.getElementById('rejectReason')?.value || '';
+      rejectTopup(id, reason);
+      closeModal();
     }
     async function approveTopup(id){
       const topup = state.topups.find(t=>t.id===id);
@@ -5366,22 +5702,22 @@
         toast("Error: "+e.message,"bad");
       }
     }
-    async function rejectTopup(id){
+    async function rejectTopup(id, reason = ''){
       const topup = state.topups.find(t=>t.id===id);
       if(!topup) return toast("Recarga no encontrada","bad");
       try{
         showLoading("Rechazando recarga...");
         const idx=state.topups.findIndex(t=>t.id===id);
-        if(idx>=0) state.topups[idx]={...state.topups[idx],status:"Rechazada"};
+        if(idx>=0) state.topups[idx]={...state.topups[idx],status:"Rechazada", notes: reason};
         try{
-          await api("topups",{method:"PATCH",body:JSON.stringify({id,status:"Rechazada"})});
+          await api("topups",{method:"PATCH",body:JSON.stringify({id,status:"Rechazada", notes: reason})});
         }catch(e1){
-          try{await api("topups",{method:"POST",body:JSON.stringify({id,status:"Rechazada"})});}catch(e2){}
+          try{await api("topups",{method:"POST",body:JSON.stringify({id,status:"Rechazada", notes: reason})});}catch(e2){}
         }
         const local=JSON.parse(localStorage.dsTopups||"[]");
         const lidx=local.findIndex(t=>t.id===id);
-        if(lidx>=0) local[lidx].status="Rechazada";
-        else local.push({...topup,status:"Rechazada"});
+        if(lidx>=0) local[lidx]={...local[lidx],status:"Rechazada",notes:reason};
+        else local.push({...topup,status:"Rechazada",notes:reason});
         localStorage.dsTopups=JSON.stringify(local);
         const userName=topup.user_name||topup.user_email||"Usuario";
         toast(`✗ Recarga rechazada - ${userName}`,"ok");
