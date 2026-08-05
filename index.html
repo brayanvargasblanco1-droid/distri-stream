@@ -5690,8 +5690,8 @@
               <button onclick="selectStatus('Activo', this)" id="statusActivo" style="padding:12px;border:2px solid ${(u.status||'Activo')==='Activo'?'#10b981':'var(--line)'};border-radius:12px;background:${(u.status||'Activo')==='Activo'?'rgba(16,185,129,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${(u.status||'Activo')==='Activo'?'#10b981':'var(--muted)'}">
                 <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> Activo
               </button>
-              <button onclick="selectStatus('Bloqueado', this)" id="statusBloqueado" style="padding:12px;border:2px solid ${u.status==='Bloqueado'?'#ef4444':'var(--line)'};border-radius:12px;background:${u.status==='Bloqueado'?'rgba(239,68,68,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${u.status==='Bloqueado'?'#ef4444':'var(--muted)'}">
-                <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> Inactivo
+              <button onclick="selectStatus('Bloqueado', this)" id="statusBloqueado" style="padding:12px;border:2px solid ${u.status==='Bloqueado'?'#8b5cf6':'var(--line)'};border-radius:12px;background:${u.status==='Bloqueado'?'rgba(139,92,246,.15)':'var(--soft)'};cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;color:${u.status==='Bloqueado'?'#8b5cf6':'var(--muted)'}">
+                <span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span> 🔒 Bloqueado
               </button>
             </div>
             <input id="editStatus" type="hidden" value="${u.status||'Activo'}">
