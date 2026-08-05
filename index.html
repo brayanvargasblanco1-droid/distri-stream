@@ -2431,33 +2431,33 @@
           </div>
         </div>
 
-        <!-- QUICK ACTIONS -->
+        <!-- QUICK ACTIONS MEJORADO -->
         <div class="section-title">Acciones rapidas</div>
-        <div class="quick-grid">
-          <div class="quick-card" onclick="setView('store')">
-            <div class="quick-icon blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <button onclick="setView('store')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(8,119,255,.1);display:grid;place-items:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
-            <span>Tienda</span>
-          </div>
-          <div class="quick-card" onclick="setView('orders')">
-            <div class="quick-icon green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="font-size:11px;font-weight:700;color:var(--text)">Tienda</span>
+          </button>
+          <button onclick="setView('orders')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(16,185,129,.1);display:grid;place-items:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="24" height="24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 12h6M9 17h3"/></svg>
             </div>
-            <span>Compras</span>
-          </div>
-          <div class="quick-card" onclick="setView('history')">
-            <div class="quick-icon purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></svg>
+            <span style="font-size:11px;font-weight:700;color:var(--text)">Compras</span>
+          </button>
+          <button onclick="setView('history')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(102,126,234,.1);display:grid;place-items:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="24" height="24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <span>Movimientos</span>
-          </div>
-          <div class="quick-card" onclick="setView('reports')">
-            <div class="quick-icon orange">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-size:11px;font-weight:700;color:var(--text)">Recargar</span>
+          </button>
+          <button onclick="setView('reports')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--line)';this.style.transform=''">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(239,68,68,.1);display:grid;place-items:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="24" height="24"><path d="M10.3 3.6 2.8 18a2 2 0 0 0 1.8 3h14.8a2 2 0 0 0 1.8-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
             </div>
-            <span>Soporte</span>
-          </div>
+            <span style="font-size:11px;font-weight:700;color:var(--text)">Reportes</span>
+          </button>
         </div>
 
         ${expiring.length > 0 ? `
@@ -2507,24 +2507,6 @@
           }).join("")}
         </div>
         ` : ""}
-
-        <!-- INFO SOPORTE -->
-        <div class="support-card">
-          <div class="support-card-header">
-            <span class="support-icon">💬</span>
-            <span>Centro de Soporte</span>
-          </div>
-          <div class="support-card-body">
-            <p>¿Necesitas ayuda? Reporta problemas con:</p>
-            <ul class="support-list">
-              <li>💰 <strong>Pagos:</strong> Recargas no reflejadas, montos incorrectos</li>
-              <li>🛒 <strong>Compras:</strong> Cuentas con problemas, datos incorrectos</li>
-              <li>❓ <strong>Otros:</strong> Cualquier otra incidencia</li>
-            </ul>
-            <p class="support-time">⏱️ Tiempo promedio de respuesta: 1-24 horas</p>
-            <button class="slide-btn full" onclick="setView('reports')">Ver todos mis reportes (${totalReports})</button>
-          </div>
-        </div>
       </div>`;
     }
 
