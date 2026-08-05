@@ -1645,6 +1645,49 @@
     /* Formato cards en móvil */
     .activity-cards { display: none; }
 
+      
+      /* ===== USERS SECTION ===== */
+      .users-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+      .users-stats .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;transition:all .25s;position:relative;overflow:hidden}
+      .users-stats .stat-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+      .users-stats .stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+      .users-stats .stat-card.client{border-color:rgba(16,185,129,.3);background:linear-gradient(135deg,rgba(16,185,129,.06),var(--panel))}
+      .users-stats .stat-card.client::before{background:linear-gradient(180deg,#10b981,#059669)}
+      .users-stats .stat-card.reseller{border-color:rgba(102,126,234,.3);background:linear-gradient(135deg,rgba(102,126,234,.06),var(--panel))}
+      .users-stats .stat-card.reseller::before{background:linear-gradient(180deg,#667eea,#764ba2)}
+      .users-stats .stat-card.admin{border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,rgba(245,158,11,.06),var(--panel))}
+      .users-stats .stat-card.admin::before{background:linear-gradient(180deg,#f59e0b,#d97706)}
+      .users-stats .stat-card.total{border-color:rgba(139,92,246,.3);background:linear-gradient(135deg,rgba(139,92,246,.06),var(--panel))}
+      .users-stats .stat-card.total::before{background:linear-gradient(180deg,#8b5cf6,#7c3aed)}
+      .users-stats .stat-icon{font-size:28px;margin-bottom:8px}
+      .users-stats .stat-value{font-size:32px;font-weight:900;line-height:1}
+      .users-stats .stat-card.client .stat-value{color:#10b981}
+      .users-stats .stat-card.reseller .stat-value{color:#667eea}
+      .users-stats .stat-card.admin .stat-value{color:#f59e0b}
+      .users-stats .stat-card.total .stat-value{color:#8b5cf6}
+      .users-stats .stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:6px}
+      
+      /* User cards mobile */
+      .user-mobile-card{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;flex-direction:column;gap:10px}
+      .user-mobile-card .card-header{display:flex;align-items:center;gap:12px}
+      .user-mobile-card .user-avatar{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:18px;font-weight:900;color:#fff;flex-shrink:0}
+      .user-mobile-card .user-info{flex:1;min-width:0}
+      .user-mobile-card .user-name{font-size:15px;font-weight:800}
+      .user-mobile-card .user-meta{font-size:12px;color:var(--muted)}
+      .user-mobile-card .card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}
+      .user-mobile-card .action-btn{flex:1;min-width:70px;padding:10px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;border:1px solid var(--line);background:var(--panel);cursor:pointer;transition:all .15s}
+      .user-mobile-card .action-btn:hover{border-color:var(--blue);color:var(--blue)}
+      
+      /* Grid 2x2 para usuarios en móvil */
+      .users-stats{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
+      .users-stats .stat-card{padding:12px!important}
+      .users-stats .stat-value{font-size:24px!important}
+      .users-stats .stat-icon{font-size:20px!important}
+      .users-table-wrap table{display:none}
+      .user-mobile-card{display:flex!important}
+      .users-cards-container{display:flex;flex-direction:column;gap:10px;padding:12px}
+    }
+
   </style>
 </head>
 <body>
@@ -5279,6 +5322,91 @@
         return hit && filterHit && tabHit;
       });
     }
+
+    
+    // ─── USERS STATS COMPONENT ─────────────────────────
+    function userStats(){
+      const clients = state.users.filter(u => u.role === "Cliente").length;
+      const resellers = state.users.filter(u => u.role === "Revendedor").length;
+      const admins = state.users.filter(u => u.role === "Administrador").length;
+      const total = state.users.length;
+      
+      return '<section class="users-stats">' +
+        '<div class="stat-card client" onclick="setUsersTab(\'clientes\')" style="cursor:pointer">' +
+          '<div class="stat-icon">👥</div>' +
+          '<div class="stat-value">' + clients + '</div>' +
+          '<div class="stat-label">Clientes</div>' +
+        '</div>' +
+        '<div class="stat-card reseller" onclick="setUsersTab(\'revendedores\')" style="cursor:pointer">' +
+          '<div class="stat-icon">🏷️</div>' +
+          '<div class="stat-value">' + resellers + '</div>' +
+          '<div class="stat-label">Revendedores</div>' +
+        '</div>' +
+        '<div class="stat-card admin" onclick="setUsersTab(\'administradores\')" style="cursor:pointer">' +
+          '<div class="stat-icon">👑</div>' +
+          '<div class="stat-value">' + admins + '</div>' +
+          '<div class="stat-label">Admins</div>' +
+        '</div>' +
+        '<div class="stat-card total">' +
+          '<div class="stat-icon">📊</div>' +
+          '<div class="stat-value">' + total + '</div>' +
+          '<div class="stat-label">Total</div>' +
+        '</div>' +
+      '</section>';
+    }
+    
+    // Renderizar cards de usuarios para móvil
+    function renderUserMobileCards(){
+      const filtered = getFilteredUsers();
+      const paginated = paginate(filtered, userPage, 20);
+      
+      if(paginated.items.length === 0){
+        return '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">👤</div><div style="font-size:14px;font-weight:700">Sin usuarios</div></div>';
+      }
+      
+      return paginated.items.map(u => {
+        const isProtected = u.email === "vargasblancobrayan@gmail.com";
+        const userStatus = u.status || "Activo";
+        const isActive = userStatus === "Activo";
+        const isBlocked = userStatus === "Bloqueado";
+        const username = (u.name||"").toLowerCase().replace(/\s+/g,".").replace(/[^a-z0-9.]/g,"").slice(0,15);
+        const role = u.role || "Cliente";
+        
+        const avatarBg = role === "Administrador" ? "linear-gradient(135deg,#f59e0b,#d97706)" : 
+                        role === "Revendedor" ? "linear-gradient(135deg,#667eea,#764ba2)" : 
+                        "linear-gradient(135deg,#10b981,#059669)";
+        
+        const roleColor = role === "Administrador" ? "#f59e0b" : role === "Revendedor" ? "#667eea" : "#10b981";
+        const roleBg = role === "Administrador" ? "rgba(245,158,11,.1)" : role === "Revendedor" ? "rgba(102,126,234,.1)" : "rgba(16,185,129,.1)";
+        
+        const statusColor = isBlocked ? "#8b5cf6" : isActive ? "#10b981" : "#ef4444";
+        const statusBg = isBlocked ? "rgba(139,92,246,.1)" : isActive ? "rgba(16,185,129,.1)" : "rgba(239,68,68,.1)";
+        const statusText = isBlocked ? "Bloqueado" : isActive ? "Activo" : "Inactivo";
+        
+        const disabled = isProtected ? 'style="opacity:0.4;pointer-events:none"' : '';
+        const cardStyle = isBlocked ? 'style="opacity:0.7"' : '';
+        
+        return '<div class="user-mobile-card" ' + cardStyle + '>' +
+          '<div class="card-header">' +
+            '<div class="user-avatar" style="background:' + avatarBg + '">' + (u.name||"?").charAt(0).toUpperCase() + '</div>' +
+            '<div class="user-info">' +
+              '<div class="user-name">' + esc(u.name || 'Usuario') + '</div>' +
+              '<div class="user-meta">@' + username + ' · ' + (u.id||"").slice(0,8) + '</div>' +
+              '<span style="display:inline-flex;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:' + roleBg + ';color:' + roleColor + ';margin-top:4px">' + role + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--muted);padding-left:60px">' + (u.email || 'Sin correo') + '</div>' +
+          '<div class="card-actions">' +
+            '<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusBg + ';color:' + statusColor + '">' +
+              '<span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>' + statusText +
+            '</span>' +
+            '<button onclick="openEditUser(\'' + u.id + '\')" class="action-btn" ' + disabled + '>✏️ Editar</button>' +
+            '<button onclick="openResetPass(\'' + u.id + '\',\'' + esc(u.name) + '\')" class="action-btn" ' + disabled + '>🔑 Clave</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
     function users(){
       const admins=state.users.filter(u=>u.role==="Administrador").length;
       const resellers=state.users.filter(u=>u.role==="Revendedor").length;
@@ -5382,7 +5510,7 @@
              </select>
           </div>
         </div>
-        <div style="overflow-x:auto">
+        <div class="users-table-wrap">
           <table style="width:100%;border-collapse:collapse;min-width:700px">
             <thead>
               <tr style="border-bottom:1px solid var(--line)">
@@ -5400,6 +5528,9 @@
              })()}
              </tbody>
            </table>
+         </div>
+         <div class="users-cards-container">
+           ${renderUserMobileCards()}
          </div>
          ${(() => {
            const filtered=getFilteredUsers();
