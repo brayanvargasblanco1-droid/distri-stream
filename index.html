@@ -5332,37 +5332,6 @@
     }
 
     
-    // ─── USERS STATS COMPONENT ─────────────────────────
-    function userStats(){
-      const clients = state.users.filter(u => u.role === "Cliente").length;
-      const resellers = state.users.filter(u => u.role === "Revendedor").length;
-      const admins = state.users.filter(u => u.role === "Administrador").length;
-      const total = state.users.length;
-      
-      return '<section class="users-stats">' +
-        '<div class="stat-card client" onclick="setUsersTab(\'clientes\')" style="cursor:pointer">' +
-          '<div class="stat-icon">👥</div>' +
-          '<div class="stat-value">' + clients + '</div>' +
-          '<div class="stat-label">Clientes</div>' +
-        '</div>' +
-        '<div class="stat-card reseller" onclick="setUsersTab(\'revendedores\')" style="cursor:pointer">' +
-          '<div class="stat-icon">🏷️</div>' +
-          '<div class="stat-value">' + resellers + '</div>' +
-          '<div class="stat-label">Revendedores</div>' +
-        '</div>' +
-        '<div class="stat-card admin" onclick="setUsersTab(\'administradores\')" style="cursor:pointer">' +
-          '<div class="stat-icon">👑</div>' +
-          '<div class="stat-value">' + admins + '</div>' +
-          '<div class="stat-label">Admins</div>' +
-        '</div>' +
-        '<div class="stat-card total">' +
-          '<div class="stat-icon">📊</div>' +
-          '<div class="stat-value">' + total + '</div>' +
-          '<div class="stat-label">Total</div>' +
-        '</div>' +
-      '</section>';
-    }
-    
     // Renderizar cards de usuarios para móvil
     function renderUserMobileCards(){
       const filtered = getFilteredUsers();
@@ -5434,17 +5403,17 @@
       return `
             <!-- Stats de Usuarios -->
       <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div style="background:var(--panel);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="filterByRole('Cliente')">
+        <div style="background:var(--panel);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('clientes')">
           <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Clientes</div>
           <div style="font-size:32px;font-weight:900;color:#10b981;line-height:1">${clients}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">Usuarios finales</div>
         </div>
-        <div style="background:var(--panel);border:1px solid rgba(102,126,234,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="filterByRole('Revendedor')">
+        <div style="background:var(--panel);border:1px solid rgba(102,126,234,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('revendedores')">
           <div style="font-size:10px;font-weight:700;color:#667eea;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Revendedores</div>
           <div style="font-size:32px;font-weight:900;color:#667eea;line-height:1">${resellers}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">Revenden productos</div>
         </div>
-        <div style="background:var(--panel);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="filterByRole('Administrador')">
+        <div style="background:var(--panel);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:20px 16px;cursor:pointer" onclick="setUsersTab('administradores')">
           <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Administradores</div>
           <div style="font-size:32px;font-weight:900;color:#f59e0b;line-height:1">${admins}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">Control total</div>
