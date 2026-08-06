@@ -5171,74 +5171,80 @@
       const activeAds = allAds.filter(a => a.status !== "Vencida");
       const images = activeAds.filter(a => a.category === "imagen");
       const videos = activeAds.filter(a => a.category === "video");
-      const paydays = activeAds.filter(a => a.category === "payday");
-      const martes = activeAds.filter(a => a.category === "martes");
       
       let html = '<section style="margin-bottom:20px">';
       
       // Header
-      html += '<div style="margin-bottom:16px">';
+      html += '<div style="margin-bottom:20px">';
       html += '<h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1>';
       html += '<p style="margin:4px 0 0;color:var(--muted);font-size:13px">' + (isAdmin() ? "Sube contenido para que tus operadores vendan" : "Copia y comparte para vender") + '</p>';
       html += '</div>';
       
       // Pestañas
-      html += '<div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:4px">';
-      html += '<button onclick="showAdTab(\'upload\')" id="tabUpload" style="padding:10px 20px;border:0;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;cursor:pointer;background:#10b981;color:#fff">📤 Subir Material</button>';
-      html += '<button onclick="showAdTab(\'view\')" id="tabView" style="padding:10px 20px;border:0;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;cursor:pointer;background:var(--soft);color:var(--muted)">👁️ Ver Material</button>';
+      html += '<div style="display:flex;gap:8px;margin-bottom:20px">';
+      html += '<button onclick="showAdTab(\'upload\')" id="tabUpload" style="padding:12px 24px;border:0;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#10b981;color:#fff">📤 Subir Archivo</button>';
+      html += '<button onclick="showAdTab(\'view\')" id="tabView" style="padding:12px 24px;border:0;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:var(--soft);color:var(--muted)">📁 Ver Material</button>';
       html += '</div>';
       
       // TAB: SUBIR
       html += '<div id="tabContentUpload" style="display:block">';
-      html += '<div style="background:var(--panel);border-radius:12px;padding:20px">';
-      html += '<h3 style="margin:0 0 16px;font-size:16px;font-weight:700">Selecciona el tipo de contenido</h3>';
+      html += '<div style="background:var(--panel);border-radius:16px;padding:30px;border:1px solid var(--line)">';
       
-      // Botones de tipo
-      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">';
-      const types = [
-        {id: "tipoImagen", value: "imagen", icon: "🖼️", label: "Imagen"},
-        {id: "tipoVideo", value: "video", icon: "🎬", label: "Video"},
-        {id: "tipoPayday", value: "payday", icon: "💰", label: "Payday"},
-        {id: "tipoMartes", value: "martes", icon: "🎉", label: "Martes"}
-      ];
-      types.forEach(t => {
-        html += '<button onclick="selectAdTipo(\'' + t.value + '\')" id="' + t.id + '" style="padding:16px;border:2px solid var(--line);border-radius:12px;background:var(--soft);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor=\'#10b981\'" onmouseout="this.style.borderColor=\'var(--line)\'">';
-        html += '<span style="font-size:32px">' + t.icon + '</span>';
-        html += '<span style="font-size:12px;font-weight:700">' + t.label + '</span>';
-        html += '</button>';
-      });
+      // Tipo de archivo
+      html += '<div style="margin-bottom:24px">';
+      html += '<div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text)">¿Qué vas a subir?</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button onclick="selectAdTipo(\'imagen\')" id="btnImagen" style="flex:1;padding:20px;border:2px solid #10b981;border-radius:12px;background:rgba(16,185,129,.1);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">';
+      html += '<span style="font-size:40px">🖼️</span>';
+      html += '<span style="font-size:14px;font-weight:700;color:#10b981">Imagen</span>';
+      html += '</button>';
+      html += '<button onclick="selectAdTipo(\'video\')" id="btnVideo" style="flex:1;padding:20px;border:2px solid var(--line);border-radius:12px;background:var(--soft);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">';
+      html += '<span style="font-size:40px">🎬</span>';
+      html += '<span style="font-size:14px;font-weight:700;color:var(--muted)">Video</span>';
+      html += '</button>';
+      html += '</div>';
       html += '</div>';
       
-      // Zona de subir
-      html += '<div id="uploadZone" style="border:2px dashed var(--line);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px" onclick="document.getElementById(\'adFileInput\').click()" ondragover="event.preventDefault();this.style.borderColor=\'#10b981\'" ondragleave="this.style.borderColor=\'var(--line)\'" ondrop="handleAdDrop(event)">';
-      html += '<div style="font-size:48px;margin-bottom:12px" id="uploadIcon">📁</div>';
-      html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px" id="uploadText">Arrastra el archivo aqui</div>';
-      html += '<div style="font-size:13px;color:var(--muted)">o haz clic para seleccionar</div>';
+      // Zona de soltar archivo
+      html += '<div id="dropZone" onclick="document.getElementById(\'adFileInput\').click()" style="border:3px dashed var(--line);border-radius:16px;padding:50px 30px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:20px;background:var(--soft)" ondragover="event.preventDefault();this.style.borderColor=\'#10b981\';this.style.background=\'rgba(16,185,129,.05)\'" ondragleave="this.style.borderColor=\'var(--line)\';this.style.background=\'var(--soft)\'">';
+      html += '<div style="font-size:60px;margin-bottom:16px" id="dropIcon">📁</div>';
+      html += '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px" id="dropText">Arrastra el archivo aqui</div>';
+      html += '<div style="font-size:14px;color:var(--muted)">o haz clic para seleccionar</div>';
       html += '</div>';
       html += '<input id="adFileInput" type="file" accept="image/*,video/*" style="display:none" onchange="handleAdFileSelect(event)">';
-      html += '<div id="adPreviewContainer" style="display:none;margin-bottom:16px;padding:16px;background:var(--soft);border-radius:8px;text-align:center">';
-      html += '<div id="adPreviewImg"></div>';
-      html += '<div style="font-size:12px;color:var(--ok);margin-top:8px">✅ Archivo listo para subir</div>';
-      html += '</div>';
-      html += '<button onclick="createAd()" id="btnPublicar" disabled style="width:100%;padding:14px;border:0;border-radius:10px;background:#6b7280;color:#fff;font-size:14px;font-weight:700;cursor:not-allowed" disabled>📤 Publicar</button>';
+      
+      // Preview
+      html += '<div id="previewArea" style="display:none;margin-bottom:20px">';
+      html += '<div style="background:var(--soft);border-radius:12px;padding:16px;text-align:center">';
+      html += '<div id="previewContent"></div>';
+      html += '<div style="margin-top:12px;font-size:14px;font-weight:700;color:#10b981" id="fileName"></div>';
       html += '</div>';
       html += '</div>';
       
-      // TAB: VER
+      // Boton publicar
+      html += '<button onclick="createAd()" id="btnPublicar" disabled style="width:100%;padding:16px;border:0;border-radius:12px;background:#6b7280;color:#fff;font-size:16px;font-weight:700;cursor:not-allowed;opacity:0.6">📤 Publicar</button>';
+      html += '</div>';
+      html += '</div>';
+      
+      // TAB: VER MATERIAL
       html += '<div id="tabContentView" style="display:none">';
       
       // Imagenes
       if (images.length > 0) {
-        html += '<div style="margin-bottom:24px">';
-        html += '<h3 style="margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px"><span style="font-size:24px">🖼️</span> Imagenes (' + images.length + ')</h3>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';
+        html += '<div style="margin-bottom:30px">';
+        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
+        html += '<span style="font-size:28px">🖼️</span>';
+        html += '<span style="font-size:18px;font-weight:700">Imagenes</span>';
+        html += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">' + images.length + '</span>';
+        html += '</div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">';
         images.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:10px;overflow:hidden;border:1px solid var(--line)">';
-          html += '<div style="height:140px;background:#f0f0f5"><img src="' + (ad.image_data || ad.file_url || '') + '" style="width:100%;height:100%;object-fit:cover" alt=""></div>';
-          html += '<div style="padding:10px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="width:100%;padding:8px;border:0;border-radius:6px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Descargar</button>';
+          html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line)">';
+          html += '<div style="height:160px;background:#f0f0f5"><img src="' + (ad.image_data || '') + '" style="width:100%;height:100%;object-fit:cover" alt=""></div>';
+          html += '<div style="padding:12px;display:flex;gap:8px">';
+          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="flex:1;padding:10px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📥 Descargar</button>';
           if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="width:100%;padding:6px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Eliminar</button>';
+            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer">🗑️</button>';
           }
           html += '</div></div>';
         });
@@ -5247,57 +5253,22 @@
       
       // Videos
       if (videos.length > 0) {
-        html += '<div style="margin-bottom:24px">';
-        html += '<h3 style="margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px"><span style="font-size:24px">🎬</span> Videos (' + videos.length + ')</h3>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';
+        html += '<div style="margin-bottom:30px">';
+        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
+        html += '<span style="font-size:28px">🎬</span>';
+        html += '<span style="font-size:18px;font-weight:700">Videos</span>';
+        html += '<span style="background:#8b5cf6;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">' + videos.length + '</span>';
+        html += '</div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">';
         videos.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:10px;overflow:hidden;border:1px solid var(--line)">';
-          if (ad.image_data) {
-            html += '<div style="height:140px;background:#f0f0f5;position:relative"><img src="' + ad.image_data + '" style="width:100%;height:100%;object-fit:cover" alt="">';
-            html += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px">▶️</div></div>';
-          } else {
-            html += '<div style="height:80px;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px">▶️</div>';
-          }
-          html += '<div style="padding:10px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="width:100%;padding:8px;border:0;border-radius:6px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Descargar</button>';
+          html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line)">';
+          html += '<div style="height:100px;background:#1a1a2e;display:flex;align-items:center;justify-content:center">';
+          html += '<span style="font-size:48px;color:#fff">▶️</span>';
+          html += '</div>';
+          html += '<div style="padding:12px;display:flex;gap:8px">';
+          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="flex:1;padding:10px;border:0;border-radius:8px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📥 Descargar</button>';
           if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="width:100%;padding:6px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Eliminar</button>';
-          }
-          html += '</div></div>';
-        });
-        html += '</div></div>';
-      }
-      
-      // Paydays
-      if (paydays.length > 0) {
-        html += '<div style="margin-bottom:24px">';
-        html += '<h3 style="margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px"><span style="font-size:24px">💰</span> Payday (' + paydays.length + ')</h3>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';
-        paydays.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:10px;overflow:hidden;border:1px solid var(--line)">';
-          html += '<div style="height:140px;background:linear-gradient(135deg,#f59e0b,#000);display:flex;align-items:center;justify-content:center"><span style="font-size:48px">💰</span></div>';
-          html += '<div style="padding:10px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="width:100%;padding:8px;border:0;border-radius:6px;background:#f59e0b;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Descargar</button>';
-          if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="width:100%;padding:6px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Eliminar</button>';
-          }
-          html += '</div></div>';
-        });
-        html += '</div></div>';
-      }
-      
-      // Martes
-      if (martes.length > 0) {
-        html += '<div style="margin-bottom:24px">';
-        html += '<h3 style="margin:0 0 12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px"><span style="font-size:24px">🎉</span> Martes de Oferta (' + martes.length + ')</h3>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';
-        martes.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:10px;overflow:hidden;border:1px solid var(--line)">';
-          html += '<div style="height:140px;background:linear-gradient(135deg,#ec4899,#000);display:flex;align-items:center;justify-content:center"><span style="font-size:48px">🎉</span></div>';
-          html += '<div style="padding:10px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="width:100%;padding:8px;border:0;border-radius:6px;background:#ec4899;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Descargar</button>';
-          if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="width:100%;padding:6px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Eliminar</button>';
+            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer">🗑️</button>';
           }
           html += '</div></div>';
         });
@@ -5305,16 +5276,133 @@
       }
       
       if (activeAds.length === 0) {
-        html += '<div style="background:var(--panel);border-radius:12px;padding:40px;text-align:center;color:var(--muted)">';
-        html += '<div style="font-size:48px;margin-bottom:12px">📭</div>';
-        html += '<div style="font-size:14px;font-weight:600">No hay material publicado</div>';
-        html += '<div style="font-size:12px;margin-top:4px">Ve a "Subir Material" para agregar contenido</div>';
+        html += '<div style="background:var(--panel);border-radius:16px;padding:60px;text-align:center;border:1px solid var(--line)">';
+        html += '<div style="font-size:64px;margin-bottom:16px">📭</div>';
+        html += '<div style="font-size:18px;font-weight:700;margin-bottom:8px">No hay material</div>';
+        html += '<div style="font-size:14px;color:var(--muted)">Ve a "Subir Archivo" para agregar contenido</div>';
         html += '</div>';
       }
       
       html += '</div>'; // fin tab view
       html += '</section>';
       return html;
+    }
+    
+    function showAdTab(tab){
+      document.getElementById("tabContentUpload").style.display = tab === "upload" ? "block" : "none";
+      document.getElementById("tabContentView").style.display = tab === "view" ? "block" : "none";
+      document.getElementById("tabUpload").style.background = tab === "upload" ? "#10b981" : "var(--soft)";
+      document.getElementById("tabUpload").style.color = tab === "upload" ? "#fff" : "var(--muted)";
+      document.getElementById("tabView").style.background = tab === "view" ? "#10b981" : "var(--soft)";
+      document.getElementById("tabView").style.color = tab === "view" ? "#fff" : "var(--muted)";
+    }
+    
+    function selectAdTipo(tipo){
+      window._selectedTipo = tipo;
+      const isImg = tipo === "imagen";
+      document.getElementById("dropIcon").textContent = isImg ? "🖼️" : "🎬";
+      document.getElementById("dropText").textContent = isImg ? "Arrastra una imagen aqui" : "Arrastra un video aqui";
+      document.getElementById("adFileInput").accept = isImg ? "image/*" : "video/*";
+      
+      // Estilo de botones
+      const imgBtn = document.getElementById("btnImagen");
+      const vidBtn = document.getElementById("btnVideo");
+      
+      if (isImg) {
+        imgBtn.style.borderColor = "#10b981";
+        imgBtn.style.background = "rgba(16,185,129,.1)";
+        imgBtn.querySelector("span:last-child").style.color = "#10b981";
+        vidBtn.style.borderColor = "var(--line)";
+        vidBtn.style.background = "var(--soft)";
+        vidBtn.querySelector("span:last-child").style.color = "var(--muted)";
+      } else {
+        vidBtn.style.borderColor = "#8b5cf6";
+        vidBtn.style.background = "rgba(139,92,246,.1)";
+        vidBtn.querySelector("span:last-child").style.color = "#8b5cf6";
+        imgBtn.style.borderColor = "var(--line)";
+        imgBtn.style.background = "var(--soft)";
+        imgBtn.querySelector("span:last-child").style.color = "var(--muted)";
+      }
+    }
+    
+    function handleAdFileSelect(event){
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      window._adFile = file;
+      document.getElementById("fileName").textContent = file.name;
+      
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("previewContent").innerHTML = "<img src=\"" + e.target.result + "\" style=\"max-height:200px;border-radius:8px\">";
+        };
+        reader.readAsDataURL(file);
+        window._adImageData = reader.result;
+      } else {
+        document.getElementById("previewContent").innerHTML = "<div style=\"font-size:60px\">🎬</div><div style=\"font-size:14px;margin-top:8px\">" + file.name + "</div>";
+        window._adImageData = "video:" + file.name;
+      }
+      
+      document.getElementById("previewArea").style.display = "block";
+      document.getElementById("btnPublicar").disabled = false;
+      document.getElementById("btnPublicar").style.background = "#10b981";
+      document.getElementById("btnPublicar").style.cursor = "pointer";
+      document.getElementById("btnPublicar").style.opacity = "1";
+    }
+    
+    async function createAd(){
+      const file = window._adFile;
+      if (!file) return toast("Selecciona un archivo", "bad");
+      
+      const tipo = window._selectedTipo || "imagen";
+      const titles = {imagen: "Imagen", video: "Video"};
+      const title = titles[tipo];
+      
+      // Si es imagen, convertir a base64
+      let image_data = null;
+      if (file.type.startsWith("image/")) {
+        image_data = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      try {
+        showLoading("Subiendo archivo...");
+        await api("ads", {method: "POST", body: JSON.stringify({title, category: tipo, image_data, status: "Activo"})});
+        toast("Archivo publicado", "ok");
+        window._adFile = null;
+        window._selectedTipo = null;
+        document.getElementById("previewArea").style.display = "none";
+        document.getElementById("btnPublicar").disabled = true;
+        document.getElementById("btnPublicar").style.background = "#6b7280";
+        document.getElementById("btnPublicar").style.cursor = "not-allowed";
+        document.getElementById("btnPublicar").style.opacity = "0.6";
+        await boot();
+      } catch(e) { toast(e.message, "bad"); }
+      finally { hideLoading(); }
+    }
+    
+    function downloadAd(id){
+      const ad = state.ads.find(a => a.id === id);
+      if (!ad || !ad.image_data || ad.image_data.startsWith("video:")) return toast("Descarga no disponible", "bad");
+      const link = document.createElement("a");
+      link.href = ad.image_data;
+      link.download = (ad.title || "archivo") + ".jpg";
+      link.click();
+    }
+    
+    async function deleteAd(id){
+      if (!confirm("¿Eliminar este material?")) return;
+      try {
+        showLoading("Eliminando...");
+        await api("ads/" + id, {method: "DELETE", body: JSON.stringify({id})});
+        toast("Material eliminado", "ok");
+        await boot();
+      } catch(e) { toast(e.message, "bad"); }
+      finally { hideLoading(); }
     }
     
     function showAdTab(tab){
