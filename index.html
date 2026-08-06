@@ -5201,36 +5201,47 @@
           <div class="grid store-grid section">${activeAds.map(adCard).join("") || "<p class='muted'>No hay material publicado.</p>"}</div>
           ${expiredAds.length?`<details style="margin-top:16px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:700">Vencidos (${expiredAds.length})</summary><div class="grid store-grid section" style="margin-top:10px;opacity:.6">${expiredAds.map(adCard).join("")}</div></details>`:""}
         </div>
-        ${isAdmin()?`<div class="card" style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><h2 style="margin:0">Crear Anuncio</h2><p class="muted" style="margin:4px 0 0">Sube una imagen y escribe el texto</p></div>
-          </div>
-        </div>
-        <div class="card"><h2>${window._editingAdId?"Editar anuncio":"Crear anuncio"}</h2><p class="muted">Sube imagen, escribe el texto y publica para todos los usuarios.</p>
-          <div class="form" id="adForm">
-            <label>Titulo del anuncio<input id="adTitle" placeholder="Ej: Promo Netflix Lunes" oninput="updateAdPreview()"></label>
-            <label>Texto para copiar<textarea id="adCopy" placeholder="Mensaje que el usuario copiara y enviara a sus clientes." rows="3" oninput="updateAdPreview()"></textarea></label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <label>Precio sugerido<input id="adPrice" placeholder="$ 15.000" oninput="updateAdPreview()"></label>
-              <label>Categoria<select id="adCategory" onchange="updateAdPreview()"><option value="promo">Promo/Descuento</option><option value="info">Informativo</option><option value="aviso">Aviso</option><option value="urgente">Urgente</option></select></label>
+        ${isAdmin()?`<div class="card" id="createAdForm">
+          <h2 style="margin:0 0 16px">➕ Subir Material</h2>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div>
+              <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px">Tipo de contenido</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--soft);border-radius:8px;cursor:pointer;border:2px solid transparent" id="typeImage">
+                  <input type="radio" name="adType" value="imagen" checked style="display:none" onchange="updateAdType('imagen')">
+                  <span style="font-size:18px">🖼️</span>
+                  <span>Imagen</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--soft);border-radius:8px;cursor:pointer;border:2px solid transparent" id="typeVideo">
+                  <input type="radio" name="adType" value="video" style="display:none" onchange="updateAdType('video')">
+                  <span style="font-size:18px">🎬</span>
+                  <span>Video</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--soft);border-radius:8px;cursor:pointer;border:2px solid transparent" id="typePayday">
+                  <input type="radio" name="adType" value="payday" style="display:none" onchange="updateAdType('payday')">
+                  <span style="font-size:18px">💰</span>
+                  <span>Payday Lunes</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--soft);border-radius:8px;cursor:pointer;border:2px solid transparent" id="typeMartes">
+                  <input type="radio" name="adType" value="martes" style="display:none" onchange="updateAdType('martes')">
+                  <span style="font-size:18px">🎉</span>
+                  <span>Martes de Oferta</span>
+                </label>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <label>Vence el (opcional)<input id="adExpiry" type="date"></label>
-              <label>Orden<select id="adOrder"><option value="0">Primero</option>${state.ads.map((_,i)=>`<option value="${i+1}">${i+2}</option>`).join("")}</select></label>
+            <div>
+              <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px">Archivo</label>
+              <div id="adDropzone" onclick="document.getElementById('adFileInput').click()" style="border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='var(--line)'">
+                <div style="font-size:32px;margin-bottom:8px" id="dropzoneIcon">📁</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)" id="dropzoneText">Arrastra el archivo aqui</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">o haz clic para seleccionar</div>
+              </div>
+              <input id="adFileInput" type="file" accept="image/*,video/*" style="display:none" onchange="handleAdFileSelect(event)">
             </div>
-            <label>Imagen / Archivo</label>
-            <div class="ad-dropzone" id="adDropzone" onclick="$('#adFileInput').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleAdDrop(event)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="32" height="32" style="margin:0 auto 8px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <div style="font-size:13px;font-weight:700;color:var(--text)">Arrastra una imagen aqui</div>
-              <div style="font-size:11px;color:var(--muted)">o haz clic para seleccionar</div>
+            <div id="adPreviewContainer" style="display:none;text-align:center">
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--ok)">✅ Archivo listo</div>
             </div>
-            <input id="adFileInput" type="file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="handleAdFileSelect(event)">
-            <div id="adPreview" style="display:none;margin-top:8px"></div>
-            <button class="primary" onclick="createAd()" id="adSubmitBtn">Publicar material</button>
-          </div>
-          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
-            <h3 style="font-size:14px;margin-bottom:10px">Vista previa</h3>
-            <div id="adLivePreview"><p class="muted" style="font-size:12px">Escribe un titulo para ver como se vera el anuncio.</p></div>
+            <button onclick="createAd()" style="padding:14px;border:0;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:700;cursor:pointer">📤 Publicar</button>
           </div>
         </div>`:""}
       </section>`;
