@@ -1889,8 +1889,8 @@
     </div>
   </div>
   <div id="offline" class="offline-banner">Sin conexion a internet - Algunas funciones pueden no estar disponibles</div>
-  <div id="pullIndicator" class="pull-indicator"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></div>
-  <div id="pullText" class="pull-text">Desliza para actualizar</div>
+  
+  
   <div id="modal" class="modal"></div>
   <div id="alerts" class="alerts-panel"></div>
   <div id="toast" class="toast"></div>
@@ -2230,31 +2230,9 @@
     const pullIndicator=$("#pullIndicator"),pullText=$("#pullText");
     const PULL_THRESHOLD=80;
     function initPullToRefresh(){
-      const main=$(".main");
-      if(!main)return;
-      main.addEventListener("touchstart",e=>{
-        if(main.scrollTop<=0&&!isRefreshing){pullStartY=e.touches[0].clientY;isPulling=true}
-      },{passive:true});
-      main.addEventListener("touchmove",e=>{
-        if(!isPulling||isRefreshing)return;
-        pullCurrentY=e.touches[0].clientY;
-        const diff=pullCurrentY-pullStartY;
-        if(diff>0&&main.scrollTop<=0){
-          const progress=Math.min(diff/PULL_THRESHOLD,1);
-          pullIndicator.style.transform=`translateX(-50%) translateY(${Math.min(diff*0.5,60)-60}px)`;
-          pullIndicator.style.opacity=progress;
-          pullText.style.opacity=progress;
-          pullText.style.transform=`translateX(-50%) translateY(${Math.min(diff*0.5,60)-40}px)`;
-          if(progress>=1){pullText.textContent="Suelta para actualizar"}else{pullText.textContent="Desliza para actualizar"}
-        }
-      },{passive:true});
-      main.addEventListener("touchend",()=>{
-        if(!isPulling||isRefreshing)return;
-        const diff=pullCurrentY-pullStartY;
-        if(diff>PULL_THRESHOLD&&main.scrollTop<=0){refreshData()}
-        else{resetPull()}
-        isPulling=false;
-      });
+      // Pull to refresh desactivado para mejor UX móvil
+      // El usuario puede actualizar desde el menú o recargando la página
+      return;
     }
     async function refreshData(){
       isRefreshing=true;
