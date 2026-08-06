@@ -3580,177 +3580,209 @@
 
     // ─── INVENTARIO DE CUENTAS ──────────────────────────
     function inventory(){
-      const inv=state.inventory||[];
-      const products=state.products||[];
-      const available=inv.filter(i=>i.status==="Disponible").length;
-      const delivered=inv.filter(i=>i.status==="Entregada").length;
-      return `
-      <section style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <div><h1 style="margin:0;font-size:22px;font-weight:800">📦 Inventario de Cuentas</h1><p style="margin:4px 0 0;color:var(--muted);font-size:13px">Aqui gestionas las cuentas para entregar a tus clientes</p></div>
-          <div style="display:flex;gap:8px">
-            <button onclick="showAddAccountModal()" style="padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">➕ Agregar cuenta</button>
-            <button onclick="showImportSection()" style="padding:10px 16px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Importar STGLIAK</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-          <div style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden;${available>0?'animation:pulse 2s infinite':''}">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#10b981,transparent);animation:shimmer 2s infinite"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:32px">✅</span>
-              <span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,.4)">${available}</span>
-            </div>
-            <div style="font-size:15px;font-weight:700;color:#10b981;margin-top:10px">Disponibles</div>
-            <div style="font-size:12px;color:var(--muted)">Listas para entregar</div>
-          </div>
-          <div style="background:rgba(8,119,255,.1);border:2px solid rgba(8,119,255,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#0877ff,transparent)"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:32px">📤</span>
-              <span style="background:#0877ff;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(8,119,255,.4)">${delivered}</span>
-            </div>
-            <div style="font-size:15px;font-weight:700;color:#0877ff;margin-top:10px">Entregadas</div>
-            <div style="font-size:12px;color:var(--muted)">En uso</div>
-          </div>
-          <div style="background:rgba(107,114,128,.1);border:2px solid rgba(107,114,128,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#6b7280,transparent)"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:32px">📊</span>
-              <span style="background:#6b7280;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(107,114,128,.4)">${inv.length}</span>
-            </div>
-            <div style="font-size:15px;font-weight:700;color:#6b7280;margin-top:10px">Total</div>
-            <div style="font-size:12px;color:var(--muted)">Cuentas</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Seccion importar oculta -->
-      <div id="importSection" style="display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px">
-        <h3 style="margin:0 0 12px;font-size:16px;font-weight:700">Importar desde STGLIAK</h3>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">1. Ve a st.gliak.com | 2. Copia la tabla | 3. Pega abajo | 4. Selecciona producto | 5. Importar</div>
-        <select id="importProduct" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;background:var(--panel)">${products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
-        <textarea id="importData" rows="6" placeholder="Pega aqui los datos de STGLIAK" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box;background:var(--soft)"></textarea>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button onclick="hideImportSection()" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-weight:700;cursor:pointer">Cancelar</button>
-          <button onclick="importFromSTGLIAK()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#10b981;color:#fff;font-weight:700;cursor:pointer">Importar</button>
-        </div>
-      </div>
-
-      <!-- IMPORTAR DE STGLIAK -->
-      <div class="card section">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#4105ab,#6b21a8);display:grid;place-items:center;flex-shrink:0">
-            <span style="color:#fff;font-weight:1000;font-size:14px">STG</span>
-          </div>
-          <div>
-            <h2 style="margin:0">Importar desde STGLIAK</h2>
-            <p class="muted" style="margin:2px 0 0">Copia la tabla de STGLIAK y pegala aqui</p>
-          </div>
-        </div>
-        <div style="background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:700;margin-bottom:8px">Pasos:</div>
-          <ol style="font-size:12px;color:var(--muted);margin:0;padding-left:20px;line-height:1.8">
-            <li>Ingresa a <b>st.gliak.com</b></li>
-            <li>Copia la tabla de cuentas</li>
-            <li>Pega en el campo de abajo</li>
-            <li>Selecciona el producto</li>
-            <li>Haz clic en "Importar"</li>
-          </ol>
-        </div>
-        <div class="form">
-          <label>Producto destino<select id="importProduct">${products.map(p=>`<option value="${p.id}">${p.name}</option>`).join("")}</select></label>
-          <label>Datos de STGLIAK (pega la tabla)</label>
-          <textarea id="importData" rows="8" placeholder="Pega aqui el contenido de la tabla de STGLIAK...&#10;&#10;Ejemplo:&#10;email@ejemplo.com : password123 : Perfil 1 : 1234&#10;email2@ejemplo.com : password456 : Perfil 2 : 5678" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:12px;font-family:monospace;background:var(--panel);color:var(--text);resize:vertical"></textarea>
-          <div style="display:flex;gap:8px">
-            <button class="primary" onclick="importFromSTGLIAK()" style="flex:1">Importar cuentas</button>
-            <button class="ghost" onclick="previewImport()" style="flex:1">Vista previa</button>
-          </div>
-        </div>
-        <div id="importPreview" style="display:none;margin-top:12px"></div>
-      </div>
-
-      <!-- AGREGAR CUENTA MANUAL -->
-      <div id="addAccountSection" style="display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px">
-        <h3 style="margin:0 0 12px;font-size:16px;font-weight:700">➕ Agregar cuenta manualmente</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <select id="newAccountProduct" style="padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)">${products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
-          <input id="newAccountEmail" placeholder="Email" style="padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--soft)">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <input id="newAccountPassword" placeholder="Contraseña" style="padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--soft)">
-          <input id="newAccountProfile" placeholder="Perfil (opcional)" style="padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--soft)">
-        </div>
-        <div style="display:flex;gap:8px">
-          <button onclick="hideAddAccountModal()" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-weight:700;cursor:pointer">Cancelar</button>
-          <button onclick="addAccountManually()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#10b981;color:#fff;font-weight:700;cursor:pointer">Guardar cuenta</button>
-        </div>
-      </div>
-
-      <!-- LISTA DE INVENTARIO -->
-      <div class="card section">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-          <div><h2>Cuentas en inventario</h2><p class="muted">Gestiona las cuentas disponibles para entregar.</p></div>
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-          <button class="ghost" onclick="filterInventory('all')" style="font-size:12px">Todas (${inv.length})</button>
-          <button class="ghost" onclick="filterInventory('Disponible')" style="font-size:12px;color:var(--ok)">Disponibles (${available})</button>
-          <button class="ghost" onclick="filterInventory('Entregada')" style="font-size:12px;color:var(--blue)">Entregadas (${delivered})</button>
-        </div>
-        <div id="inventoryList">
-          ${inv.length?inv.map(i=>{
-            const product=products.find(p=>p.id===i.product_id);
-            const statusColor=i.status==="Disponible"?"var(--ok)":i.status==="Entregada"?"var(--blue)":"var(--bad)";
-            return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;border-left:4px solid ${statusColor}">
-              <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
-                <div style="flex:1">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                    <b style="font-size:12px">${product?.name||"Producto"}</b>
-                    <span class="tag ${i.status==='Disponible'?'':'warn'}" style="font-size:9px">${i.status}</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text)">📧 ${i.email}</div>
-                  <div style="font-size:11px;color:var(--muted)">🔑 ${i.password}</div>
-                  ${i.profile?`<div style="font-size:11px;color:var(--muted)">👤 ${i.profile}</div>`:""}
-                </div>
-                <div style="display:flex;gap:4px;flex-shrink:0">
-                  <button onclick="editInventoryItem('${i.id}')" style="padding:4px 8px;border:0;border-radius:6px;background:rgba(8,119,255,.1);color:var(--blue);font-size:10px;cursor:pointer;font-weight:700">Editar</button>
-                  ${i.status==="Disponible"?`<button onclick="deleteInventory('${i.id}')" style="padding:4px 8px;border:0;border-radius:6px;background:rgba(239,68,68,.1);color:var(--bad);font-size:10px;cursor:pointer">Eliminar</button>`:""}
-                </div>
-              </div>
-            </div>`;
-          }).join(""):`<div style="text-align:center;padding:30px"><p class="muted">Sin cuentas en inventario. Importa desde STGLIAK.</p></div>`}
-        </div>
-      </div>`;
-    }
-    function showImportSection(){
-      document.getElementById('importSection').style.display='block';
-    }
-    function hideImportSection(){
-      document.getElementById('importSection').style.display='none';
+      const inv = state.inventory || [];
+      const products = state.products || [];
+      const users = state.users || [];
+      const available = inv.filter(i => i.status === "Disponible");
+      const delivered = inv.filter(i => i.status === "Entregada");
+      
+      // Agrupar cuentas por producto
+      const grouped = {};
+      products.forEach(p => {
+        grouped[p.id] = {
+          name: p.name,
+          accounts: inv.filter(i => i.product_id === p.id)
+        };
+      });
+      
+      let html = '<section style="margin-bottom:20px">';
+      
+      // Header
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+      html += '<div><h1 style="margin:0;font-size:22px;font-weight:800">📦 Inventario de Cuentas</h1><p style="margin:4px 0 0;color:var(--muted);font-size:13px">Gestiona las cuentas para tus operadores y clientes</p></div>';
+      html += '<div style="display:flex;gap:8px">';
+      html += '<button onclick="showAddAccountModal()" style="padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">➕ Agregar cuenta</button>';
+      html += '<button onclick="showImportSection()" style="padding:10px 16px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📥 Importar STGLIAK</button>';
+      html += '</div></div>';
+      
+      // Tarjetas resumen
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">';
+      html += '<div style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden' + (available.length > 0 ? ';animation:pulse 2s infinite' : '') + '">';
+      html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#10b981,transparent);animation:shimmer 2s infinite"></div>';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-size:32px">✅</span>';
+      html += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,.4)">' + available.length + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#10b981;margin-top:10px">Disponibles</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">Para entregar</div></div>';
+      html += '<div style="background:rgba(8,119,255,.1);border:2px solid rgba(8,119,255,.4);border-radius:12px;padding:16px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-size:32px">📤</span>';
+      html += '<span style="background:#0877ff;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(8,119,255,.4)">' + delivered.length + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#0877ff;margin-top:10px">Entregadas</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">En uso</div></div>';
+      html += '<div style="background:rgba(107,114,128,.1);border:2px solid rgba(107,114,128,.4);border-radius:12px;padding:16px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="font-size:32px">📊</span>';
+      html += '<span style="background:#6b7280;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(107,114,128,.4)">' + inv.length + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:15px;font-weight:700;color:#6b7280;margin-top:10px">Total</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">Cuentas</div></div></div>';
+      
+      // Productos con sus cuentas
+      Object.keys(grouped).forEach(pid => {
+        const group = grouped[pid];
+        if (group.accounts.length === 0) return;
+        
+        const availCount = group.accounts.filter(a => a.status === "Disponible").length;
+        const statusColor = availCount > 0 ? '#10b981' : '#6b7280';
+        
+        html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden;margin-bottom:16px">';
+        html += '<div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.02)">';
+        html += '<div style="display:flex;align-items:center;gap:10px">';
+        html += '<span style="font-size:20px;font-weight:800">' + esc(group.name) + '</span>';
+        html += '<span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(16,185,129,.1);color:' + statusColor + '">' + availCount + ' disp / ' + group.accounts.length + ' total</span>';
+        html += '</div>';
+        html += '</div>';
+        
+        // Lista de cuentas
+        group.accounts.forEach(acc => {
+          const prod = products.find(p => p.id === acc.product_id);
+          const isAvailable = acc.status === "Disponible";
+          const assignedUsers = users.filter(u => u.assigned_account_id === acc.id);
+          const assignedCount = assignedUsers.length;
+          const canAssign = assignedCount < 2;
+          
+          // Calcular dias restantes
+          let daysLeft = "";
+          let daysColor = "";
+          if (acc.delivery_date) {
+            const deliveryDate = new Date(acc.delivery_date);
+            const now = new Date();
+            const daysSince = Math.floor((now - deliveryDate) / (1000 * 60 * 60 * 24));
+            daysLeft = 30 - daysSince;
+            daysColor = daysLeft <= 7 ? '#ef4444' : daysLeft <= 15 ? '#f59e0b' : '#10b981';
+          }
+          
+          html += '<div style="padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+          
+          // Info de la cuenta
+          html += '<div style="flex:1;min-width:200px">';
+          html += '<div style="font-size:13px;margin-bottom:4px">';
+          html += '<span style="font-family:monospace;background:var(--soft);padding:2px 8px;border-radius:4px;margin-right:8px">' + esc(acc.email || "-") + '</span>';
+          html += '<span style="color:var(--muted);font-size:12px">🔑 ' + esc(acc.password || "-") + '</span>';
+          if (acc.profile) html += '<span style="color:var(--muted);font-size:12px;margin-left:8px">👤 ' + esc(acc.profile) + '</span>';
+          html += '</div>';
+          
+          // Quien la tiene
+          if (assignedUsers.length > 0) {
+            html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">📌 Asignada a: ';
+            html += assignedUsers.map(u => '<span style="background:#0877ff;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px">' + esc(u.name || u.email) + '</span>').join('');
+            html += '</div>';
+          }
+          
+          html += '</div>';
+          
+          // Info y acciones
+          html += '<div style="display:flex;align-items:center;gap:8px">';
+          
+          if (daysLeft !== "") {
+            html += '<span style="font-size:11px;color:' + daysColor + ';font-weight:700">' + daysLeft + ' dias</span>';
+          }
+          
+          html += '<span style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;background:' + (isAvailable ? 'rgba(16,185,129,.1);color:#10b981' : 'rgba(8,119,255,.1);color:#0877ff') + '">' + acc.status + '</span>';
+          
+          if (isAvailable && canAssign) {
+            html += '<button onclick="openAssignAccountModal(\'' + acc.id + '\')" style="padding:6px 12px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:11px;font-weight:700;cursor:pointer">📤 Entregar</button>';
+          }
+          if (!isAvailable) {
+            html += '<button onclick="reclaimAccount(\'' + acc.id + '\')" style="padding:6px 12px;border:1px solid #ef4444;border-radius:8px;background:rgba(239,68,68,.1);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">↩️ Recuperar</button>';
+          }
+          html += '<button onclick="deleteInventory(\'' + acc.id + '\')" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:11px;cursor:pointer">🗑️</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+        
+        html += '</div>';
+      });
+      
+      // Mensaje si no hay cuentas
+      if (inv.length === 0) {
+        html += '<div style="background:var(--panel);border-radius:12px;padding:40px;text-align:center;color:var(--muted)">';
+        html += '<div style="font-size:48px;margin-bottom:12px">📦</div>';
+        html += '<div style="font-size:16px;font-weight:600;margin-bottom:4px">No hay cuentas en inventario</div>';
+        html += '<div style="font-size:13px">Agrega cuentas manualmente o importa desde STGLIAK</div>';
+        html += '</div>';
+      }
+      
+      html += '</section>';
+      return html;
     }
     
-    function showAddAccountModal(){
-      document.getElementById('addAccountSection').style.display='block';
+    function openAssignAccountModal(accountId){
+      const account = state.inventory.find(a => a.id === accountId);
+      if (!account) return;
+      const product = state.products.find(p => p.id === account.product_id);
+      const users = state.users.filter(u => !u.assigned_account_id);
+      
+      if (users.length === 0) {
+        toast('Todos los usuarios ya tienen cuenta asignada','bad');
+        return;
+      }
+      
+      let options = users.map(u => '<option value="' + u.id + '">' + esc(u.name || u.email) + ' (' + u.role + ')</option>').join('');
+      
+      openModal('<div style="padding:20px">' +
+        '<h2 style="margin:0 0 16px;font-size:18px;font-weight:700">📤 Entregar cuenta</h2>' +
+        '<div style="background:var(--soft);padding:12px;border-radius:8px;margin-bottom:16px">' +
+        '<div style="font-size:13px;margin-bottom:4px"><b>' + esc(product ? product.name : 'Cuenta') + '</b></div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + esc(account.email) + ' | ' + esc(account.password) + '</div>' +
+        '</div>' +
+        '<div style="margin-bottom:16px">' +
+        '<label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px">Seleccionar operador/cliente:</label>' +
+        '<select id="assignUserSelect" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:13px">' + options + '</select>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="assignAccount(\'' + accountId + '\')" style="flex:1;padding:12px;border:0;border-radius:8px;background:#10b981;color:#fff;font-weight:700;cursor:pointer">Entregar</button>' +
+        '</div>' +
+        '</div>');
     }
-    function hideAddAccountModal(){
-      document.getElementById('addAccountSection').style.display='none';
-      document.getElementById('newAccountEmail').value='';
-      document.getElementById('newAccountPassword').value='';
-      document.getElementById('newAccountProfile').value='';
-    }
-    async function addAccountManually(){
-      const product_id = document.getElementById('newAccountProduct').value;
-      const email = document.getElementById('newAccountEmail').value.trim();
-      const password = document.getElementById('newAccountPassword').value.trim();
-      const profile = document.getElementById('newAccountProfile').value.trim();
-      if(!email || !password) return toast('Ingresa email y contraseña','bad');
-      try{
-        showLoading('Guardando...');
-        await api('inventory',{method:'POST',body:JSON.stringify({product_id,email,password,profile,status:'Disponible'})});
-        toast('Cuenta guardada','ok');
-        hideAddAccountModal();
+    
+    async function assignAccount(accountId){
+      const userId = document.getElementById('assignUserSelect').value;
+      if (!userId) return toast('Selecciona un usuario','bad');
+      try {
+        showLoading('Asignando...');
+        await api('inventory/' + accountId, {method:'PATCH', body:JSON.stringify({status:'Entregada', delivery_date:new Date().toISOString()})});
+        await api('users/' + userId, {method:'PATCH', body:JSON.stringify({assigned_account_id:accountId})});
+        closeModal();
+        toast('Cuenta entregada','ok');
         await boot();
-      }catch(e){toast(e.message,'bad')}
-      finally{hideLoading()}
+      } catch(e) {
+        toast(e.message,'bad');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function reclaimAccount(accountId){
+      if (!confirm('¿Recuperar esta cuenta?')) return;
+      try {
+        showLoading('Recuperando...');
+        const users = state.users.filter(u => u.assigned_account_id === accountId);
+        for (const u of users) {
+          await api('users/' + u.id, {method:'PATCH', body:JSON.stringify({assigned_account_id:null})});
+        }
+        await api('inventory/' + accountId, {method:'PATCH', body:JSON.stringify({status:'Disponible'})});
+        toast('Cuenta recuperada','ok');
+        await boot();
+      } catch(e) {
+        toast(e.message,'bad');
+      } finally {
+        hideLoading();
+      }
     }
     
     function parseSTGLIAKData(text){
