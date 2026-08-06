@@ -2471,8 +2471,8 @@
       }
       finally{btn?.classList.remove("loading");hideLoading()}
     }
-    async function boot(){
-      showLoading("Cargando...");
+    async function boot(silent=false){
+      if(!silent) showLoading("Cargando...");
       try{
         const res=await api("bootstrap");
         state={...emptyState(),...res,view:state.view || "home"};
@@ -2483,8 +2483,8 @@
         if(!state.user) throw new Error("Sesion invalida");
         normalizeViewForRole();
         renderApp();
-        checkBalanceAlerts();
-      }finally{hideLoading()}
+        if(!silent) checkBalanceAlerts();
+      }finally{if(!silent) hideLoading()}
     }
     function logout(){localStorage.removeItem("dsToken");token="";state=emptyState();renderLogin()}
     function normalizeViewForRole(){
@@ -6728,7 +6728,7 @@
         showLoading("Eliminando...");
         await api('topups/' + id, {method: 'DELETE'});
         toast("Recarga eliminada", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
