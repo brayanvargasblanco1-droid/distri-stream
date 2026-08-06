@@ -2239,7 +2239,7 @@
       pullIndicator.classList.add("refreshing");
       pullText.textContent="Actualizando...";
       pullText.classList.add("show");
-      try{await boot();toast("Datos actualizados","ok")}
+      try{await boot(true);toast("Datos actualizados","ok")}
       catch(e){toast("Error al actualizar","bad")}
       finally{resetPull();isRefreshing=false}
     }
@@ -3487,12 +3487,12 @@
             localStorage.dsPayment=JSON.stringify(newData);
             toast("Configuracion guardada. Recargando...","ok");
             // Forzar recarga completa para que TODO se actualice
-            setTimeout(()=>location.reload(),500);
+            // location.reload() eliminado
           })
           .catch(()=>{
             localStorage.dsPayment=JSON.stringify(newData);
             toast("Configuracion guardada. Recargando...","ok");
-            setTimeout(()=>location.reload(),500);
+            // location.reload() eliminado
           });
       };
       if(qrFile){
@@ -3562,12 +3562,12 @@
             state.settings.payment=newData;
             localStorage.dsPayment=JSON.stringify(newData);
             toast("Datos de pago actualizados. Recargando...","ok");
-            setTimeout(()=>location.reload(),500);
+            // location.reload() eliminado
           })
           .catch(()=>{
             localStorage.dsPayment=JSON.stringify(newData);
             toast("Datos de pago guardados. Recargando...","ok");
-            setTimeout(()=>location.reload(),500);
+            // location.reload() eliminado
           });
       };
       if(qrFile){
@@ -3667,7 +3667,7 @@
         await api("products",{method:"POST",body:JSON.stringify({name,description,price,provider_price,share_type,status:"Activo"})});
         toast("Producto creado","ok");
         closeModal();
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -3696,7 +3696,7 @@
         await api("products",{method:"PATCH",body:JSON.stringify({id,name,description,price,provider_price,share_type})});
         toast("Producto actualizado","ok");
         closeModal();
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -3706,7 +3706,7 @@
         showLoading("Eliminando...");
         await api("products",{method:"DELETE",body:JSON.stringify({id})});
         toast("Producto eliminado","ok");
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -3892,7 +3892,7 @@
         await api('users/' + userId, {method:'PATCH', body:JSON.stringify({assigned_account_id:accountId})});
         closeModal();
         toast('Cuenta entregada','ok');
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message,'bad');
       } finally {
@@ -3910,7 +3910,7 @@
         }
         await api('inventory/' + accountId, {method:'PATCH', body:JSON.stringify({status:'Disponible'})});
         toast('Cuenta recuperada','ok');
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message,'bad');
       } finally {
@@ -4035,7 +4035,7 @@
       toast(`${imported} cuentas importadas`,"ok");
       $("#importData").value="";
       $("#importPreview").style.display="none";
-      await boot();
+      await boot(true);
       hideLoading();
     }
     async function addInventory(){
@@ -4050,7 +4050,7 @@
         await api("inventory",{method:"POST",body:JSON.stringify({product_id,email,password,profile,pin,status:"Disponible"})});
         toast("Cuenta agregada","ok");
         $("#invEmail").value="";$("#invPassword").value="";$("#invProfile").value="";$("#invPin").value="";
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -4060,7 +4060,7 @@
         showLoading("Eliminando...");
         await api("inventory",{method:"DELETE",body:JSON.stringify({id})});
         toast("Cuenta eliminada","ok");
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -4095,7 +4095,7 @@
         await api("inventory",{method:"PATCH",body:JSON.stringify({id,...data})});
         toast("Cuenta actualizada","ok");
         closeModal();
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -4261,7 +4261,7 @@
         state.orders=[...delivered,...state.orders];
         if(res.balance!==undefined) state.user.balance=res.balance;
         renderDelivery(delivered);
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -5133,7 +5133,7 @@
         showLoading("Actualizando...");
         await api("reports",{method:"PATCH",body:JSON.stringify({id,status,provider_response:response})});
         toast("Reporte actualizado","ok");
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -5287,12 +5287,12 @@
           </div>
           <button onclick="closeModal()" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-size:14px;font-weight:800;cursor:pointer">Entendido</button>
         </div>`);
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
-    async function deleteReport(id){try{showLoading("Eliminando...");await api("reports",{method:"DELETE",body:JSON.stringify({id})});toast("Reporte eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
-    async function resolveReport(id,status){try{showLoading("Actualizando...");await api("reports",{method:"PATCH",body:JSON.stringify({id,status})});toast("Reporte actualizado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function deleteReport(id){try{showLoading("Eliminando...");await api("reports",{method:"DELETE",body:JSON.stringify({id})});toast("Reporte eliminado","ok");await boot(true)}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function resolveReport(id,status){try{showLoading("Actualizando...");await api("reports",{method:"PATCH",body:JSON.stringify({id,status})});toast("Reporte actualizado","ok");await boot(true)}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
     function exportReportsCsv(){
       const rows=state.reports.map(r=>[r.code,r.product_name,r.reason,r.status,r.description,r.provider_response].map(csvCell).join(";")).join("\n");
       downloadFile("distrito-reportes.csv","\ufeffCodigo;Producto;Motivo;Estado;Descripcion;Respuesta\n"+rows);
@@ -5513,7 +5513,7 @@
         document.getElementById("btnPublicar").style.background = "#6b7280";
         document.getElementById("btnPublicar").style.cursor = "not-allowed";
         document.getElementById("btnPublicar").style.opacity = "0.6";
-        await boot();
+        await boot(true);
       } catch(e) { toast(e.message, "bad"); }
       finally { hideLoading(); }
     }
@@ -5533,7 +5533,7 @@
         showLoading("Eliminando...");
         await api("ads/" + id, {method: "DELETE", body: JSON.stringify({id})});
         toast("Material eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) { toast(e.message, "bad"); }
       finally { hideLoading(); }
     }
@@ -5603,7 +5603,7 @@
         toast("Material publicado", "ok");
         window._selectedTipo = null;
         window._adImageData = null;
-        await boot();
+        await boot(true);
       } catch(e) { toast(e.message, "bad"); }
       finally { hideLoading(); }
     }
@@ -5625,7 +5625,7 @@
         showLoading("Eliminando...");
         await api("ads/" + id, {method: "DELETE", body: JSON.stringify({id})});
         toast("Material eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) { toast(e.message, "bad"); }
       finally { hideLoading(); }
     }
@@ -5688,7 +5688,7 @@
         toast("Anuncio publicado","ok");
         window._adSelectedFile=null;
         window._editingAdId=null;
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -5849,7 +5849,7 @@
       }
       box.className="copy-box";
     }
-    async function deleteAd(id){try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function deleteAd(id){try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot(true)}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
 
     function editAd(id){
       const a=state.ads.find(x=>x.id===id);
@@ -5913,7 +5913,7 @@
         }
         await api("ads",{method:"PATCH",body:JSON.stringify(updateData)});
         toast("Anuncio actualizado","ok");
-        await boot();
+        await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6413,7 +6413,7 @@
           margin: newMargen,
           status: currentStatus
         })});
-        closeModal(); toast("Usuario actualizado","ok"); await boot();
+        closeModal(); toast("Usuario actualizado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6474,7 +6474,7 @@
       try{
         showLoading("Eliminando usuario...");
         await api("users",{method:"DELETE",body:JSON.stringify({id})});
-        closeModal(); toast("Usuario eliminado","ok"); await boot();
+        closeModal(); toast("Usuario eliminado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6505,7 +6505,7 @@
       try{
         showLoading("Bloqueando usuario...");
         await api("users",{method:"PATCH",body:JSON.stringify({id,status:"Bloqueado"})});
-        closeModal(); toast("Usuario bloqueado","ok"); await boot();
+        closeModal(); toast("Usuario bloqueado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6532,7 +6532,7 @@
       try{
         showLoading("Desbloqueando...");
         await api("users",{method:"PATCH",body:JSON.stringify({id,status:"Activo"})});
-        closeModal(); toast("Usuario desbloqueado","ok"); await boot();
+        closeModal(); toast("Usuario desbloqueado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6585,7 +6585,7 @@
       try{
         showLoading("Creando usuario...");
         await api("users",{method:"POST",body:JSON.stringify({name:$("#nuName").value,email:$("#nuEmail").value,password:$("#nuPass").value,role:$("#nuRole").value,balance:Number($("#nuBalance").value||0),margin:Number($("#nuMargin").value||2000)})});
-        closeModal(); toast("Usuario creado","ok"); await boot();
+        closeModal(); toast("Usuario creado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6593,7 +6593,7 @@
       try{
         showLoading("Guardando...");
         await api("users",{method:"PATCH",body:JSON.stringify({id,balance:Number($("#bal-"+id).value||0),margin:Number($("#mar-"+id).value||0)})});
-        toast("Usuario actualizado","ok"); await boot();
+        toast("Usuario actualizado","ok"); await boot(true);
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
@@ -6848,7 +6848,7 @@
         }
         closeModal();
         toast(toDelete.length + " recargas eliminadas", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8607,7 +8607,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8620,7 +8620,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8653,7 +8653,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8666,7 +8666,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8704,7 +8704,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8717,7 +8717,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8750,7 +8750,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8763,7 +8763,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8797,7 +8797,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8810,7 +8810,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8843,7 +8843,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8856,7 +8856,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8889,7 +8889,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8902,7 +8902,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8935,7 +8935,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8948,7 +8948,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8981,7 +8981,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -8994,7 +8994,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9027,7 +9027,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9040,7 +9040,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9073,7 +9073,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9086,7 +9086,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9119,7 +9119,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9132,7 +9132,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9166,7 +9166,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9179,7 +9179,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9212,7 +9212,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9225,7 +9225,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9259,7 +9259,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9272,7 +9272,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9305,7 +9305,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9318,7 +9318,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9473,7 +9473,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9486,7 +9486,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9519,7 +9519,7 @@
         }
         closeModal();
         toast(toDelete.length + " reportes eliminados", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
@@ -9532,7 +9532,7 @@
         showLoading("Eliminando...");
         await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
         toast("Reporte eliminado", "ok");
-        await boot();
+        await boot(true);
       } catch(e) {
         toast(e.message, "bad");
       } finally {
