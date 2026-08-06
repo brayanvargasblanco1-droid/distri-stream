@@ -4502,6 +4502,36 @@
              <input id="reportSearch" oninput="debouncedSearchReports(this.value)" value="${reportSearch}" placeholder="Buscar reportes por producto, motivo o descripción..." style="width:100%;padding:10px 12px 10px 38px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px">
            </div>
          </div>
+         <!-- Tarjetas animadas de resumen -->
+         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px">
+           <div onclick="filterReportTable('all')" style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.4);border-radius:12px;padding:16px;cursor:pointer;position:relative;overflow:hidden;${pending>0?'animation:pulse 2s infinite':''}">
+             <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ef4444,transparent);animation:shimmer 2s infinite"></div>
+             <div style="display:flex;justify-content:space-between;align-items:center">
+               <span style="font-size:28px">🚨</span>
+               <span style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${pending}</span>
+             </div>
+             <div style="font-size:13px;font-weight:700;color:#ef4444;margin-top:8px">Pendientes</div>
+           </div>
+           <div onclick="filterReportTable('Resuelto')" style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;cursor:pointer">
+             <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#10b981,transparent)"></div>
+             <div style="display:flex;justify-content:space-between;align-items:center">
+               <span style="font-size:28px">✅</span>
+               <span style="background:#10b981;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${solved}</span>
+             </div>
+             <div style="font-size:13px;font-weight:700;color:#10b981;margin-top:8px">Resueltos</div>
+           </div>
+           <div onclick="filterReportTable('Rechazado')" style="background:rgba(107,114,128,.1);border:2px solid rgba(107,114,128,.4);border-radius:12px;padding:16px;cursor:pointer">
+             <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#6b7280,transparent)"></div>
+             <div style="display:flex;justify-content:space-between;align-items:center">
+               <span style="font-size:28px">❌</span>
+               <span style="background:#6b7280;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${rejected}</span>
+             </div>
+             <div style="font-size:13px;font-weight:700;color:#6b7280;margin-top:8px">Rechazados</div>
+           </div>
+         </div>
+         
+         ${(reportFilter==="Resuelto"||reportFilter==="Rechazado")&&searched.length>0?'<div style="padding:0 16px 12px;text-align:right"><button onclick="confirmDeleteAllReports(\''+reportFilter+'\')" style="padding:8px 16px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">🗑️ Eliminar todos</button></div>':''}
+         
          <div style="overflow-x:auto">
            <table style="width:100%;border-collapse:collapse;font-size:13px">
              <thead>
@@ -8047,6 +8077,52 @@
         hideLoading();
       }
     }
+
+    
+    // Funciones para eliminar reportes
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
 </script>
 <!-- MEJORAS DE REPORTES Y SOPORTE -->
 <link rel="stylesheet" href="reports-styles.css?v=5">
@@ -8055,6 +8131,52 @@
 <!-- Seguridad: Cargar primero para que validadores estén disponibles -->
 <script src="reports-security.js">
     
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    
+    // Funciones para eliminar reportes
     function confirmDeleteAllReports(status) {
       const count = state.reports.filter(r => r.status === status).length;
       openModal(
@@ -8145,9 +8267,101 @@
         hideLoading();
       }
     }
+
+    
+    // Funciones para eliminar reportes
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
 </script>
 <script src="reports-monkey-patch.js?v=3">
     
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    
+    // Funciones para eliminar reportes
     function confirmDeleteAllReports(status) {
       const count = state.reports.filter(r => r.status === status).length;
       openModal(
@@ -8237,9 +8451,101 @@
         hideLoading();
       }
     }
+
+    
+    // Funciones para eliminar reportes
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
 </script>
 <script src="profile-loyalty.js?v=1">
     
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    
+    // Funciones para eliminar reportes
     function confirmDeleteAllReports(status) {
       const count = state.reports.filter(r => r.status === status).length;
       openModal(
@@ -8330,10 +8636,102 @@
         hideLoading();
       }
     }
+
+    
+    // Funciones para eliminar reportes
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
 </script>
 <!-- Mejoras de Compras para Operadores y Revendedores -->
 <script src="purchases-operators.js?v=1">
     
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    
+    // Funciones para eliminar reportes
     function confirmDeleteAllReports(status) {
       const count = state.reports.filter(r => r.status === status).length;
       openModal(
@@ -8502,6 +8900,52 @@
     }
   
     
+    function confirmDeleteAllReports(status) {
+      const count = state.reports.filter(r => r.status === status).length;
+      openModal(
+        '<div style="padding:20px;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+        '<h2 style="margin:0 0 8px;color:var(--text)">¿Eliminar ' + count + ' reportes ' + status + 's?</h2>' +
+        '<p style="color:var(--muted);margin:0 0 20px">Esta accion no se puede deshacer</p>' +
+        '<div style="display:flex;gap:12px">' +
+        '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer">Cancelar</button>' +
+        '<button onclick="deleteAllReports(\'' + status + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">🗑️ Eliminar</button>' +
+        '</div></div>'
+      );
+    }
+    
+    async function deleteAllReports(status) {
+      try {
+        showLoading("Eliminando...");
+        const toDelete = state.reports.filter(r => r.status === status);
+        for (const r of toDelete) {
+          await api('reports/' + r.id, {method: 'DELETE'});
+        }
+        closeModal();
+        toast(toDelete.length + " reportes eliminados", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    async function deleteReport(id) {
+      try {
+        showLoading("Eliminando...");
+        await api('reports/' + id, {method: 'DELETE'});
+        toast("Reporte eliminado", "ok");
+        await boot();
+      } catch(e) {
+        toast(e.message, "bad");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    
+    // Funciones para eliminar reportes
     function confirmDeleteAllReports(status) {
       const count = state.reports.filter(r => r.status === status).length;
       openModal(
