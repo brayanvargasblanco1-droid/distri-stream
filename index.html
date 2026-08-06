@@ -5169,14 +5169,35 @@
     function ads(){
       const activeAds=state.ads.filter(a=>a.status!=="Vencida");
       const expiredAds=state.ads.filter(a=>a.status==="Vencida");
-      return `<section class="grid ${isAdmin()?"split":""}">
+      return `<section style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div><h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1><p style="margin:4px 0 0;color:var(--muted);font-size:13px">${isAdmin()?"Sube imagenes para que tus operadores vendan":"Copia y comparte para vender"}</p></div>
+          ${isAdmin()?'<button onclick="document.getElementById(\'createAdSection\').style.display=\'block\'" style="padding:10px 16px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">➕ Crear material</button>':''}
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px">
+          <div style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden${activeAds.length>0?';animation:pulse 2s infinite':''}">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#10b981,transparent);animation:shimmer 2s infinite"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:32px">📢</span>
+              <span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(16,185,129,.4)">${activeAds.length}</span>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:#10b981;margin-top:10px">Activos</div>
+            <div style="font-size:12px;color:var(--muted)">Para compartir</div>
+          </div>
+          <div style="background:rgba(107,114,128,.1);border:2px solid rgba(107,114,128,.4);border-radius:12px;padding:16px;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#6b7280,transparent)"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:32px">📁</span>
+              <span style="background:#6b7280;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(107,114,128,.4)">${expiredAds.length}</span>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:#6b7280;margin-top:10px">Vencidos</div>
+            <div style="font-size:12px;color:var(--muted)">Historial</div>
+          </div>
+        </div>
+        
+        <section class="grid ${isAdmin()?"split":""}">
         <div class="card"><h2>${isAdmin()?"Campanas publicadas":"Material disponible"}</h2><p class="muted">${isAdmin()?"Sube imagenes, textos y material para que los usuarios copien y compartan.":"Copia, descarga y comparte el material activo."}</p>
-          ${isAdmin()?`<div style="display:flex;gap:6px;margin:12px 0;flex-wrap:wrap">
-            <span class="ad-category promo">Promos: ${state.ads.filter(a=>(a.category||"promo")==="promo").length}</span>
-            <span class="ad-category info">Info: ${state.ads.filter(a=>a.category==="info").length}</span>
-            <span class="ad-category aviso">Avisos: ${state.ads.filter(a=>a.category==="aviso").length}</span>
-            <span class="ad-category urgente">Urgentes: ${state.ads.filter(a=>a.category==="urgente").length}</span>
-          </div>`:""}
           <div class="grid store-grid section">${activeAds.map(adCard).join("") || "<p class='muted'>No hay material publicado.</p>"}</div>
           ${expiredAds.length?`<details style="margin-top:16px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:700">Vencidos (${expiredAds.length})</summary><div class="grid store-grid section" style="margin-top:10px;opacity:.6">${expiredAds.map(adCard).join("")}</div></details>`:""}
         </div>
