@@ -5201,7 +5201,12 @@
           <div class="grid store-grid section">${activeAds.map(adCard).join("") || "<p class='muted'>No hay material publicado.</p>"}</div>
           ${expiredAds.length?`<details style="margin-top:16px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:700">Vencidos (${expiredAds.length})</summary><div class="grid store-grid section" style="margin-top:10px;opacity:.6">${expiredAds.map(adCard).join("")}</div></details>`:""}
         </div>
-        ${isAdmin()?`<div class="card"><h2>${window._editingAdId?"Editar anuncio":"Crear anuncio"}</h2><p class="muted">Sube imagen, escribe el texto y publica para todos los usuarios.</p>
+        ${isAdmin()?`<div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 style="margin:0">Crear Anuncio</h2><p class="muted" style="margin:4px 0 0">Sube una imagen y escribe el texto</p></div>
+          </div>
+        </div>
+        <div class="card"><h2>${window._editingAdId?"Editar anuncio":"Crear anuncio"}</h2><p class="muted">Sube imagen, escribe el texto y publica para todos los usuarios.</p>
           <div class="form" id="adForm">
             <label>Titulo del anuncio<input id="adTitle" placeholder="Ej: Promo Netflix Lunes" oninput="updateAdPreview()"></label>
             <label>Texto para copiar<textarea id="adCopy" placeholder="Mensaje que el usuario copiara y enviara a sus clientes." rows="3" oninput="updateAdPreview()"></textarea></label>
