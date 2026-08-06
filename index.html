@@ -5172,7 +5172,7 @@
       return `<section style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <div><h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1><p style="margin:4px 0 0;color:var(--muted);font-size:13px">${isAdmin()?"Sube imagenes para que tus operadores vendan":"Copia y comparte para vender"}</p></div>
-          ${isAdmin()?'<button onclick="document.getElementById(\'createAdSection\').style.display=\'block\'" style="padding:10px 16px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">➕ Crear material</button>':''}
+          ${isAdmin()?'<button onclick="document.getElementById(\'adForm\').scrollIntoView({behavior:\'smooth\'});document.getElementById(\'adTitle\').focus()" style="padding:10px 16px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer">➕ Crear material</button>':''}
         </div>
         
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px">
