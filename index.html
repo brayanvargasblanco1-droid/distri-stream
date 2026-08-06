@@ -4567,82 +4567,103 @@
        renderApp();
      }
     function openReportDetail(id){
-      const r=state.reports.find(x=>x.id===id);
-      if(!r) return;
-      const isOpen=r.status!=="Resuelto"&&r.status!=="Rechazado";
-      // Determinar paso actual del timeline
-      let currentStep=0;
-      if(r.status==="Resuelto") currentStep=3;
-      else if(r.status==="En revision"||r.provider_response) currentStep=2;
-      else if(r.status==="Asignado") currentStep=1;
-      else currentStep=0; // Recibido/Pendiente
-
-      const steps=[
-        {label:"Recibido",icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>`},
-        {label:"Asignado",icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`},
-        {label:"En revision",icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`},
-        {label:"Resuelto",icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>`}
-      ];
-
-      openModal(`<div style="padding:0">
-        <!-- Header -->
-        <div style="padding:20px 20px 16px;border-bottom:1px solid var(--line)">
-          <div style="display:flex;justify-content:space-between;align-items:start">
-            <div>
-              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">SOPORTE</div>
-              <h2 style="margin:0;font-size:17px;font-weight:900">${esc(r.product_name||"Reporte")}</h2>
-              <div style="font-size:12px;color:var(--muted);margin-top:4px">Reporte: <b>${r.code||"-"}</b> · ${r.created_at||""}</div>
-            </div>
-            <button onclick="closeModal()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center;transition:all .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='var(--panel)'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" width="16" height="16"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Timeline -->
-        <div style="padding:20px;border-bottom:1px solid var(--line)">
-          <div style="display:flex;align-items:center;justify-content:space-between;position:relative;margin-bottom:8px">
-            <div style="position:absolute;top:18px;left:24px;right:24px;height:3px;background:var(--line);border-radius:2px"></div>
-            <div style="position:absolute;top:18px;left:24px;width:${currentStep===0?0:currentStep===1?33:currentStep===2?66:100}%;height:3px;background:linear-gradient(90deg,#0877ff,#10b981);border-radius:2px;transition:width .5s"></div>
-            ${steps.map((s,i)=>`
-              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;z-index:1;position:relative">
-                <div style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:14px;transition:all .3s;${i<=currentStep?'background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;box-shadow:0 4px 12px rgba(8,119,255,.3)':'background:var(--soft);color:var(--muted);border:2px solid var(--line)'}">
-                  ${s.icon}
-                </div>
-                <span style="font-size:10px;font-weight:700;color:${i<=currentStep?'var(--blue)':'var(--muted)'};white-space:nowrap">${s.label}</span>
-              </div>
-            `).join("")}
-          </div>
-          <div style="text-align:center;margin-top:8px">
-            ${r.status==="Resuelto"?`<span style="font-size:12px;color:var(--ok);font-weight:700">✓ Reporte resuelto</span>`:
-              r.status==="Rechazado"?`<span style="font-size:12px;color:var(--bad);font-weight:700">✗ Reporte rechazado</span>`:
-              `<span style="font-size:12px;color:var(--warn);font-weight:600">⏱ En proceso de atencion</span>`}
-          </div>
-        </div>
-
-        <!-- Detalles -->
-        <div style="padding:16px 20px;display:grid;gap:12px">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="tag ${r.status==='Resuelto'?'ok':r.status==='Rechazado'?'bad':'warn'}" style="font-size:10px">${r.status||"Pendiente"}</span>
-            <span style="font-size:12px;color:var(--muted)">${r.reason||""}</span>
-          </div>
-          ${r.description?`<div style="padding:12px;background:var(--soft);border-radius:8px;font-size:13px">${esc(r.description)}</div>`:""}
-          ${r.account_data?`<div style="font-size:12px;color:var(--muted)">Cuenta: <span style="font-family:monospace;background:var(--soft);padding:2px 6px;border-radius:4px">${esc(r.account_data)}</span></div>`:""}
-          ${r.provider_response?`<div style="padding:10px 12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;font-size:12px"><b style="color:var(--ok)">Respuesta del equipo:</b><br>${esc(r.provider_response)}</div>`:""}
-
-          ${(isOpen && isAdmin())?`<div style="border-top:1px solid var(--line);padding-top:12px">
-            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Respuesta rápida (Administrador)</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-              ${["Cuenta reemplazada.","PIN actualizado.","Cuenta restaurada.","Funcionando correctamente.","Reembolso procesado."].map(t=>`<button onclick="$('#detailResp-${r.id}').value='${t}'" style="padding:4px 10px;border:1px dashed var(--line);border-radius:6px;background:var(--panel);font-size:10px;cursor:pointer;color:var(--text);transition:all .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='var(--panel)'">${t.slice(0,25)}</button>`).join("")}
-            </div>
-            <div style="display:flex;gap:8px">
-              <input id="detailResp-${r.id}" placeholder="Escribe la solución..." style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--soft);color:var(--text)">
-              <button onclick="sendDetailResponse('${r.id}')" style="padding:10px 16px;border:0;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Resolver</button>
-            </div>
-          </div>`:""}
-        </div>
-      </div>`);
+      const r = state.reports.find(x => x.id === id);
+      if (!r) return;
+      
+      const user = state.users.find(u => u.id === r.user_id);
+      const userName = user ? (user.name || user.email) : (r.client_name || r.user_name || "Usuario");
+      const userRole = user ? user.role : "Cliente";
+      const isOpen = r.status !== "Resuelto" && r.status !== "Rechazado";
+      
+      let html = '<div style="padding:0;font-family:system-ui">';
+      
+      // Header rojo
+      html += '<div style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:20px;text-align:center">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<div></div>';
+      html += '<div style="color:white;text-align:center">';
+      html += '<div style="font-size:32px;margin-bottom:4px">🚨</div>';
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Reporte de Soporte</div>';
+      html += '</div>';
+      html += '<button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;width:32px;height:32px">×</button>';
+      html += '</div></div>';
+      
+      // Quien reporta
+      const roleColor = userRole === "Revendedor" ? "#667eea" : "#10b981";
+      const roleIcon = userRole === "Revendedor" ? "👥" : "👤";
+      html += '<div style="padding:16px;background:rgba(0,0,0,.02);border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px">';
+      html += '<div style="width:48px;height:48px;border-radius:50%;background:' + roleColor + ';display:flex;align-items:center;justify-content:center;font-size:20px;color:white;font-weight:700">' + roleIcon + '</div>';
+      html += '<div>';
+      html += '<div style="font-weight:700;font-size:16px">' + esc(userName) + '</div>';
+      html += '<div style="font-size:12px;color:#6b7280">' + roleIcon + ' ' + userRole + '</div>';
+      html += '</div></div>';
+      
+      // Detalle
+      html += '<div style="padding:16px">';
+      
+      // Producto
+      html += '<div style="background:#f3f4f6;border-radius:10px;padding:14px;margin-bottom:12px">';
+      html += '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Producto reportado</div>';
+      html += '<div style="font-size:18px;font-weight:800">' + esc(r.product_name || "Sin producto") + '</div>';
+      html += '</div>';
+      
+      // Motivo
+      html += '<div style="background:#f3f4f6;border-radius:10px;padding:14px;margin-bottom:12px">';
+      html += '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Motivo</div>';
+      html += '<div style="font-size:14px;font-weight:600">' + esc(r.reason || "Sin motivo") + '</div>';
+      html += '</div>';
+      
+      // Descripcion
+      if (r.description) {
+        html += '<div style="background:#f3f4f6;border-radius:10px;padding:14px;margin-bottom:12px">';
+        html += '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Descripcion</div>';
+        html += '<div style="font-size:13px;line-height:1.5">' + esc(r.description) + '</div>';
+        html += '</div>';
+      }
+      
+      // Cuenta
+      if (r.account_data) {
+        html += '<div style="background:#f3f4f6;border-radius:10px;padding:14px;margin-bottom:12px">';
+        html += '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Cuenta afectada</div>';
+        html += '<div style="font-family:monospace;font-size:14px;background:white;padding:8px;border-radius:6px;border:1px solid #e5e7eb">' + esc(r.account_data) + '</div>';
+        html += '</div>';
+      }
+      
+      // Respuesta anterior
+      if (r.provider_response) {
+        html += '<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:14px;margin-bottom:12px">';
+        html += '<div style="font-size:11px;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px">✓ Respuesta enviada</div>';
+        html += '<div style="font-size:13px">' + esc(r.provider_response) + '</div>';
+        html += '</div>';
+      }
+      
+      // Formulario de solucion (solo si es admin y esta abierto)
+      if (isOpen && isAdmin()) {
+        html += '<div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px">';
+        html += '<div style="font-size:12px;font-weight:700;margin-bottom:10px">Dar solucion</div>';
+        
+        // Botones rapidos
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+        html += '<button onclick="document.getElementById(\'solucion\').value=\'Cuenta nueva enviada\'" style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:11px;cursor:pointer">📧 Cuenta nueva</button>';
+        html += '<button onclick="document.getElementById(\'solucion\').value=\'Cuenta reemplazada\'" style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:11px;cursor:pointer">🔄 Reemplazada</button>';
+        html += '<button onclick="document.getElementById(\'solucion\').value=\'PIN actualizado\'" style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:11px;cursor:pointer">🔑 PIN</button>';
+        html += '<button onclick="document.getElementById(\'solucion\').value=\'Funcionando correctamente\'" style="padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:11px;cursor:pointer">✓ OK</button>';
+        html += '</div>';
+        
+        html += '<textarea id="solucion" placeholder="Escribe la solucion..." style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none;min-height:80px;margin-bottom:12px;box-sizing:border-box"></textarea>';
+        
+        html += '<div style="display:flex;gap:8px">';
+        html += '<button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>';
+        html += '<button onclick="resolveReport(\'' + r.id + '\',\'Resuelto\',document.getElementById(\'solucion\').value)" style="flex:1;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:white;font-size:13px;font-weight:700;cursor:pointer">✓ Resolver</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+      
+      html += '</div></div>';
+      
+      openModal(html);
     }
+    
     function sendDetailResponse(id){
       const input=$(`#detailResp-${id}`);
       if(!input||!input.value.trim()) return;
