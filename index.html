@@ -2831,6 +2831,11 @@
       
     function home(){
       const u = state.user || {};
+      // Usar vista premium si está disponible
+      if(typeof improvedHomeView === 'function' && !isAdmin()){
+        return improvedHomeView();
+      }
+      
       const firstName = u.name ? u.name.split(" ")[0] : "Usuario";
       const hour = new Date().getHours();
       const greeting = hour < 12 ? "Buenos dias" : hour < 18 ? "Buenas tardes" : "Buenas noches";
