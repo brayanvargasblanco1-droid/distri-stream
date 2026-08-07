@@ -1735,15 +1735,17 @@
       .main-content { padding: 12px !important; padding-bottom: 80px !important; flex: 1; }
       
       /* NAVEGACIÓN INFERIOR MÓVIL */
-      .mobile-nav { 
+      .mobile-nav {
         display: flex !important;
         position: fixed !important;
         bottom: 0 !important; left: 0 !important; right: 0 !important;
-        background: var(--panel) !important;
-        border-top: 1px solid var(--line) !important;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-        padding: 6px 4px !important;
-        padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+        box-shadow: 0 -8px 40px rgba(99, 102, 241, 0.12) !important;
+        padding: 8px 4px !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
         z-index: 9999 !important;
         justify-content: space-around !important;
       }
@@ -1753,23 +1755,42 @@
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
-        padding: 6px 4px !important;
-        border-radius: 10px !important;
-        font-size: 9px !important;
+        gap: 4px !important;
+        padding: 8px 6px !important;
+        border-radius: 16px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
         background: transparent !important;
         border: none !important;
-        color: var(--muted) !important;
+        color: #9ca3af !important;
         cursor: pointer !important;
-        min-height: 52px !important;
-        transition: all 0.15s ease !important;
+        min-height: 56px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative !important;
       }
       .mobile-nav button:active { transform: scale(0.95); }
-      .mobile-nav button.active { color: var(--blue) !important; }
-      .mobile-nav button.active svg { stroke: var(--blue) !important; }
-      .mobile-nav button svg { width: 22px !important; height: 22px !important; }
-      
+      .mobile-nav button:hover { background: rgba(99, 102, 241, 0.06) !important; }
+      .mobile-nav button.active { 
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        color: white !important;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4) !important;
+      }
+      .mobile-nav button.active svg { 
+        stroke: white !important;
+        transform: scale(1.1) !important;
+      }
+      .mobile-nav button.active span {
+        color: white !important;
+        font-weight: 700 !important;
+      }
+      .mobile-nav button svg { 
+        width: 24px !important; 
+        height: 24px !important; 
+        transition: all 0.25s ease !important;
+      }
+      .mobile-nav button span {
+        transition: all 0.25s ease !important;
+      }
       /* BOTONES GRANDES Y TÁCTILES */
       button, .btn, .primary, .ghost, button[type], button[class] {
         min-height: 44px !important;
@@ -8681,6 +8702,7 @@
 <script src="history-simple.js?v=1"></script>
 <script src="orders-simple.js?v=1"></script>
 <script src="store-simple.js?v=1"></script>
+<script src="nav-simple.js?v=1"></script>
 <!-- Scripts de reportes -->
 <script src="reports-security.js"></script>
 <script src="reports-functions.js?v=5"></script>
