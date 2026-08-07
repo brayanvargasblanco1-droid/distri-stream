@@ -1,5 +1,5 @@
 /**
- * SOPORTE PREMIUM v16 - TU REPORTE + RESPUESTA SIEMPRE VISIBLES
+ * SOPORTE PREMIUM v17 - Notificación + Corregido eliminar
  */
 
 const Soporte = {
@@ -104,7 +104,7 @@ const Soporte = {
           </div>
         </div>
         
-        <!-- 📝 TU REPORTE -->
+        <!-- TU REPORTE -->
         <div class="s-tu-reporte">
           <div class="s-tu-header">
             <div class="s-tu-icon">📝</div>
@@ -116,7 +116,7 @@ const Soporte = {
           </div>
         </div>
         
-        <!-- 💬 RESPUESTA DEL ADMINISTRADOR - SIEMPRE VISIBLE -->
+        <!-- RESPUESTA DEL ADMIN -->
         <div class="s-admin-section ${tieneRespuesta ? 's-admin-has' : 's-admin-pending'}">
           <div class="s-admin-header">
             <div class="s-admin-avatar">
@@ -136,9 +136,7 @@ const Soporte = {
             <div class="s-admin-content">${escHtml(solucion)}</div>
           ` : `
             <div class="s-admin-pending-content">
-              <div class="s-pending-dots">
-                <span></span><span></span><span></span>
-              </div>
+              <div class="s-pending-dots"><span></span><span></span><span></span></div>
               <span>El administrador aún no ha respondido</span>
             </div>
           `}
@@ -241,24 +239,24 @@ const Soporte = {
         <div class="s-loading-sub">${escHtml(r.product_name || 'Producto')}</div>
         <div class="s-loading-actions">
           <button class="s-btn-cancel" onclick="closeModal()">Cancelar</button>
-          <button class="s-btn-delete" onclick="Soporte.confirmarEliminar('${id}')">🗑️ Eliminar</button>
+          <button class="s-btn-delete" id="btn-confirmar-eliminar" onclick="Soporte.confirmarEliminar('${id}')">🗑️ Eliminar</button>
         </div>
       </div>
     `);
   },
   
   async confirmarEliminar(id) {
-    document.querySelector('.s-loading-actions').innerHTML = `
-      <div class="s-loading-spinner">
-        <div class="s-spinner"></div>
-        <span>Eliminando...</span>
-      </div>
-    `;
+    const btn = document.getElementById('btn-confirmar-eliminar');
+    if (btn) {
+      btn.innerHTML = '<div class="s-spinner"></div> Eliminando...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
     
     try {
-      await api('reports', { method: 'DELETE', body: JSON.stringify({ id: id }) });
+      await api('reports', {method: 'DELETE', body: JSON.stringify({id})});
       closeModal();
-      toast('✓ Eliminado correctamente', 'ok');
+      toast('✓ Reporte eliminado', 'ok');
       await boot();
       setView('reports');
     } catch(e) {
@@ -278,24 +276,24 @@ const Soporte = {
         <div class="s-loading-sub">Se eliminarán ${reportes.length} reporte(s)</div>
         <div class="s-loading-actions">
           <button class="s-btn-cancel" onclick="closeModal()">Cancelar</button>
-          <button class="s-btn-delete" onclick="Soporte.confirmarEliminarTodos()">🗑️ Eliminar Todo</button>
+          <button class="s-btn-delete" id="btn-confirmar-todos" onclick="Soporte.confirmarEliminarTodos()">🗑️ Eliminar Todo</button>
         </div>
       </div>
     `);
   },
   
   async confirmarEliminarTodos() {
-    document.querySelector('.s-loading-actions').innerHTML = `
-      <div class="s-loading-spinner">
-        <div class="s-spinner"></div>
-        <span>Eliminando...</span>
-      </div>
-    `;
+    const btn = document.getElementById('btn-confirmar-todos');
+    if (btn) {
+      btn.innerHTML = '<div class="s-spinner"></div> Eliminando...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
     
     try {
       const reportes = state.reports || [];
       for (const r of reportes) {
-        await api('reports', { method: 'DELETE', body: JSON.stringify({ id: r.id }) });
+        await api('reports', {method: 'DELETE', body: JSON.stringify({id: r.id})});
       }
       closeModal();
       toast('✓ ' + reportes.length + ' reportes eliminados', 'ok');
@@ -371,7 +369,7 @@ const Soporte = {
     
     showLoading('Creando...');
     try {
-      await api('reports', { method: 'POST', body: JSON.stringify({ product_name: name, reason: cat.value, description: desc.value.trim(), order_id: id, client_id: state.user?.id })});
+      await api('reports', {method: 'POST', body: JSON.stringify({ product_name: name, reason: cat.value, description: desc.value.trim(), order_id: id, client_id: state.user?.id })});
       closeModal();
       toast('✓ Reporte creado', 'ok');
       await boot();
@@ -394,8 +392,51 @@ const SoporteCSS = `
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
 .s-container { max-width: 720px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; }
+
+/* ALERTA DE REPORTES */
+.s-alert {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeInUp 0.5s ease;
+}
+.s-alert-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  animation: bounce 2s ease-in-out infinite;
+}
+.s-alert-content { flex: 1; }
+.s-alert-title { font-size: 15px; font-weight: 800; color: #92400e; margin-bottom: 4px; }
+.s-alert-sub { font-size: 13px; color: #b45309; }
+.s-alert-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+.s-alert-btn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
 
 /* HEADER */
 .s-header {
@@ -507,16 +548,14 @@ const SoporteCSS = `
   letter-spacing: 1px;
 }
 .s-tu-icon { font-size: 16px; }
-.s-tu-content {}
 .s-tu-problema { font-size: 15px; color: #334155; font-weight: 600; margin-bottom: 6px; }
 .s-tu-desc { font-size: 13px; color: #64748b; line-height: 1.6; }
 
-/* ADMIN SECTION - SIEMPRE VISIBLE */
+/* ADMIN SECTION */
 .s-admin-section {
   border-radius: 18px;
   padding: 18px;
   margin-bottom: 16px;
-  transition: all 0.3s;
 }
 .s-admin-has {
   background: linear-gradient(135deg, #10b981, #059669);
@@ -670,7 +709,7 @@ const SoporteCSS = `
 .s-loading-sub { font-size: 14px; color: #64748b; margin-bottom: 24px; }
 .s-loading-actions { display: flex; gap: 12px; }
 .s-loading-spinner { display: flex; align-items: center; justify-content: center; gap: 12px; color: #64748b; }
-.s-spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.s-spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
 /* FORM */
 .s-form-group { margin-bottom: 20px; }
@@ -689,6 +728,7 @@ const SoporteCSS = `
   .s-modal-info { grid-template-columns: 1fr; }
   .s-modal-actions { flex-direction: column; }
   .s-loading-actions { flex-direction: column; }
+  .s-alert { flex-direction: column; text-align: center; }
 }
 </style>`;
 
@@ -704,8 +744,23 @@ function reportsUserSimple() {
   };
   const total = (state.reports || []).length;
   
+  // Notificación si hay más de 10 reportes
+  const alerta = total > 10 ? `
+    <div class="s-alert">
+      <div class="s-alert-icon">⚠️</div>
+      <div class="s-alert-content">
+        <div class="s-alert-title">Tienes ${total} reportes</div>
+        <div class="s-alert-sub">¿Quieres eliminar todos?</div>
+      </div>
+      <button class="s-alert-btn" onclick="Soporte.eliminarTodos()">🗑️ Eliminar</button>
+    </div>
+  ` : '';
+  
   return SoporteCSS + `
     <div class="s-container">
+      
+      <!-- ALERTA SI HAY MÁS DE 10 -->
+      ${alerta}
       
       <!-- HEADER -->
       <div class="s-header">
@@ -746,4 +801,4 @@ function reportsUserSimple() {
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-console.log('✅ Soporte Premium v16 - Tu Reporte + Respuesta Siempre Visible');
+console.log('✅ Soporte Premium v17 - Notificación + Corregido');
