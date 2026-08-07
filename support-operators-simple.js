@@ -1,5 +1,5 @@
 /**
- * SOPORTE PREMIUM v10 - COLORES MORADOS CORREGIDOS
+ * SOPORTE PREMIUM v11 - TARJETAS CON EFECTOS + RESPUESTA VISIBLE
  */
 
 const Soporte = {
@@ -39,15 +39,11 @@ const Soporte = {
   render() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
       const esActivo = btn.dataset.tab === this.tabActual;
-      if (esActivo) {
-        btn.style.background = '#7c3aed';
-        btn.style.color = 'white';
-        btn.style.borderColor = '#7c3aed';
-      } else {
-        btn.style.background = 'white';
-        btn.style.color = '#6b7280';
-        btn.style.borderColor = '#e5e7eb';
-      }
+      btn.style.background = esActivo ? '#7c3aed' : 'white';
+      btn.style.color = esActivo ? 'white' : '#6b7280';
+      btn.style.borderColor = esActivo ? '#7c3aed' : '#e5e7eb';
+      btn.querySelector('.count').style.background = esActivo ? 'rgba(255,255,255,0.25)' : '#f3f4f6';
+      btn.querySelector('.count').style.color = esActivo ? 'white' : '#6b7280';
     });
     document.getElementById('soporte_lista').innerHTML = this.renderReportes();
   },
@@ -76,23 +72,97 @@ const Soporte = {
   renderCard(r, index) {
     const estado = this.getEstado(r.status);
     const tiempo = this.getTiempo(r.created_at);
+    const solucion = r.provider_response || r.admin_response;
+    const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
+    
+    // Color según estado para el borde
+    const bordeColor = estado.color;
     
     return `
-      <div onclick="Soporte.verDetalle('${r.id}')" style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:12px;padding:18px 20px;cursor:pointer;transition:all 0.3s"
-        onmouseover="this.style.borderColor='#7c3aed';this.style.boxShadow='0 4px 12px rgba(124,58,237,0.15)'"
-        onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px">${escHtml(r.product_name || 'Producto')}</div>
-            <div style="font-size:13px;color:#6b7280">${escHtml(r.reason || 'Sin motivo')} · ${tiempo}</div>
+      <div onclick="Soporte.verDetalle('${r.id}')" style="background:white;border-radius:18px;margin-bottom:16px;overflow:hidden;cursor:pointer;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);border:2px solid transparent;animation:slideIn 0.5s ease ${index * 0.1}s both"
+        onmouseover="this.style.borderColor='${bordeColor}';this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px ${bordeColor}25'"
+        onmouseout="this.style.borderColor='transparent';this.style.transform='translateY(0)';this.style.boxShadow='none'">
+        
+        <!-- Barra de color arriba -->
+        <div style="height:4px;background:linear-gradient(90deg,${bordeColor},${bordeColor}80)"></div>
+        
+        <div style="padding:20px">
+          <!-- Header del reporte -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:20px">${this.getServiceIcon(r.product_name)}</span>
+                ${escHtml(r.product_name || 'Producto')}
+              </div>
+              <div style="display:inline-block;padding:6px 12px;background:#f3f4f6;border-radius:8px;font-size:13px;color:#4b5563">
+                ${escHtml(r.reason || 'Sin motivo')}
+              </div>
+            </div>
+            <div style="padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;background:${estado.bg};color:${estado.color};display:flex;align-items:center;gap:6px">
+              ${estado.icon} ${r.status}
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <span style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;background:${estado.bg};color:${estado.color}">${estado.icon} ${r.status}</span>
-            <span style="color:#9ca3af;font-size:18px">→</span>
+          
+          <!-- Descripción -->
+          ${r.description ? `
+            <div style="font-size:14px;color:#6b7280;margin-bottom:14px;line-height:1.5;padding:12px;background:#f9fafb;border-radius:10px">
+              ${escHtml(r.description)}
+            </div>
+          ` : ''}
+          
+          <!-- 💬 RESPUESTA DEL ADMINISTRADOR -->
+          ${solucion ? `
+            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:14px;padding:16px;margin-bottom:14px;position:relative">
+              <div style="position:absolute;top:-12px;left:16px;background:#10b981;color:white;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px">
+                💬 RESPUESTA DEL ADMINISTRADOR
+              </div>
+              <div style="padding-top:8px;font-size:14px;color:#065f46;line-height:1.7">
+                ${escHtml(solucion)}
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- ❌ RECHAZO -->
+          ${rechazo ? `
+            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:16px;margin-bottom:14px;position:relative">
+              <div style="position:absolute;top:-12px;left:16px;background:#ef4444;color:white;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
+                ❌ RECHAZADO
+              </div>
+              <div style="padding-top:8px;font-size:14px;color:#991b1b;line-height:1.6">
+                ${escHtml(rechazo)}
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Footer -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f3f4f6">
+            <div style="display:flex;align-items:center;gap:16px">
+              <span style="font-size:13px;color:#9ca3af;display:flex;align-items:center;gap:6px">
+                🕐 ${tiempo}
+              </span>
+              ${r.order_id ? `
+                <span style="font-size:13px;color:#9ca3af;display:flex;align-items:center;gap:6px">
+                  📦 #${r.order_id.substring(0,8)}
+                </span>
+              ` : ''}
+            </div>
+            <div style="color:#7c3aed;font-size:18px;font-weight:700">→</div>
           </div>
         </div>
       </div>
     `;
+  },
+  
+  getServiceIcon(name) {
+    if (!name) return '📦';
+    const n = name.toLowerCase();
+    if (n.includes('netflix')) return '🎬';
+    if (n.includes('spotify')) return '🎵';
+    if (n.includes('disney')) return '🏰';
+    if (n.includes('prime')) return '📺';
+    if (n.includes('hbo') || n.includes('max')) return '🎥';
+    if (n.includes('youtube')) return '▶️';
+    return '📦';
   },
   
   getTiempo(dateStr) {
@@ -165,28 +235,17 @@ const Soporte = {
           </div>
           
           <div style="display:flex;gap:10px">
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Cerrar</button>
+            <button onclick="closeModal()" style="flex:1;padding:16px;background:#7c3aed;border:none;border-radius:12px;font-size:15px;font-weight:700;color:white;cursor:pointer;transition:all 0.3s"
+              onmouseover="this.style.background='#6d28d9';this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.background='#7c3aed';this.style.transform='translateY(0)'">
+              ✓ Cerrar
+            </button>
             ${puedeEliminar ? `
-              <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:14px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;color:#dc2626;font-size:14px;font-weight:600;cursor:pointer">🗑️ Eliminar</button>
+              <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:16px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;font-size:15px;font-weight:700;color:#dc2626;cursor:pointer">
+                🗑️ Eliminar
+              </button>
             ` : ''}
           </div>
-        </div>
-      </div>
-    `);
-  },
-  
-  eliminar(id) {
-    const r = state.reports.find(x => x.id === id);
-    if (!r) { toast('No encontrado', 'bad'); return; }
-    
-    openModal(`
-      <div style="padding:32px;text-align:center">
-        <div style="font-size:56px;margin-bottom:16px">🗑️</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:8px">¿Eliminar este reporte?</div>
-        <div style="font-size:14px;color:#6b7280;margin-bottom:24px">${escHtml(r.product_name || 'Producto')}</div>
-        <div style="display:flex;gap:12px">
-          <button onclick="closeModal()" style="flex:1;padding:14px;background:white;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
-          <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:14px;background:#dc2626;border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer">🗑️ Eliminar</button>
         </div>
       </div>
     `);
@@ -217,7 +276,7 @@ const Soporte = {
     
     if (opciones.length === 0) {
       openModal(`
-        <div style="padding:32px;text-align:center">
+        <div style="padding:32px;text-align:center;background:white;border-radius:16px">
           <div style="font-size:56px;margin-bottom:16px">📦</div>
           <div style="font-size:18px;font-weight:700;margin-bottom:8px">Sin productos</div>
           <div style="font-size:14px;color:#6b7280;margin-bottom:24px">Primero compra o recibe una cuenta.</div>
@@ -310,9 +369,12 @@ function reportsUserSimple() {
   };
   
   return `
+    <style>
+      @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
     <div style="max-width:700px;margin:0 auto">
       
-      <!-- HEADER CUADRITO MORADO -->
+      <!-- HEADER MORADO -->
       <div style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden">
         <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
         <div style="position:absolute;bottom:-80px;left:-40px;width:250px;height:250px;background:rgba(255,255,255,0.05);border-radius:50%"></div>
@@ -328,26 +390,24 @@ function reportsUserSimple() {
         </div>
       </div>
       
-      <!-- TABS MORADOS -->
+      <!-- TABS -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="tab-btn" style="${Soporte.tabActual === 'pendientes' ? 'background:#7c3aed;color:white;border-color:#7c3aed' : 'background:white;color:#6b7280;border-color:#e5e7eb'}">
-          📋 Pendientes <span class="tab-count">${stats.pendientes}</span>
+        <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="tab-btn">
+          📋 Pendientes <span class="count" style="padding:4px 10px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px;font-weight:700">${stats.pendientes}</span>
         </button>
-        <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="tab-btn" style="${Soporte.tabActual === 'resueltos' ? 'background:#7c3aed;color:white;border-color:#7c3aed' : 'background:white;color:#6b7280;border-color:#e5e7eb'}">
-          ✅ Resueltos <span class="tab-count">${stats.resueltos}</span>
+        <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="tab-btn">
+          ✅ Resueltos <span class="count" style="padding:4px 10px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px;font-weight:700">${stats.resueltos}</span>
         </button>
-        <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="tab-btn" style="${Soporte.tabActual === 'rechazados' ? 'background:#7c3aed;color:white;border-color:#7c3aed' : 'background:white;color:#6b7280;border-color:#e5e7eb'}">
-          ❌ Rechazados <span class="tab-count">${stats.rechazados}</span>
+        <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="tab-btn">
+          ❌ Rechazados <span class="count" style="padding:4px 10px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px;font-weight:700">${stats.rechazados}</span>
         </button>
       </div>
       
       <style>
         .tab-btn { padding:14px 16px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#6b7280;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px }
         .tab-btn:hover { border-color:#7c3aed }
-        .tab-count { padding:3px 8px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px }
       </style>
       
-      <!-- Lista -->
       <div id="soporte_lista">${Soporte.renderReportes()}</div>
     </div>
   `;
@@ -358,4 +418,4 @@ function escHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-console.log('✅ Soporte Premium v10 - Colores morados');
+console.log('✅ Soporte Premium v11 - Con respuesta visible');
