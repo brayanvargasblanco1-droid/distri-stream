@@ -1,5 +1,5 @@
 /**
- * SOPORTE PREMIUM v11 - TARJETAS CON EFECTOS + RESPUESTA VISIBLE
+ * SOPORTE PREMIUM v12 - TU REPORTE vs RESPUESTA DEL ADMIN
  */
 
 const Soporte = {
@@ -74,8 +74,6 @@ const Soporte = {
     const tiempo = this.getTiempo(r.created_at);
     const solucion = r.provider_response || r.admin_response;
     const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
-    
-    // Color según estado para el borde
     const bordeColor = estado.color;
     
     return `
@@ -83,70 +81,67 @@ const Soporte = {
         onmouseover="this.style.borderColor='${bordeColor}';this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px ${bordeColor}25'"
         onmouseout="this.style.borderColor='transparent';this.style.transform='translateY(0)';this.style.boxShadow='none'">
         
-        <!-- Barra de color arriba -->
-        <div style="height:4px;background:linear-gradient(90deg,${bordeColor},${bordeColor}80)"></div>
+        <!-- Barra de color -->
+        <div style="height:5px;background:linear-gradient(90deg,${bordeColor},${bordeColor}80)"></div>
         
         <div style="padding:20px">
-          <!-- Header del reporte -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <!-- Header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
             <div style="flex:1">
-              <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:6px;display:flex;align-items:center;gap:10px">
-                <span style="font-size:20px">${this.getServiceIcon(r.product_name)}</span>
+              <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:22px">${this.getServiceIcon(r.product_name)}</span>
                 ${escHtml(r.product_name || 'Producto')}
               </div>
-              <div style="display:inline-block;padding:6px 12px;background:#f3f4f6;border-radius:8px;font-size:13px;color:#4b5563">
-                ${escHtml(r.reason || 'Sin motivo')}
-              </div>
+              <span style="display:inline-flex;padding:8px 14px;background:${estado.bg};color:${estado.color};border-radius:10px;font-size:13px;font-weight:700;align-items:center;gap:6px">
+                ${estado.icon} ${r.status}
+              </span>
             </div>
-            <div style="padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;background:${estado.bg};color:${estado.color};display:flex;align-items:center;gap:6px">
-              ${estado.icon} ${r.status}
-            </div>
+            <div style="color:#7c3aed;font-size:22px;font-weight:700">→</div>
           </div>
           
-          <!-- Descripción -->
-          ${r.description ? `
-            <div style="font-size:14px;color:#6b7280;margin-bottom:14px;line-height:1.5;padding:12px;background:#f9fafb;border-radius:10px">
-              ${escHtml(r.description)}
+          <!-- 📝 TU REPORTE -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+              📝 TU REPORTE
             </div>
-          ` : ''}
+            <div style="font-size:14px;color:#374151;line-height:1.6">
+              <strong style="color:#7c3aed">Problema:</strong> ${escHtml(r.reason || 'Sin motivo')}
+            </div>
+            ${r.description ? `
+              <div style="font-size:13px;color:#6b7280;margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0">
+                ${escHtml(r.description)}
+              </div>
+            ` : ''}
+          </div>
           
           <!-- 💬 RESPUESTA DEL ADMINISTRADOR -->
           ${solucion ? `
-            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:14px;padding:16px;margin-bottom:14px;position:relative">
-              <div style="position:absolute;top:-12px;left:16px;background:#10b981;color:white;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px">
+            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:12px;padding:14px;margin-bottom:12px">
+              <div style="font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
                 💬 RESPUESTA DEL ADMINISTRADOR
               </div>
-              <div style="padding-top:8px;font-size:14px;color:#065f46;line-height:1.7">
+              <div style="font-size:14px;color:#065f46;line-height:1.7">
                 ${escHtml(solucion)}
               </div>
             </div>
           ` : ''}
           
-          <!-- ❌ RECHAZO -->
+          <!-- ❌ MOTIVO DEL RECHAZO -->
           ${rechazo ? `
-            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:16px;margin-bottom:14px;position:relative">
-              <div style="position:absolute;top:-12px;left:16px;background:#ef4444;color:white;padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
-                ❌ RECHAZADO
+            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:14px;margin-bottom:12px">
+              <div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;margin-bottom:8px">
+                ❌ MOTIVO DEL RECHAZO
               </div>
-              <div style="padding-top:8px;font-size:14px;color:#991b1b;line-height:1.6">
+              <div style="font-size:14px;color:#991b1b;line-height:1.6">
                 ${escHtml(rechazo)}
               </div>
             </div>
           ` : ''}
           
           <!-- Footer -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f3f4f6">
-            <div style="display:flex;align-items:center;gap:16px">
-              <span style="font-size:13px;color:#9ca3af;display:flex;align-items:center;gap:6px">
-                🕐 ${tiempo}
-              </span>
-              ${r.order_id ? `
-                <span style="font-size:13px;color:#9ca3af;display:flex;align-items:center;gap:6px">
-                  📦 #${r.order_id.substring(0,8)}
-                </span>
-              ` : ''}
-            </div>
-            <div style="color:#7c3aed;font-size:18px;font-weight:700">→</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f1f5f9">
+            <span style="font-size:12px;color:#94a3b8">🕐 ${tiempo}</span>
+            ${r.order_id ? `<span style="font-size:12px;color:#94a3b8">📦 #${r.order_id.substring(0,8)}</span>` : ''}
           </div>
         </div>
       </div>
@@ -189,46 +184,45 @@ const Soporte = {
     openModal(`
       <div style="background:white;border-radius:20px;overflow:hidden">
         <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:24px;text-align:center;color:white">
-          <div style="font-size:40px;margin-bottom:8px">${estado.icon}</div>
+          <div style="font-size:40px;margin-bottom:8px">${this.getServiceIcon(r.product_name)}</div>
           <div style="font-size:22px;font-weight:800;margin-bottom:4px">${escHtml(r.product_name || 'Producto')}</div>
-          <div style="font-size:14px;opacity:0.9">${r.status}</div>
+          <div style="font-size:14px;opacity:0.9;display:flex;align-items:center;justify-content:center;gap:8px">
+            ${estado.icon} ${r.status}
+          </div>
         </div>
         
         <div style="padding:20px">
-          <div style="margin-bottom:16px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">📋 MOTIVO</div>
-            <div style="padding:12px;background:#f9fafb;border-radius:10px;font-size:14px">${escHtml(r.reason || 'Sin motivo')}</div>
+          <!-- 📝 TU REPORTE -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px">
+            <div style="font-size:10px;font-weight:800;color:#7c3aed;text-transform:uppercase;margin-bottom:10px">📝 TU REPORTE</div>
+            <div style="font-size:15px;color:#374151;margin-bottom:8px"><strong>Problema:</strong> ${escHtml(r.reason || 'Sin motivo')}</div>
+            ${r.description ? `<div style="font-size:14px;color:#6b7280;line-height:1.6">${escHtml(r.description)}</div>` : ''}
           </div>
           
-          ${r.description ? `
-            <div style="margin-bottom:16px">
-              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">📄 DESCRIPCIÓN</div>
-              <div style="padding:12px;background:#f9fafb;border-radius:10px;font-size:14px;line-height:1.5">${escHtml(r.description)}</div>
-            </div>
-          ` : ''}
-          
+          <!-- 💬 RESPUESTA DEL ADMINISTRADOR -->
           ${solucion ? `
-            <div style="margin-bottom:16px">
-              <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:6px">💬 RESPUESTA</div>
-              <div style="padding:16px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;font-size:14px;line-height:1.6;color:#065f46">${escHtml(solucion)}</div>
+            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid #6ee7b7;border-radius:12px;padding:16px;margin-bottom:16px">
+              <div style="font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;margin-bottom:10px">💬 RESPUESTA DEL ADMINISTRADOR</div>
+              <div style="font-size:15px;color:#065f46;line-height:1.7">${escHtml(solucion)}</div>
             </div>
           ` : ''}
           
+          <!-- ❌ RECHAZO -->
           ${rechazo ? `
-            <div style="margin-bottom:16px">
-              <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;margin-bottom:6px">❌ RECHAZADO</div>
-              <div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;font-size:14px;line-height:1.6;color:#991b1b">${escHtml(rechazo)}</div>
+            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:16px">
+              <div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;margin-bottom:10px">❌ MOTIVO DEL RECHAZO</div>
+              <div style="font-size:14px;color:#991b1b;line-height:1.6">${escHtml(rechazo)}</div>
             </div>
           ` : ''}
           
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-            <div style="padding:12px;background:#f9fafb;border-radius:10px;text-align:center">
-              <div style="font-size:10px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">📅 CREADO</div>
+            <div style="padding:14px;background:#f8fafc;border-radius:10px;text-align:center">
+              <div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px">📅 Creado</div>
               <div style="font-size:13px;font-weight:600">${fecha}</div>
             </div>
             ${r.order_id ? `
-              <div style="padding:12px;background:#f9fafb;border-radius:10px;text-align:center">
-                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">📦 PEDIDO</div>
+              <div style="padding:14px;background:#f8fafc;border-radius:10px;text-align:center">
+                <div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px">📦 Pedido</div>
                 <div style="font-size:13px;font-weight:600;font-family:monospace">#${r.order_id.substring(0,8)}</div>
               </div>
             ` : '<div></div>'}
@@ -236,8 +230,8 @@ const Soporte = {
           
           <div style="display:flex;gap:10px">
             <button onclick="closeModal()" style="flex:1;padding:16px;background:#7c3aed;border:none;border-radius:12px;font-size:15px;font-weight:700;color:white;cursor:pointer;transition:all 0.3s"
-              onmouseover="this.style.background='#6d28d9';this.style.transform='translateY(-2px)'"
-              onmouseout="this.style.background='#7c3aed';this.style.transform='translateY(0)'">
+              onmouseover="this.style.background='#6d28d9'"
+              onmouseout="this.style.background='#7c3aed'">
               ✓ Cerrar
             </button>
             ${puedeEliminar ? `
@@ -418,4 +412,4 @@ function escHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-console.log('✅ Soporte Premium v11 - Con respuesta visible');
+console.log('✅ Soporte Premium v12 - Tu Reporte vs Respuesta');
