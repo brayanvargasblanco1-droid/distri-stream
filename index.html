@@ -11,9 +11,9 @@
   <meta property="og:title" content="Distrito Streaming - Gestión de Cuentas Streaming" />
   <meta property="og:description" content="Panel de gestión para revendedores y clientes de streaming. Compra, vende y administra cuentas." />
   <meta property="og:type" content="website" />
-  <link rel="icon" type="image/png" href="assets/distrito-angel-blue-v1.png" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230877ff' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'%3EDS%3C/text%3E%3C/svg%3E" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="assets/distrito-angel-blue-v1.png" id="appleTouchIcon" />
+  <link rel="apple-touch-icon" href="assets/distrito-login-brand.png" id="appleTouchIcon" />
   <title>Distrito Streaming - Panel de Gestión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8188,7 +8188,7 @@
       setTimeout(() => {
         localStorage.dsDark = isDark ? "0" : "1";
         const icon = document.getElementById('appleTouchIcon');
-        if(icon) icon.href = isDark ? "assets/distrito-angel-white.png" : "assets/distrito-angel-blue-v1.png";
+        if(icon) icon.href = "assets/distrito-login-brand.png";
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 300);
         renderApp();
@@ -8657,7 +8657,7 @@
     if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));navigator.serviceWorker.register("sw.js").catch(()=>{})}
 
     // ─── INIT ──────────────────────────────────────────
-    const icon=document.getElementById('appleTouchIcon');if(icon)icon.href=localStorage.dsDark==="1"?"assets/distrito-angel-blue-v1.png":"assets/distrito-angel-white.png";
+    const icon=document.getElementById('appleTouchIcon');if(icon)icon.href="assets/distrito-login-brand.png";
     token ? boot().catch(()=>{localStorage.removeItem("dsToken");token="";renderLogin()}) : renderLogin();
   
     
