@@ -6,5 +6,8 @@
   "scripts": {
     "build": "node -e \"console.log('Distrito Streaming listo para Vercel')\"",
     "start": "npx serve ."
+  },
+  "devDependencies": {
+    "vercel": "^58.8.0"
   }
 }
