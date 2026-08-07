@@ -1,19 +1,20 @@
 /**
- * SOPORTE PREMIUM v13 - ICONOS OFICIALES + RESPUESTA MUY VISIBLE
+ * SOPORTE PREMIUM v14 - DISEÑO PREMIUM 2026
+ * Aesthetic: Cloud + AI + Futuristic Professional
  */
 
 const Soporte = {
   tabActual: 'pendientes',
   
   estados: {
-    'Abierto': { color: '#7c3aed', bg: '#f5f3ff', icon: '📋' },
-    'En revisión': { color: '#f59e0b', bg: '#fffbeb', icon: '🔍' },
-    'En proceso': { color: '#8b5cf6', bg: '#f5f3ff', icon: '⚙️' },
-    'Resuelto': { color: '#10b981', bg: '#ecfdf5', icon: '✅' },
-    'Rechazado': { color: '#ef4444', bg: '#fef2f2', icon: '❌' }
+    'Abierto': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: '#a78bfa', icon: '📋', glow: 'rgba(139,92,246,0.3)' },
+    'En revisión': { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: '#fbbf24', icon: '🔍', glow: 'rgba(245,158,11,0.3)' },
+    'En proceso': { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', border: '#22d3ee', icon: '⚙️', glow: 'rgba(6,182,212,0.3)' },
+    'Resuelto': { color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: '#34d399', icon: '✅', glow: 'rgba(16,185,129,0.3)' },
+    'Rechazado': { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: '#f87171', icon: '❌', glow: 'rgba(239,68,68,0.3)' }
   },
   
-  getEstado(s) { return this.estados[s] || { color: '#7c3aed', bg: '#f5f3ff', icon: '📌' }; },
+  getEstado(s) { return this.estados[s] || { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', border: '#9ca3af', icon: '📌', glow: 'rgba(107,114,128,0.3)' }; },
   
   puedeEliminar(r) {
     if (!r || !state.user) return false;
@@ -37,15 +38,25 @@ const Soporte = {
   },
   
   render() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.s-tab').forEach(btn => {
       const esActivo = btn.dataset.tab === this.tabActual;
-      btn.style.background = esActivo ? '#7c3aed' : 'white';
-      btn.style.color = esActivo ? 'white' : '#6b7280';
-      btn.style.borderColor = esActivo ? '#7c3aed' : '#e5e7eb';
-      btn.querySelector('.count').style.background = esActivo ? 'rgba(255,255,255,0.25)' : '#f3f4f6';
-      btn.querySelector('.count').style.color = esActivo ? 'white' : '#6b7280';
+      if (esActivo) {
+        btn.style.background = 'linear-gradient(135deg, #7c3aed, #6d28d9)';
+        btn.style.color = 'white';
+        btn.style.borderColor = '#7c3aed';
+        btn.style.boxShadow = '0 8px 25px rgba(124, 58, 237, 0.4)';
+        btn.querySelector('.s-count').style.background = 'rgba(255,255,255,0.25)';
+        btn.querySelector('.s-count').style.color = 'white';
+      } else {
+        btn.style.background = 'rgba(255,255,255,0.8)';
+        btn.style.color = '#64748b';
+        btn.style.borderColor = 'rgba(148,163,184,0.3)';
+        btn.style.boxShadow = 'none';
+        btn.querySelector('.s-count').style.background = '#f1f5f9';
+        btn.querySelector('.s-count').style.color = '#64748b';
+      }
     });
-    document.getElementById('soporte_lista').innerHTML = this.renderReportes();
+    document.getElementById('s-lista').innerHTML = this.renderReportes();
   },
   
   renderReportes() {
@@ -53,88 +64,103 @@ const Soporte = {
     
     if (reportes.length === 0) {
       const info = {
-        pendientes: { icon: '📋', titulo: 'No hay reportes pendientes' },
-        resueltos: { icon: '✅', titulo: 'No hay reportes resueltos' },
-        rechazados: { icon: '❌', titulo: 'No hay reportes rechazados' }
+        pendientes: { icon: '📋', title: 'Sin reportes pendientes', sub: 'Todo está en orden 👍' },
+        resueltos: { icon: '✅', title: 'Sin reportes resueltos', sub: 'Los resueltos aparecerán aquí' },
+        rechazados: { icon: '❌', title: 'Sin reportes rechazados', sub: 'Los rechazados aparecerán aquí' }
       };
       const i = info[this.tabActual];
       return `
-        <div style="text-align:center;padding:60px 20px;background:white;border-radius:16px;border:2px dashed #e5e7eb">
-          <div style="font-size:64px;margin-bottom:16px">${i.icon}</div>
-          <div style="font-size:18px;font-weight:700;color:#111827">${i.titulo}</div>
+        <div class="s-empty">
+          <div class="s-empty-icon">${i.icon}</div>
+          <div class="s-empty-title">${i.title}</div>
+          <div class="s-empty-sub">${i.sub}</div>
         </div>
       `;
     }
     
-    return reportes.map((r, i) => this.renderCard(r, i)).join('');
+    return reportes.map((r, idx) => this.renderCard(r, idx)).join('');
   },
   
-  renderCard(r, index) {
+  renderCard(r, idx) {
     const estado = this.getEstado(r.status);
-    const tiempo = this.getTiempo(r.created_at);
     const solucion = r.provider_response || r.admin_response;
     const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
-    const bordeColor = estado.color;
+    const tiempo = this.getTiempo(r.created_at);
     
     return `
-      <div onclick="Soporte.verDetalle('${r.id}')" style="background:white;border-radius:18px;margin-bottom:16px;overflow:hidden;cursor:pointer;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);border:2px solid transparent;animation:slideIn 0.5s ease ${index * 0.1}s both"
-        onmouseover="this.style.borderColor='${bordeColor}';this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px ${bordeColor}25'"
-        onmouseout="this.style.borderColor='transparent';this.style.transform='translateY(0)';this.style.boxShadow='none'">
+      <div class="s-card" style="--glow: ${estado.glow}; --accent: ${estado.color}; animation-delay: ${idx * 0.08}s"
+           onclick="Soporte.verDetalle('${r.id}')">
         
-        <!-- Barra de color -->
-        <div style="height:5px;background:linear-gradient(90deg,${bordeColor},${bordeColor}80)"></div>
+        <!-- Glow effect -->
+        <div class="s-card-glow"></div>
         
-        <div style="padding:20px">
-          <!-- Header con icono oficial -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <div style="display:flex;align-items:center;gap:12px">
+        <!-- Border gradient -->
+        <div class="s-card-border" style="--c1: ${estado.color}"></div>
+        
+        <div class="s-card-content">
+          <!-- Header -->
+          <div class="s-card-header">
+            <div class="s-card-product">
               ${smallLogo(r.product_name || '')}
               <div>
-                <div style="font-size:17px;font-weight:800;color:#111827">${escHtml(r.product_name || 'Producto')}</div>
-                <div style="font-size:12px;color:#6b7280">${escHtml(r.reason || 'Sin motivo')}</div>
+                <div class="s-card-name">${escHtml(r.product_name || 'Producto')}</div>
+                <div class="s-card-reason">${escHtml(r.reason || 'Sin motivo')}</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;background:${estado.bg};color:${estado.color}">${estado.icon} ${r.status}</span>
-              <span style="color:#7c3aed;font-size:20px">→</span>
+            <div class="s-card-status" style="--c: ${estado.color}">
+              <span class="s-status-icon">${estado.icon}</span>
+              <span class="s-status-text">${r.status}</span>
             </div>
           </div>
           
-          <!-- 📝 TU REPORTE -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:12px">
-            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:8px">📝 TU REPORTE</div>
-            <div style="font-size:14px;color:#374151">${escHtml(r.description || r.reason || 'Sin descripción')}</div>
+          <!-- TU REPORTE -->
+          <div class="s-tu-reporte">
+            <div class="s-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              TU REPORTE
+            </div>
+            <div class="s-tu-texto">${escHtml(r.description || r.reason || 'Sin descripción')}</div>
           </div>
           
-          <!-- 💬💬💬 RESPUESTA DEL ADMINISTRADOR - MUY VISIBLE 💬💬💬 -->
+          <!-- 💬 RESPUESTA DEL ADMIN - PREMIUM -->
           ${solucion ? `
-            <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;padding:18px;margin-bottom:12px;position:relative;box-shadow:0 4px 15px rgba(16,185,129,0.3)">
-              <div style="position:absolute;top:-1px;left:0;right:0;height:4px;background:linear-gradient(90deg,#34d399,#10b981);border-radius:14px 14px 0 0"></div>
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-                <span style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px">👨‍💼</span>
-                <div>
-                  <div style="font-size:12px;font-weight:800;color:white;text-transform:uppercase">Respuesta del Administrador</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,0.8)">Solución a tu reporte</div>
+            <div class="s-admin-response">
+              <div class="s-admin-header">
+                <div class="s-admin-avatar">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="s-admin-info">
+                  <span class="s-admin-title">Respuesta del Administrador</span>
+                  <span class="s-admin-sub">Solución a tu reporte</span>
+                </div>
+                <div class="s-admin-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 12 4 4 9"/><path d="M20 6 9 12 20 4 9"/></svg>
                 </div>
               </div>
-              <div style="font-size:15px;color:white;line-height:1.7;background:rgba(255,255,255,0.15);padding:14px;border-radius:10px">
-                ${escHtml(solucion)}
-              </div>
+              <div class="s-admin-texto">${escHtml(solucion)}</div>
             </div>
           ` : ''}
           
           <!-- ❌ RECHAZO -->
           ${rechazo ? `
-            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:14px;margin-bottom:12px">
-              <div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;margin-bottom:8px">❌ MOTIVO DEL RECHAZO</div>
-              <div style="font-size:14px;color:#991b1b;line-height:1.6">${escHtml(rechazo)}</div>
+            <div class="s-rechazo">
+              <div class="s-rechazo-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                Motivo del Rechazo
+              </div>
+              <div class="s-rechazo-texto">${escHtml(rechazo)}</div>
             </div>
           ` : ''}
           
           <!-- Footer -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f1f5f9">
-            <span style="font-size:12px;color:#94a3b8">🕐 ${tiempo}</span>
-            ${r.order_id ? `<span style="font-size:12px;color:#94a3b8">📦 #${r.order_id.substring(0,8)}</span>` : ''}
+          <div class="s-card-footer">
+            <div class="s-card-meta">
+              <span>🕐 ${tiempo}</span>
+              ${r.order_id ? `<span>📦 #${r.order_id.substring(0,8)}</span>` : ''}
+            </div>
+            <div class="s-card-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
           </div>
         </div>
       </div>
@@ -163,67 +189,60 @@ const Soporte = {
     const fecha = new Date(r.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
     
     openModal(`
-      <div style="background:white;border-radius:20px;overflow:hidden">
-        <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:24px;text-align:center;color:white">
-          <div style="display:flex;justify-content:center;margin-bottom:12px">${smallLogo(r.product_name || '')}</div>
-          <div style="font-size:22px;font-weight:800;margin-bottom:4px">${escHtml(r.product_name || 'Producto')}</div>
-          <div style="font-size:14px;opacity:0.9;display:flex;align-items:center;justify-content:center;gap:8px">${estado.icon} ${r.status}</div>
+      <div class="s-modal">
+        <div class="s-modal-header" style="--c: ${estado.color}">
+          <div class="s-modal-logo">${smallLogo(r.product_name || '')}</div>
+          <div class="s-modal-title">${escHtml(r.product_name || 'Producto')}</div>
+          <div class="s-modal-status">
+            <span>${estado.icon}</span>
+            <span>${r.status}</span>
+          </div>
         </div>
         
-        <div style="padding:20px">
+        <div class="s-modal-body">
           <!-- TU REPORTE -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px">
-            <div style="font-size:10px;font-weight:800;color:#7c3aed;text-transform:uppercase;margin-bottom:10px">📝 TU REPORTE</div>
-            <div style="font-size:15px;color:#374151;margin-bottom:8px"><strong>Problema:</strong> ${escHtml(r.reason || 'Sin motivo')}</div>
-            ${r.description ? `<div style="font-size:14px;color:#6b7280;line-height:1.6">${escHtml(r.description)}</div>` : ''}
+          <div class="s-modal-section">
+            <div class="s-modal-label">📝 TU REPORTE</div>
+            <div class="s-modal-tu">
+              <div class="s-modal-problema"><strong>Problema:</strong> ${escHtml(r.reason || 'Sin motivo')}</div>
+              ${r.description ? `<div class="s-modal-desc">${escHtml(r.description)}</div>` : ''}
+            </div>
           </div>
           
-          <!-- 💬 RESPUESTA DEL ADMIN - MUY VISIBLE -->
+          <!-- 💬 RESPUESTA -->
           ${solucion ? `
-            <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 4px 15px rgba(16,185,129,0.3)">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-                <span style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px">👨‍💼</span>
-                <div>
-                  <div style="font-size:13px;font-weight:800;color:white;text-transform:uppercase">Respuesta del Administrador</div>
-                  <div style="font-size:12px;color:rgba(255,255,255,0.8)">Solución a tu reporte</div>
+            <div class="s-modal-section s-modal-response">
+              <div class="s-modal-label s-modal-label-green">💬 RESPUESTA DEL ADMINISTRADOR</div>
+              <div class="s-modal-response-box">
+                <div class="s-modal-admin">
+                  <div class="s-modal-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                  <span>Administrador</span>
                 </div>
-              </div>
-              <div style="font-size:16px;color:white;line-height:1.8;background:rgba(255,255,255,0.15);padding:16px;border-radius:10px">
-                ${escHtml(solucion)}
+                <div class="s-modal-texto">${escHtml(solucion)}</div>
               </div>
             </div>
           ` : ''}
           
-          <!-- RECHAZO -->
+          <!-- ❌ RECHAZO -->
           ${rechazo ? `
-            <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:16px">
-              <div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;margin-bottom:10px">❌ MOTIVO DEL RECHAZO</div>
-              <div style="font-size:14px;color:#991b1b;line-height:1.6">${escHtml(rechazo)}</div>
+            <div class="s-modal-section">
+              <div class="s-modal-label s-modal-label-red">❌ MOTIVO DEL RECHAZO</div>
+              <div class="s-modal-rechazo">${escHtml(rechazo)}</div>
             </div>
           ` : ''}
           
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-            <div style="padding:14px;background:#f8fafc;border-radius:10px;text-align:center">
-              <div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px">📅 Creado</div>
-              <div style="font-size:13px;font-weight:600">${fecha}</div>
-            </div>
-            ${r.order_id ? `
-              <div style="padding:14px;background:#f8fafc;border-radius:10px;text-align:center">
-                <div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:4px">📦 Pedido</div>
-                <div style="font-size:13px;font-weight:600;font-family:monospace">#${r.order_id.substring(0,8)}</div>
-              </div>
-            ` : '<div></div>'}
+          <!-- Info -->
+          <div class="s-modal-info">
+            <div><span>📅 Creado</span><strong>${fecha}</strong></div>
+            ${r.order_id ? `<div><span>📦 Pedido</span><strong>#${r.order_id.substring(0,8)}</strong></div>` : ''}
           </div>
           
-          <div style="display:flex;gap:10px">
-            <button onclick="closeModal()" style="flex:1;padding:16px;background:#7c3aed;border:none;border-radius:12px;font-size:15px;font-weight:700;color:white;cursor:pointer">
-              ✓ Cerrar
-            </button>
-            ${puedeEliminar ? `
-              <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:16px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;font-size:15px;font-weight:700;color:#dc2626;cursor:pointer">
-                🗑️ Eliminar
-              </button>
-            ` : ''}
+          <!-- Botones -->
+          <div class="s-modal-actions">
+            <button class="s-btn-cerrar" onclick="closeModal()">✓ Cerrar</button>
+            ${puedeEliminar ? `<button class="s-btn-eliminar" onclick="Soporte.confirmarEliminar('${r.id}')">🗑️</button>` : ''}
           </div>
         </div>
       </div>
@@ -254,27 +273,27 @@ const Soporte = {
     ordenes.forEach(o => { if (!seen.has(o.product_name)) { seen.add(o.product_name); opciones.push({ name: o.product_name, id: o.id }); } });
     
     if (opciones.length === 0) {
-      openModal(`<div style="padding:32px;text-align:center;background:white;border-radius:16px"><div style="font-size:56px;margin-bottom:16px">📦</div><div style="font-size:18px;font-weight:700;margin-bottom:8px">Sin productos</div><div style="font-size:14px;color:#6b7280;margin-bottom:24px">Primero compra o recibe una cuenta.</div><button onclick="closeModal()" style="padding:12px 24px;background:#7c3aed;border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer">Entendido</button></div>`);
+      openModal(`<div class="s-modal-empty"><div class="s-empty-icon">📦</div><div class="s-empty-title">Sin productos</div><div class="s-empty-sub">Primero compra o recibe una cuenta.</div><button class="s-btn-primary" onclick="closeModal()">Entendido</button></div>`);
       return;
     }
     
     openModal(`
-      <div style="background:white;border-radius:20px;overflow:hidden">
-        <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:24px;text-align:center;color:white">
-          <div style="font-size:32px;margin-bottom:8px">➕</div>
-          <div style="font-size:18px;font-weight:700">Nuevo Reporte</div>
+      <div class="s-modal">
+        <div class="s-modal-header s-modal-header-create">
+          <div class="s-modal-icon">➕</div>
+          <div class="s-modal-title">Nuevo Reporte</div>
         </div>
-        <div style="padding:24px">
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px">📦 Producto</label>
-            <select id="crear_producto" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px">
+        <div class="s-modal-body">
+          <div class="s-form-group">
+            <label class="s-form-label">📦 Producto</label>
+            <select id="crear_producto" class="s-form-select">
               <option value="">Selecciona...</option>
               ${opciones.map(o => `<option value="${o.id}|${o.name}">${o.name}</option>`).join('')}
             </select>
           </div>
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px">📋 Problema</label>
-            <select id="crear_categoria" style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px">
+          <div class="s-form-group">
+            <label class="s-form-label">📋 Problema</label>
+            <select id="crear_categoria" class="s-form-select">
               <option value="">Selecciona...</option>
               <option value="Producto no llegó">📦 Producto no llegó</option>
               <option value="Defectuoso">⚠️ Defectuoso</option>
@@ -282,13 +301,13 @@ const Soporte = {
               <option value="Otro">❓ Otro</option>
             </select>
           </div>
-          <div style="margin-bottom:20px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px">📝 Describe qué pasó</label>
-            <textarea id="crear_descripcion" rows="4" placeholder="Cuéntanos qué pasó..." style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;resize:vertical"></textarea>
+          <div class="s-form-group">
+            <label class="s-form-label">📝 Describe qué pasó</label>
+            <textarea id="crear_descripcion" class="s-form-textarea" rows="4" placeholder="Cuéntanos qué pasó..."></textarea>
           </div>
-          <div style="display:flex;gap:12px">
-            <button onclick="closeModal()" style="flex:1;padding:14px;background:white;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
-            <button onclick="Soporte.crearReporte()" style="flex:1;padding:14px;background:#7c3aed;border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer">Crear</button>
+          <div class="s-modal-actions">
+            <button class="s-btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="s-btn-primary" onclick="Soporte.crearReporte()">Crear</button>
           </div>
         </div>
       </div>
@@ -320,7 +339,301 @@ const Soporte = {
   }
 };
 
-// RENDER PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════════════════
+// CSS PREMIUM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const SoporteCSS = `
+<style>
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+@keyframes pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+.s-container { max-width: 720px; margin: 0 auto; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+/* HEADER PREMIUM */
+.s-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  border-radius: 28px;
+  padding: 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(67, 56, 202, 0.4);
+}
+.s-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.4) 0%, transparent 70%);
+  animation: pulse 4s ease-in-out infinite;
+}
+.s-header::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -100px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+  animation: pulse 5s ease-in-out infinite reverse;
+}
+.s-header-content { position: relative; z-index: 1; }
+.s-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+.s-header-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+.s-header-title { font-size: 32px; font-weight: 800; color: white; margin: 0; }
+.s-header-btn {
+  padding: 16px 28px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 16px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.s-header-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+
+/* TABS */
+.s-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.s-tab {
+  padding: 18px 20px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+.s-tab:hover { transform: translateY(-2px); }
+.s-count { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+/* CARD */
+.s-card {
+  background: white;
+  border-radius: 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.s-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px var(--glow); }
+.s-card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, var(--glow) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.s-card:hover .s-card-glow { opacity: 0.3; }
+.s-card-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--c1), var(--c1), transparent);
+}
+.s-card-content { padding: 24px; position: relative; z-index: 1; }
+.s-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.s-card-product { display: flex; align-items: center; gap: 14px; }
+.s-card-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+.s-card-reason { font-size: 13px; color: #64748b; }
+.s-card-status {
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--c);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* TU REPORTE */
+.s-tu-reporte {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.s-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.s-tu-texto { font-size: 14px; color: #334155; line-height: 1.6; }
+
+/* ADMIN RESPONSE - PREMIUM */
+.s-admin-response {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.35);
+}
+.s-admin-response::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #34d399, #10b981, #059669);
+}
+.s-admin-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.s-admin-avatar {
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.s-admin-info { flex: 1; }
+.s-admin-title { display: block; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+.s-admin-sub { font-size: 11px; color: rgba(255,255,255,0.8); }
+.s-admin-badge {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.s-admin-texto {
+  background: rgba(255,255,255,0.15);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 15px;
+  color: white;
+  line-height: 1.7;
+}
+
+/* RECHAZO */
+.s-rechazo { background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+.s-rechazo-header { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.s-rechazo-texto { font-size: 14px; color: #991b1b; line-height: 1.6; }
+
+/* FOOTER */
+.s-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.s-card-meta { font-size: 12px; color: #94a3b8; display: flex; gap: 16px; }
+.s-card-arrow { color: #7c3aed; font-size: 20px; font-weight: 700; transition: transform 0.3s; }
+.s-card:hover .s-card-arrow { transform: translateX(4px); }
+
+/* EMPTY */
+.s-empty { text-align: center; padding: 80px 40px; background: white; border-radius: 24px; border: 2px dashed #e2e8f0; }
+.s-empty-icon { font-size: 72px; margin-bottom: 20px; }
+.s-empty-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.s-empty-sub { font-size: 14px; color: #64748b; }
+
+/* MODAL */
+.s-modal { background: white; border-radius: 28px; overflow: hidden; }
+.s-modal-header {
+  padding: 32px;
+  background: linear-gradient(135deg, var(--c), var(--c));
+  text-align: center;
+  color: white;
+  position: relative;
+}
+.s-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: white;
+  border-radius: 50% 50% 0 0;
+}
+.s-modal-header-create { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+.s-modal-icon { font-size: 40px; margin-bottom: 8px; }
+.s-modal-logo { margin-bottom: 12px; display: flex; justify-content: center; }
+.s-modal-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.s-modal-status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 14px; font-weight: 600; }
+.s-modal-body { padding: 28px; position: relative; z-index: 1; }
+.s-modal-section { margin-bottom: 24px; }
+.s-modal-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.s-modal-label-green { color: #059669; }
+.s-modal-label-red { color: #dc2626; }
+.s-modal-tu { background: #f8fafc; border-radius: 16px; padding: 16px; }
+.s-modal-problema { font-size: 15px; color: #334155; margin-bottom: 8px; }
+.s-modal-desc { font-size: 14px; color: #64748b; line-height: 1.6; }
+.s-modal-response-box { background: linear-gradient(135deg, #10b981, #059669); border-radius: 16px; padding: 20px; }
+.s-modal-admin { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.s-modal-avatar { width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+.s-modal-admin span { color: white; font-weight: 700; font-size: 14px; }
+.s-modal-texto { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 14px; font-size: 15px; color: white; line-height: 1.7; }
+.s-modal-rechazo { background: #fef2f2; border-radius: 16px; padding: 16px; font-size: 14px; color: #991b1b; line-height: 1.6; }
+.s-modal-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.s-modal-info div { background: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; }
+.s-modal-info span { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+.s-modal-info strong { font-size: 14px; color: #0f172a; }
+.s-modal-actions { display: flex; gap: 12px; }
+.s-btn-cerrar { flex: 1; padding: 16px; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 14px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.s-btn-cerrar:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); }
+.s-btn-eliminar { padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; color: #dc2626; font-size: 15px; font-weight: 700; cursor: pointer; }
+.s-btn-eliminar:hover { background: #dc2626; color: white; }
+.s-btn-primary { padding: 14px 28px; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; }
+.s-btn-cancel { flex: 1; padding: 14px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+/* FORM */
+.s-form-group { margin-bottom: 20px; }
+.s-form-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.s-form-select, .s-form-textarea { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: white; transition: all 0.3s; }
+.s-form-select:focus, .s-form-textarea:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1); }
+
+/* EMPTY MODAL */
+.s-modal-empty { padding: 48px; text-align: center; background: white; border-radius: 20px; }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .s-header { padding: 24px; border-radius: 20px; }
+  .s-header-title { font-size: 24px; }
+  .s-tabs { grid-template-columns: 1fr; }
+  .s-card-content { padding: 18px; }
+  .s-modal-info { grid-template-columns: 1fr; }
+  .s-modal-actions { flex-direction: column; }
+}
+</style>`;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
 function reportsUserSimple() {
   const stats = {
     pendientes: (state.reports || []).filter(r => !['Resuelto', 'Rechazado'].includes(r.status)).length,
@@ -328,41 +641,50 @@ function reportsUserSimple() {
     rechazados: (state.reports || []).filter(r => r.status === 'Rechazado').length
   };
   
-  return `
-    <style>@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }</style>
-    <div style="max-width:700px;margin:0 auto">
+  return SoporteCSS + `
+    <div class="s-container">
       
-      <!-- HEADER MORADO -->
-      <div style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
-        <div style="position:absolute;bottom:-80px;left:-40px;width:250px;height:250px;background:rgba(255,255,255,0.05);border-radius:50%"></div>
-        <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-          <div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">Centro de Soporte</div>
-            <h1 style="font-size:26px;font-weight:800;color:white;margin:0">Mis Reportes</h1>
+      <!-- HEADER PREMIUM -->
+      <div class="s-header">
+        <div class="s-header-content">
+          <div class="s-header-top">
+            <div>
+              <div class="s-header-label">Centro de Soporte</div>
+              <h1 class="s-header-title">Mis Reportes</h1>
+            </div>
+            <button class="s-header-btn" onclick="Soporte.mostrarCrear()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Nuevo Reporte
+            </button>
           </div>
-          <button onclick="Soporte.mostrarCrear()" style="padding:14px 24px;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);border-radius:14px;color:white;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px">➕ Nuevo</button>
         </div>
       </div>
       
       <!-- TABS -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="tab-btn">📋 Pendientes <span class="count">${stats.pendientes}</span></button>
-        <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="tab-btn">✅ Resueltos <span class="count">${stats.resueltos}</span></button>
-        <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="tab-btn">❌ Rechazados <span class="count">${stats.rechazados}</span></button>
+      <div class="s-tabs">
+        <button class="s-tab s-tab-active" data-tab="pendientes" onclick="Soporte.cambiarTab('pendientes')">
+          📋 Pendientes <span class="s-count">${stats.pendientes}</span>
+        </button>
+        <button class="s-tab" data-tab="resueltos" onclick="Soporte.cambiarTab('resueltos')">
+          ✅ Resueltos <span class="s-count">${stats.resueltos}</span>
+        </button>
+        <button class="s-tab" data-tab="rechazados" onclick="Soporte.cambiarTab('rechazados')">
+          ❌ Rechazados <span class="s-count">${stats.rechazados}</span>
+        </button>
       </div>
       
-      <style>
-        .tab-btn { padding:14px 16px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#6b7280;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px }
-        .tab-btn:hover { border-color:#7c3aed }
-        .count { padding:4px 10px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px;font-weight:700 }
-      </style>
-      
-      <div id="soporte_lista">${Soporte.renderReportes()}</div>
+      <div id="s-lista">${Soporte.renderReportes()}</div>
     </div>
+    <script>
+      // Fix tab active
+      document.querySelectorAll('.s-tab').forEach(btn => {
+        btn.classList.remove('s-tab-active');
+        if (btn.dataset.tab === 'pendientes') btn.classList.add('s-tab-active');
+      });
+    </script>
   `;
 }
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-console.log('✅ Soporte Premium v13 - Iconos oficiales + Respuesta muy visible');
+console.log('✅ Soporte Premium v14 - Diseño Premium 2026');
