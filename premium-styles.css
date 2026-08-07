@@ -1307,5 +1307,157 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   20. ENHANCED DARK MODE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+body.dark {
+  --bg: #0a0f1a;
+  --panel: #111827;
+  --soft: #1f2937;
+  --line: #374151;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --surface-glass: rgba(17, 24, 39, 0.85);
+  color-scheme: dark;
+}
+
+body.dark .app-bg::before {
+  background: 
+    radial-gradient(ellipse at 20% 0%, rgba(8, 119, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
+}
+
+body.dark .app-bg::after {
+  background: 
+    radial-gradient(ellipse at 30% 20%, rgba(8, 119, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 70%, rgba(124, 58, 237, 0.03) 0%, transparent 40%);
+}
+
+body.dark .card,
+body.dark .expiring-card,
+body.dark .compras-card,
+body.dark .activity-card,
+body.dark .movements-card {
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(55, 65, 81, 0.5);
+  backdrop-filter: blur(16px);
+}
+
+body.dark .card:hover,
+body.dark .expiring-card:hover,
+body.dark .compras-card:hover {
+  border-color: rgba(8, 119, 255, 0.3);
+  background: rgba(17, 24, 39, 0.95);
+}
+
+body.dark .card .card-header,
+body.dark .expiring-card .card-header,
+body.dark .compras-card .card-header {
+  background: linear-gradient(180deg, rgba(55, 65, 81, 0.3) 0%, transparent 100%);
+  border-color: rgba(55, 65, 81, 0.5);
+}
+
+body.dark .card .card-header h2,
+body.dark .expiring-card .card-header h2,
+body.dark .compras-card .card-header h2 {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+body.dark .table-premium td,
+body.dark .expiring-table td,
+body.dark .table-purple td {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(55, 65, 81, 0.3);
+}
+
+body.dark .table-premium tr:hover td,
+body.dark .expiring-table tr:hover td,
+body.dark .table-purple tr:hover td {
+  background: rgba(8, 119, 255, 0.08);
+}
+
+body.dark .field {
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(55, 65, 81, 0.6);
+}
+
+body.dark .field:focus-within {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 4px rgba(8, 119, 255, 0.15);
+}
+
+body.dark .field input { color: #f3f4f6; }
+body.dark .field svg { stroke: #9ca3af; }
+body.dark .field:focus-within svg { stroke: var(--primary-light); }
+
+body.dark .modal-content {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(55, 65, 81, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   21. SCROLLBAR PREMIUM
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(8, 119, 255, 0.3), rgba(124, 58, 237, 0.3));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(8, 119, 255, 0.5), rgba(124, 58, 237, 0.5));
+  background-clip: padding-box;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   22. SELECT PREMIUM
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+select {
+  appearance: none;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 12px center;
+  padding: 12px 40px 12px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-smooth), box-shadow var(--duration-fast);
+}
+
+select:hover { border-color: rgba(8, 119, 255, 0.3); }
+select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(8, 119, 255, 0.1); outline: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   23. FLOATING ANIMATION
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.float-animation { animation: float 4s ease-in-out infinite; }
+.float-delay-1 { animation-delay: 0.5s; }
+.float-delay-2 { animation-delay: 1s; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   24. FOCUS ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    END - DISTRITO STREAMING PREMIUM DESIGN SYSTEM 2026
    ═══════════════════════════════════════════════════════════════════════════════ */
