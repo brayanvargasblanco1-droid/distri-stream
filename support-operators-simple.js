@@ -1,20 +1,19 @@
 /**
- * SOPORTE PREMIUM v14 - DISEÑO PREMIUM 2026
- * Aesthetic: Cloud + AI + Futuristic Professional
+ * SOPORTE PREMIUM v15 - CORREGIDO + ELIMINAR TODOS
  */
 
 const Soporte = {
   tabActual: 'pendientes',
   
   estados: {
-    'Abierto': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: '#a78bfa', icon: '📋', glow: 'rgba(139,92,246,0.3)' },
-    'En revisión': { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: '#fbbf24', icon: '🔍', glow: 'rgba(245,158,11,0.3)' },
-    'En proceso': { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', border: '#22d3ee', icon: '⚙️', glow: 'rgba(6,182,212,0.3)' },
-    'Resuelto': { color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: '#34d399', icon: '✅', glow: 'rgba(16,185,129,0.3)' },
-    'Rechazado': { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: '#f87171', icon: '❌', glow: 'rgba(239,68,68,0.3)' }
+    'Abierto': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', icon: '📋' },
+    'En revisión': { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🔍' },
+    'En proceso': { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', icon: '⚙️' },
+    'Resuelto': { color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: '✅' },
+    'Rechazado': { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '❌' }
   },
   
-  getEstado(s) { return this.estados[s] || { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', border: '#9ca3af', icon: '📌', glow: 'rgba(107,114,128,0.3)' }; },
+  getEstado(s) { return this.estados[s] || { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', icon: '📌' }; },
   
   puedeEliminar(r) {
     if (!r || !state.user) return false;
@@ -48,7 +47,7 @@ const Soporte = {
         btn.querySelector('.s-count').style.background = 'rgba(255,255,255,0.25)';
         btn.querySelector('.s-count').style.color = 'white';
       } else {
-        btn.style.background = 'rgba(255,255,255,0.8)';
+        btn.style.background = 'rgba(255,255,255,0.9)';
         btn.style.color = '#64748b';
         btn.style.borderColor = 'rgba(148,163,184,0.3)';
         btn.style.boxShadow = 'none';
@@ -61,6 +60,7 @@ const Soporte = {
   
   renderReportes() {
     const reportes = this.getReportes().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const stats = { total: (state.reports || []).length };
     
     if (reportes.length === 0) {
       const info = {
@@ -88,80 +88,49 @@ const Soporte = {
     const tiempo = this.getTiempo(r.created_at);
     
     return `
-      <div class="s-card" style="--glow: ${estado.glow}; --accent: ${estado.color}; animation-delay: ${idx * 0.08}s"
-           onclick="Soporte.verDetalle('${r.id}')">
+      <div class="s-card" style="animation-delay: ${idx * 0.08}s" onclick="Soporte.verDetalle('${r.id}')">
         
-        <!-- Glow effect -->
-        <div class="s-card-glow"></div>
-        
-        <!-- Border gradient -->
-        <div class="s-card-border" style="--c1: ${estado.color}"></div>
-        
-        <div class="s-card-content">
-          <!-- Header -->
-          <div class="s-card-header">
-            <div class="s-card-product">
-              ${smallLogo(r.product_name || '')}
-              <div>
-                <div class="s-card-name">${escHtml(r.product_name || 'Producto')}</div>
-                <div class="s-card-reason">${escHtml(r.reason || 'Sin motivo')}</div>
-              </div>
-            </div>
-            <div class="s-card-status" style="--c: ${estado.color}">
-              <span class="s-status-icon">${estado.icon}</span>
-              <span class="s-status-text">${r.status}</span>
+        <!-- Header -->
+        <div class="s-card-header">
+          <div class="s-card-product">
+            ${smallLogo(r.product_name || '')}
+            <div>
+              <div class="s-card-name">${escHtml(r.product_name || 'Producto')}</div>
+              <div class="s-card-reason">${escHtml(r.reason || 'Sin motivo')}</div>
             </div>
           </div>
-          
-          <!-- TU REPORTE -->
-          <div class="s-tu-reporte">
-            <div class="s-label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              TU REPORTE
-            </div>
-            <div class="s-tu-texto">${escHtml(r.description || r.reason || 'Sin descripción')}</div>
+          <div class="s-card-status" style="background: ${estado.bg}; color: ${estado.color}">
+            ${estado.icon} ${r.status}
           </div>
-          
-          <!-- 💬 RESPUESTA DEL ADMIN - PREMIUM -->
-          ${solucion ? `
-            <div class="s-admin-response">
-              <div class="s-admin-header">
-                <div class="s-admin-avatar">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div class="s-admin-info">
-                  <span class="s-admin-title">Respuesta del Administrador</span>
-                  <span class="s-admin-sub">Solución a tu reporte</span>
-                </div>
-                <div class="s-admin-badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 12 4 4 9"/><path d="M20 6 9 12 20 4 9"/></svg>
-                </div>
+        </div>
+        
+        <!-- 💬 RESPUESTA DEL ADMIN -->
+        ${solucion ? `
+          <div class="s-admin-response">
+            <div class="s-admin-header">
+              <div class="s-admin-avatar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
               </div>
-              <div class="s-admin-texto">${escHtml(solucion)}</div>
-            </div>
-          ` : ''}
-          
-          <!-- ❌ RECHAZO -->
-          ${rechazo ? `
-            <div class="s-rechazo">
-              <div class="s-rechazo-header">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-                Motivo del Rechazo
+              <div class="s-admin-info">
+                <span class="s-admin-title">Respuesta del Administrador</span>
               </div>
-              <div class="s-rechazo-texto">${escHtml(rechazo)}</div>
             </div>
-          ` : ''}
-          
-          <!-- Footer -->
-          <div class="s-card-footer">
-            <div class="s-card-meta">
-              <span>🕐 ${tiempo}</span>
-              ${r.order_id ? `<span>📦 #${r.order_id.substring(0,8)}</span>` : ''}
-            </div>
-            <div class="s-card-arrow">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
-            </div>
+            <div class="s-admin-texto">${escHtml(solucion)}</div>
           </div>
+        ` : ''}
+        
+        <!-- ❌ RECHAZO -->
+        ${rechazo ? `
+          <div class="s-rechazo">
+            <div class="s-rechazo-header">❌ Motivo del Rechazo</div>
+            <div class="s-rechazo-texto">${escHtml(rechazo)}</div>
+          </div>
+        ` : ''}
+        
+        <!-- Footer -->
+        <div class="s-card-footer">
+          <span class="s-card-meta">🕐 ${tiempo}</span>
+          <span class="s-card-arrow">→</span>
         </div>
       </div>
     `;
@@ -190,34 +159,27 @@ const Soporte = {
     
     openModal(`
       <div class="s-modal">
-        <div class="s-modal-header" style="--c: ${estado.color}">
-          <div class="s-modal-logo">${smallLogo(r.product_name || '')}</div>
+        <div class="s-modal-header" style="background: linear-gradient(135deg, ${estado.color}, ${estado.color}cc)">
+          ${smallLogo(r.product_name || '')}
           <div class="s-modal-title">${escHtml(r.product_name || 'Producto')}</div>
-          <div class="s-modal-status">
-            <span>${estado.icon}</span>
-            <span>${r.status}</span>
-          </div>
+          <div class="s-modal-status">${estado.icon} ${r.status}</div>
         </div>
         
         <div class="s-modal-body">
-          <!-- TU REPORTE -->
+          <!-- MOTIVO -->
           <div class="s-modal-section">
-            <div class="s-modal-label">📝 TU REPORTE</div>
-            <div class="s-modal-tu">
-              <div class="s-modal-problema"><strong>Problema:</strong> ${escHtml(r.reason || 'Sin motivo')}</div>
-              ${r.description ? `<div class="s-modal-desc">${escHtml(r.description)}</div>` : ''}
-            </div>
+            <div class="s-modal-label">📋 MOTIVO</div>
+            <div class="s-modal-motivo">${escHtml(r.reason || 'Sin motivo')}</div>
+            ${r.description ? `<div class="s-modal-desc">${escHtml(r.description)}</div>` : ''}
           </div>
           
           <!-- 💬 RESPUESTA -->
           ${solucion ? `
-            <div class="s-modal-section s-modal-response">
-              <div class="s-modal-label s-modal-label-green">💬 RESPUESTA DEL ADMINISTRADOR</div>
-              <div class="s-modal-response-box">
+            <div class="s-modal-section">
+              <div class="s-modal-label-green">💬 RESPUESTA DEL ADMINISTRADOR</div>
+              <div class="s-modal-response">
                 <div class="s-modal-admin">
-                  <div class="s-modal-avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
+                  <div class="s-modal-avatar">👨‍💼</div>
                   <span>Administrador</span>
                 </div>
                 <div class="s-modal-texto">${escHtml(solucion)}</div>
@@ -228,7 +190,7 @@ const Soporte = {
           <!-- ❌ RECHAZO -->
           ${rechazo ? `
             <div class="s-modal-section">
-              <div class="s-modal-label s-modal-label-red">❌ MOTIVO DEL RECHAZO</div>
+              <div class="s-modal-label-red">❌ MOTIVO DEL RECHAZO</div>
               <div class="s-modal-rechazo">${escHtml(rechazo)}</div>
             </div>
           ` : ''}
@@ -236,30 +198,94 @@ const Soporte = {
           <!-- Info -->
           <div class="s-modal-info">
             <div><span>📅 Creado</span><strong>${fecha}</strong></div>
-            ${r.order_id ? `<div><span>📦 Pedido</span><strong>#${r.order_id.substring(0,8)}</strong></div>` : ''}
+            ${r.order_id ? `<div><span>📦 Pedido</span><strong>#${r.order_id.substring(0,8)}</strong></div>` : '<div></div>'}
           </div>
           
-          <!-- Botones -->
+          <!-- Botones iguales -->
           <div class="s-modal-actions">
             <button class="s-btn-cerrar" onclick="closeModal()">✓ Cerrar</button>
-            ${puedeEliminar ? `<button class="s-btn-eliminar" onclick="Soporte.confirmarEliminar('${r.id}')">🗑️</button>` : ''}
+            ${puedeEliminar ? `<button class="s-btn-eliminar" onclick="Soporte.eliminar('${r.id}')">🗑️ Eliminar</button>` : ''}
           </div>
         </div>
       </div>
     `);
   },
   
+  eliminar(id) {
+    const r = state.reports.find(x => x.id === id);
+    if (!r) { toast('No encontrado', 'bad'); return; }
+    
+    openModal(`
+      <div class="s-modal-loading">
+        <div class="s-loading-icon">🗑️</div>
+        <div class="s-loading-title">¿Eliminar este reporte?</div>
+        <div class="s-loading-sub">${escHtml(r.product_name || 'Producto')}</div>
+        <div class="s-loading-actions">
+          <button class="s-btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="s-btn-delete" onclick="Soporte.confirmarEliminar('${id}')">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `);
+  },
+  
   async confirmarEliminar(id) {
-    closeModal();
-    showLoading('Eliminando...');
+    // Cambiar a modo loading
+    document.querySelector('.s-loading-actions').innerHTML = `
+      <div class="s-loading-spinner">
+        <div class="s-spinner"></div>
+        <span>Eliminando...</span>
+      </div>
+    `;
+    
     try {
       await api('reports', { method: 'DELETE', body: JSON.stringify({ id: id }) });
-      toast('Eliminado', 'ok');
+      closeModal();
+      toast('✓ Eliminado correctamente', 'ok');
       await boot();
       setView('reports');
     } catch(e) {
       toast('Error: ' + e.message, 'bad');
-      hideLoading();
+      closeModal();
+    }
+  },
+  
+  eliminarTodos() {
+    const reportes = state.reports || [];
+    if (reportes.length === 0) { toast('No hay reportes', 'bad'); return; }
+    
+    openModal(`
+      <div class="s-modal-loading">
+        <div class="s-loading-icon">⚠️</div>
+        <div class="s-loading-title">¿Eliminar TODOS los reportes?</div>
+        <div class="s-loading-sub">Se eliminarán ${reportes.length} reporte(s)</div>
+        <div class="s-loading-actions">
+          <button class="s-btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="s-btn-delete" onclick="Soporte.confirmarEliminarTodos()">🗑️ Eliminar Todo</button>
+        </div>
+      </div>
+    `);
+  },
+  
+  async confirmarEliminarTodos() {
+    document.querySelector('.s-loading-actions').innerHTML = `
+      <div class="s-loading-spinner">
+        <div class="s-spinner"></div>
+        <span>Eliminando...</span>
+      </div>
+    `;
+    
+    try {
+      const reportes = state.reports || [];
+      for (const r of reportes) {
+        await api('reports', { method: 'DELETE', body: JSON.stringify({ id: r.id }) });
+      }
+      closeModal();
+      toast('✓ ' + reportes.length + ' reportes eliminados', 'ok');
+      await boot();
+      setView('reports');
+    } catch(e) {
+      toast('Error: ' + e.message, 'bad');
+      closeModal();
     }
   },
   
@@ -329,7 +355,7 @@ const Soporte = {
     try {
       await api('reports', { method: 'POST', body: JSON.stringify({ product_name: name, reason: cat.value, description: desc.value.trim(), order_id: id, client_id: state.user?.id })});
       closeModal();
-      toast('Reporte creado', 'ok');
+      toast('✓ Reporte creado', 'ok');
       await boot();
       setView('reports');
     } catch(e) {
@@ -345,14 +371,14 @@ const Soporte = {
 
 const SoporteCSS = `
 <style>
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-@keyframes pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-.s-container { max-width: 720px; margin: 0 auto; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+.s-container { max-width: 720px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; }
 
-/* HEADER PREMIUM */
+/* HEADER */
 .s-header {
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
   border-radius: 28px;
@@ -383,7 +409,7 @@ const SoporteCSS = `
   animation: pulse 5s ease-in-out infinite reverse;
 }
 .s-header-content { position: relative; z-index: 1; }
-.s-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+.s-header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
 .s-header-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
 .s-header-title { font-size: 32px; font-weight: 800; color: white; margin: 0; }
 .s-header-btn {
@@ -399,9 +425,9 @@ const SoporteCSS = `
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s;
 }
-.s-header-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+.s-header-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); }
 
 /* TABS */
 .s-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
@@ -416,7 +442,8 @@ const SoporteCSS = `
   justify-content: center;
   gap: 10px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.9);
+  border: 2px solid rgba(148,163,184,0.3);
 }
 .s-tab:hover { transform: translateY(-2px); }
 .s-count { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
@@ -426,91 +453,30 @@ const SoporteCSS = `
   background: white;
   border-radius: 24px;
   margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
+  padding: 24px;
   cursor: pointer;
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   opacity: 0;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
-.s-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px var(--glow); }
-.s-card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(180deg, var(--glow) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.s-card:hover .s-card-glow { opacity: 0.3; }
-.s-card-border {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--c1), var(--c1), transparent);
-}
-.s-card-content { padding: 24px; position: relative; z-index: 1; }
+.s-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px rgba(124, 58, 237, 0.2); border-color: #7c3aed; }
 .s-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 .s-card-product { display: flex; align-items: center; gap: 14px; }
 .s-card-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
 .s-card-reason { font-size: 13px; color: #64748b; }
-.s-card-status {
-  padding: 10px 18px;
-  border-radius: 14px;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--c);
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.s-card-status { padding: 10px 18px; border-radius: 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 
-/* TU REPORTE */
-.s-tu-reporte {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-.s-label {
-  font-size: 10px;
-  font-weight: 800;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.s-tu-texto { font-size: 14px; color: #334155; line-height: 1.6; }
-
-/* ADMIN RESPONSE - PREMIUM */
+/* ADMIN RESPONSE */
 .s-admin-response {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #10b981, #059669);
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.3);
 }
-.s-admin-response::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #34d399, #10b981, #059669);
-}
-.s-admin-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.s-admin-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .s-admin-avatar {
   width: 44px;
   height: 44px;
@@ -522,35 +488,17 @@ const SoporteCSS = `
   color: white;
 }
 .s-admin-info { flex: 1; }
-.s-admin-title { display: block; font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
-.s-admin-sub { font-size: 11px; color: rgba(255,255,255,0.8); }
-.s-admin-badge {
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-.s-admin-texto {
-  background: rgba(255,255,255,0.15);
-  border-radius: 14px;
-  padding: 16px;
-  font-size: 15px;
-  color: white;
-  line-height: 1.7;
-}
+.s-admin-title { font-size: 13px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+.s-admin-texto { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 16px; font-size: 15px; color: white; line-height: 1.7; }
 
 /* RECHAZO */
 .s-rechazo { background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
-.s-rechazo-header { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.s-rechazo-header { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-bottom: 8px; }
 .s-rechazo-texto { font-size: 14px; color: #991b1b; line-height: 1.6; }
 
 /* FOOTER */
 .s-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #f1f5f9; }
-.s-card-meta { font-size: 12px; color: #94a3b8; display: flex; gap: 16px; }
+.s-card-meta { font-size: 12px; color: #94a3b8; }
 .s-card-arrow { color: #7c3aed; font-size: 20px; font-weight: 700; transition: transform 0.3s; }
 .s-card:hover .s-card-arrow { transform: translateX(4px); }
 
@@ -562,61 +510,99 @@ const SoporteCSS = `
 
 /* MODAL */
 .s-modal { background: white; border-radius: 28px; overflow: hidden; }
-.s-modal-header {
-  padding: 32px;
-  background: linear-gradient(135deg, var(--c), var(--c));
-  text-align: center;
-  color: white;
-  position: relative;
-}
-.s-modal-header::after {
-  content: '';
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: white;
-  border-radius: 50% 50% 0 0;
-}
+.s-modal-header { padding: 32px; background: linear-gradient(135deg, #7c3aed, #6d28d9); text-align: center; color: white; }
 .s-modal-header-create { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 .s-modal-icon { font-size: 40px; margin-bottom: 8px; }
-.s-modal-logo { margin-bottom: 12px; display: flex; justify-content: center; }
+.s-modal-logo { display: flex; justify-content: center; margin-bottom: 12px; }
 .s-modal-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
 .s-modal-status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 14px; font-weight: 600; }
-.s-modal-body { padding: 28px; position: relative; z-index: 1; }
+.s-modal-body { padding: 28px; }
 .s-modal-section { margin-bottom: 24px; }
-.s-modal-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-.s-modal-label-green { color: #059669; }
-.s-modal-label-red { color: #dc2626; }
-.s-modal-tu { background: #f8fafc; border-radius: 16px; padding: 16px; }
-.s-modal-problema { font-size: 15px; color: #334155; margin-bottom: 8px; }
-.s-modal-desc { font-size: 14px; color: #64748b; line-height: 1.6; }
-.s-modal-response-box { background: linear-gradient(135deg, #10b981, #059669); border-radius: 16px; padding: 20px; }
-.s-modal-admin { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.s-modal-avatar { width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
-.s-modal-admin span { color: white; font-weight: 700; font-size: 14px; }
+.s-modal-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.s-modal-label-green { font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.s-modal-label-red { font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.s-modal-motivo { background: #f8fafc; border-radius: 14px; padding: 14px; font-size: 15px; color: #334155; margin-bottom: 8px; }
+.s-modal-desc { font-size: 13px; color: #64748b; line-height: 1.6; padding-left: 14px; }
+.s-modal-response { background: linear-gradient(135deg, #10b981, #059669); border-radius: 16px; padding: 18px; }
+.s-modal-admin { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.s-modal-avatar { font-size: 24px; }
+.s-modal-admin span { color: white; font-weight: 700; }
 .s-modal-texto { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 14px; font-size: 15px; color: white; line-height: 1.7; }
-.s-modal-rechazo { background: #fef2f2; border-radius: 16px; padding: 16px; font-size: 14px; color: #991b1b; line-height: 1.6; }
+.s-modal-rechazo { background: #fef2f2; border-radius: 14px; padding: 14px; font-size: 14px; color: #991b1b; }
 .s-modal-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
 .s-modal-info div { background: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; }
 .s-modal-info span { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
 .s-modal-info strong { font-size: 14px; color: #0f172a; }
 .s-modal-actions { display: flex; gap: 12px; }
-.s-btn-cerrar { flex: 1; padding: 16px; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 14px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+
+/* BOTONES IGUALES */
+.s-btn-cerrar, .s-btn-eliminar, .s-btn-cancel, .s-btn-delete, .s-btn-primary {
+  flex: 1;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.s-btn-cerrar {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  color: white;
+}
 .s-btn-cerrar:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); }
-.s-btn-eliminar { padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; color: #dc2626; font-size: 15px; font-weight: 700; cursor: pointer; }
-.s-btn-eliminar:hover { background: #dc2626; color: white; }
-.s-btn-primary { padding: 14px 28px; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; }
-.s-btn-cancel { flex: 1; padding: 14px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.s-btn-eliminar {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  color: white;
+}
+.s-btn-eliminar:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
+.s-btn-cancel {
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #374151;
+}
+.s-btn-cancel:hover { border-color: #7c3aed; color: #7c3aed; }
+.s-btn-delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  color: white;
+}
+.s-btn-delete:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
+.s-btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  color: white;
+}
+.s-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); }
+
+/* MODAL LOADING */
+.s-modal-loading { padding: 40px; text-align: center; background: white; border-radius: 24px; }
+.s-loading-icon { font-size: 64px; margin-bottom: 16px; }
+.s-loading-title { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.s-loading-sub { font-size: 14px; color: #64748b; margin-bottom: 24px; }
+.s-loading-actions { display: flex; gap: 12px; }
+.s-loading-spinner { display: flex; align-items: center; justify-content: center; gap: 12px; color: #64748b; }
+.s-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
 /* FORM */
 .s-form-group { margin-bottom: 20px; }
 .s-form-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.s-form-select, .s-form-textarea { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: white; transition: all 0.3s; }
+.s-form-select, .s-form-textarea { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; transition: all 0.3s; }
 .s-form-select:focus, .s-form-textarea:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1); }
 
-/* EMPTY MODAL */
+/* MODAL EMPTY */
 .s-modal-empty { padding: 48px; text-align: center; background: white; border-radius: 20px; }
 
 /* RESPONSIVE */
@@ -624,9 +610,9 @@ const SoporteCSS = `
   .s-header { padding: 24px; border-radius: 20px; }
   .s-header-title { font-size: 24px; }
   .s-tabs { grid-template-columns: 1fr; }
-  .s-card-content { padding: 18px; }
   .s-modal-info { grid-template-columns: 1fr; }
   .s-modal-actions { flex-direction: column; }
+  .s-loading-actions { flex-direction: column; }
 }
 </style>`;
 
@@ -640,11 +626,12 @@ function reportsUserSimple() {
     resueltos: (state.reports || []).filter(r => r.status === 'Resuelto').length,
     rechazados: (state.reports || []).filter(r => r.status === 'Rechazado').length
   };
+  const total = (state.reports || []).length;
   
   return SoporteCSS + `
     <div class="s-container">
       
-      <!-- HEADER PREMIUM -->
+      <!-- HEADER -->
       <div class="s-header">
         <div class="s-header-content">
           <div class="s-header-top">
@@ -652,17 +639,17 @@ function reportsUserSimple() {
               <div class="s-header-label">Centro de Soporte</div>
               <h1 class="s-header-title">Mis Reportes</h1>
             </div>
-            <button class="s-header-btn" onclick="Soporte.mostrarCrear()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-              Nuevo Reporte
-            </button>
+            <div style="display:flex;gap:10px">
+              ${total > 0 ? `<button class="s-header-btn" style="background:rgba(239,68,68,0.2)" onclick="Soporte.eliminarTodos()">🗑️ Todo</button>` : ''}
+              <button class="s-header-btn" onclick="Soporte.mostrarCrear()">➕ Nuevo</button>
+            </div>
           </div>
         </div>
       </div>
       
       <!-- TABS -->
       <div class="s-tabs">
-        <button class="s-tab s-tab-active" data-tab="pendientes" onclick="Soporte.cambiarTab('pendientes')">
+        <button class="s-tab" data-tab="pendientes" onclick="Soporte.cambiarTab('pendientes')">
           📋 Pendientes <span class="s-count">${stats.pendientes}</span>
         </button>
         <button class="s-tab" data-tab="resueltos" onclick="Soporte.cambiarTab('resueltos')">
@@ -676,15 +663,11 @@ function reportsUserSimple() {
       <div id="s-lista">${Soporte.renderReportes()}</div>
     </div>
     <script>
-      // Fix tab active
-      document.querySelectorAll('.s-tab').forEach(btn => {
-        btn.classList.remove('s-tab-active');
-        if (btn.dataset.tab === 'pendientes') btn.classList.add('s-tab-active');
-      });
+      Soporte.render();
     </script>
   `;
 }
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-console.log('✅ Soporte Premium v14 - Diseño Premium 2026');
+console.log('✅ Soporte Premium v15 - Corregido + Eliminar Todos');
