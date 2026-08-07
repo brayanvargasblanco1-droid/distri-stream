@@ -1,5 +1,5 @@
 /**
- * SOPORTE PREMIUM v8 - CON HEADER
+ * SOPORTE PREMIUM v9 - CON MODAL DE DETALLE
  */
 
 const Soporte = {
@@ -42,14 +42,10 @@ const Soporte = {
         btn.style.background = '#6366f1';
         btn.style.color = 'white';
         btn.style.borderColor = '#6366f1';
-        btn.querySelector('.count').style.background = 'rgba(255,255,255,0.25)';
-        btn.querySelector('.count').style.color = 'white';
       } else {
         btn.style.background = 'white';
         btn.style.color = '#6b7280';
         btn.style.borderColor = '#e5e7eb';
-        btn.querySelector('.count').style.background = '#f3f4f6';
-        btn.querySelector('.count').style.color = '#6b7280';
       }
     });
     document.getElementById('soporte_lista').innerHTML = this.renderReportes();
@@ -60,16 +56,15 @@ const Soporte = {
     
     if (reportes.length === 0) {
       const info = {
-        pendientes: { icon: '📋', titulo: 'No hay reportes pendientes', sub: 'Todo está en orden 👍' },
-        resueltos: { icon: '✅', titulo: 'No hay reportes resueltos', sub: 'Los resueltos aparecerán aquí' },
-        rechazados: { icon: '❌', titulo: 'No hay reportes rechazados', sub: 'Los rechazados aparecerán aquí' }
+        pendientes: { icon: '📋', titulo: 'No hay reportes pendientes' },
+        resueltos: { icon: '✅', titulo: 'No hay reportes resueltos' },
+        rechazados: { icon: '❌', titulo: 'No hay reportes rechazados' }
       };
       const i = info[this.tabActual];
       return `
         <div style="text-align:center;padding:60px 20px;background:white;border-radius:16px;border:2px dashed #e5e7eb">
           <div style="font-size:64px;margin-bottom:16px">${i.icon}</div>
-          <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:8px">${i.titulo}</div>
-          <div style="font-size:14px;color:#6b7280">${i.sub}</div>
+          <div style="font-size:18px;font-weight:700;color:#111827">${i.titulo}</div>
         </div>
       `;
     }
@@ -79,51 +74,20 @@ const Soporte = {
   
   renderCard(r, index) {
     const estado = this.getEstado(r.status);
-    const puedeEliminar = this.puedeEliminar(r);
-    const solucion = r.provider_response || r.admin_response;
-    const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
     const tiempo = this.getTiempo(r.created_at);
     
     return `
-      <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;animation:fadeIn 0.4s ease ${index * 0.05}s both">
-        <div style="padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-            <div style="flex:1">
-              <div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:6px">${escHtml(r.product_name || 'Producto')}</div>
-              <div style="display:inline-block;padding:6px 12px;background:#f3f4f6;border-radius:8px;font-size:13px;color:#374151">${escHtml(r.reason || 'Sin motivo')}</div>
-            </div>
-            <div style="padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;background:${estado.bg};color:${estado.color}">
-              ${estado.icon} ${r.status}
-            </div>
+      <div onclick="Soporte.verDetalle('${r.id}')" style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:12px;padding:18px 20px;cursor:pointer;transition:all 0.3s"
+        onmouseover="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 12px rgba(99,102,241,0.15)'"
+        onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px">${escHtml(r.product_name || 'Producto')}</div>
+            <div style="font-size:13px;color:#6b7280">${escHtml(r.reason || 'Sin motivo')} · ${tiempo}</div>
           </div>
-          
-          ${r.description ? `<div style="font-size:14px;color:#6b7280;margin-bottom:12px;line-height:1.5">${escHtml(r.description)}</div>` : ''}
-          
-          ${solucion ? `
-            <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                <span style="background:#10b981;color:white;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800">💬 RESPUESTA</span>
-              </div>
-              <div style="font-size:14px;color:#065f46;line-height:1.6">${escHtml(solucion)}</div>
-            </div>
-          ` : ''}
-          
-          ${rechazo ? `
-            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                <span style="background:#ef4444;color:white;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800">❌ RECHAZADO</span>
-              </div>
-              <div style="font-size:14px;color:#991b1b;line-height:1.6">${escHtml(rechazo)}</div>
-            </div>
-          ` : ''}
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f3f4f6">
-            <span style="font-size:12px;color:#9ca3af">📅 ${tiempo}</span>
-            ${puedeEliminar ? `
-              <button onclick="Soporte.eliminar('${r.id}')" style="padding:8px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer">
-                🗑️ Eliminar
-              </button>
-            ` : ''}
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;background:${estado.bg};color:${estado.color}">${estado.icon} ${r.status}</span>
+            <span style="color:#9ca3af;font-size:18px">→</span>
           </div>
         </div>
       </div>
@@ -135,10 +99,87 @@ const Soporte = {
     const fecha = new Date(dateStr);
     const ahora = new Date();
     const diffMins = Math.floor((ahora - fecha) / 60000);
-    if (diffMins < 60) return `Hace ${diffMins} minutos`;
+    if (diffMins < 60) return `Hace ${diffMins}min`;
     const horas = Math.floor(diffMins / 60);
-    if (horas < 24) return `Hace ${horas} hora${horas > 1 ? 's' : ''}`;
-    return `Hace ${Math.floor(horas/24)} día${Math.floor(horas/24) > 1 ? 's' : ''}`;
+    if (horas < 24) return `Hace ${horas}h`;
+    return `Hace ${Math.floor(horas/24)}d`;
+  },
+  
+  verDetalle(id) {
+    const r = state.reports.find(x => x.id === id);
+    if (!r) { toast('No encontrado', 'bad'); return; }
+    
+    const estado = this.getEstado(r.status);
+    const puedeEliminar = this.puedeEliminar(r);
+    const solucion = r.provider_response || r.admin_response;
+    const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
+    const fecha = new Date(r.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+    
+    openModal(`
+      <div style="background:white;border-radius:20px;overflow:hidden">
+        <!-- Header con color del estado -->
+        <div style="background:linear-gradient(135deg,${estado.color},${estado.color}cc);padding:24px;text-align:center;color:white">
+          <div style="font-size:40px;margin-bottom:8px">${estado.icon}</div>
+          <div style="font-size:22px;font-weight:800;margin-bottom:4px">${escHtml(r.product_name || 'Producto')}</div>
+          <div style="font-size:14px;opacity:0.9">${r.status}</div>
+        </div>
+        
+        <!-- Detalles -->
+        <div style="padding:20px">
+          <!-- Motivo -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">📋 MOTIVO</div>
+            <div style="padding:12px;background:#f9fafb;border-radius:10px;font-size:14px">${escHtml(r.reason || 'Sin motivo')}</div>
+          </div>
+          
+          <!-- Descripción -->
+          ${r.description ? `
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">📄 DESCRIPCIÓN</div>
+              <div style="padding:12px;background:#f9fafb;border-radius:10px;font-size:14px;line-height:1.5">${escHtml(r.description)}</div>
+            </div>
+          ` : ''}
+          
+          <!-- RESPUESTA DEL ADMINISTRADOR -->
+          ${solucion ? `
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:6px">💬 RESPUESTA</div>
+              <div style="padding:16px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;font-size:14px;line-height:1.6;color:#065f46">${escHtml(solucion)}</div>
+            </div>
+          ` : ''}
+          
+          <!-- RECHAZO -->
+          ${rechazo ? `
+            <div style="margin-bottom:16px">
+              <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;margin-bottom:6px">❌ RECHAZADO</div>
+              <div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;font-size:14px;line-height:1.6;color:#991b1b">${escHtml(rechazo)}</div>
+            </div>
+          ` : ''}
+          
+          <!-- Info -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+            <div style="padding:12px;background:#f9fafb;border-radius:10px;text-align:center">
+              <div style="font-size:10px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">📅 CREADO</div>
+              <div style="font-size:13px;font-weight:600">${fecha}</div>
+            </div>
+            ${r.order_id ? `
+              <div style="padding:12px;background:#f9fafb;border-radius:10px;text-align:center">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">📦 PEDIDO</div>
+                <div style="font-size:13px;font-weight:600;font-family:monospace">#${r.order_id.substring(0,8)}</div>
+              </div>
+            ` : '<div></div>'}
+          </div>
+          
+          <!-- Botones -->
+          <div style="display:flex;gap:10px">
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Cerrar</button>
+            ${puedeEliminar ? `
+              <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:14px;background:#fef2f2;border:2px solid #fecaca;border-radius:12px;color:#dc2626;font-size:14px;font-weight:600;cursor:pointer">🗑️ Eliminar</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `);
   },
   
   eliminar(id) {
@@ -152,7 +193,7 @@ const Soporte = {
         <div style="font-size:14px;color:#6b7280;margin-bottom:24px">${escHtml(r.product_name || 'Producto')}</div>
         <div style="display:flex;gap:12px">
           <button onclick="closeModal()" style="flex:1;padding:14px;background:white;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
-          <button onclick="Soporte.confirmarEliminar('${id}')" style="flex:1;padding:14px;background:#dc2626;border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer">🗑️ Eliminar</button>
+          <button onclick="Soporte.confirmarEliminar('${r.id}')" style="flex:1;padding:14px;background:#dc2626;border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer">🗑️ Eliminar</button>
         </div>
       </div>
     `);
@@ -265,7 +306,7 @@ const Soporte = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🏠 RENDER PRINCIPAL CON HEADER CUADRO
+// RENDER PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════
 
 function reportsUserSimple() {
@@ -276,12 +317,9 @@ function reportsUserSimple() {
   };
   
   return `
-    <style>
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
     <div style="max-width:700px;margin:0 auto">
       
-      <!-- CUADRITO AZUL/PÚRPURA CON HEADER -->
+      <!-- HEADER CUADRITO MORADO -->
       <div style="background:linear-gradient(135deg,#4338ca 0%,#6366f1 50%,#818cf8 100%);border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden">
         <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
         <div style="position:absolute;bottom:-80px;left:-40px;width:250px;height:250px;background:rgba(255,255,255,0.05);border-radius:50%"></div>
@@ -299,24 +337,23 @@ function reportsUserSimple() {
       
       <!-- TABS -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="soporte-tab ${Soporte.tabActual === 'pendientes' ? 'active' : ''}">
-          📋 Pendientes
-          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'pendientes' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'pendientes' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.pendientes}</span>
+        <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="tab-btn ${Soporte.tabActual === 'pendientes' ? 'active' : ''}">
+          📋 Pendientes <span class="tab-count">${stats.pendientes}</span>
         </button>
-        <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="soporte-tab ${Soporte.tabActual === 'resueltos' ? 'active' : ''}">
-          ✅ Resueltos
-          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'resueltos' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'resueltos' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.resueltos}</span>
+        <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="tab-btn ${Soporte.tabActual === 'resueltos' ? 'active' : ''}">
+          ✅ Resueltos <span class="tab-count">${stats.resueltos}</span>
         </button>
-        <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="soporte-tab ${Soporte.tabActual === 'rechazados' ? 'active' : ''}">
-          ❌ Rechazados
-          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'rechazados' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'rechazados' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.rechazados}</span>
+        <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="tab-btn ${Soporte.tabActual === 'rechazados' ? 'active' : ''}">
+          ❌ Rechazados <span class="tab-count">${stats.rechazados}</span>
         </button>
       </div>
       
       <style>
-        .soporte-tab { padding:16px;background:${Soporte.tabActual === 'pendientes' ? '#6366f1' : 'white'};border:2px solid ${Soporte.tabActual === 'pendientes' ? '#6366f1' : '#e5e7eb'};border-radius:14px;font-size:14px;font-weight:700;color:${Soporte.tabActual === 'pendientes' ? 'white' : '#6b7280'};cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px }
-        .soporte-tab:hover { border-color:#6366f1 }
-        .soporte-tab.active { background:#6366f1;border-color:#6366f1;color:white }
+        .tab-btn { padding:14px 16px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#6b7280;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px }
+        .tab-btn:hover { border-color:#6366f1 }
+        .tab-btn.active { background:#6366f1;border-color:#6366f1;color:white }
+        .tab-count { padding:3px 8px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px }
+        .tab-btn.active .tab-count { background:rgba(255,255,255,0.25);color:white }
       </style>
       
       <!-- Lista -->
@@ -330,4 +367,4 @@ function escHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-console.log('✅ Soporte Premium v8 - Con header cuadrito');
+console.log('✅ Soporte Premium v9 - Con modal de detalle');
