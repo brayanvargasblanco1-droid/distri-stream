@@ -94,6 +94,66 @@ const NavPremium = {
       animation: navSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
     }
     
+    /* Premium Nav Icon Container */
+    .nav-premium-btn .nav-icon-wrap {
+      width: 32px !important;
+      height: 32px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 10px !important;
+      background: rgba(99, 102, 241, 0.08) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    
+    .nav-premium-btn .nav-icon-wrap::before {
+      content: '' !important;
+      position: absolute !important;
+      inset: 0 !important;
+      background: var(--gradient-primary) !important;
+      opacity: 0 !important;
+      transition: opacity 0.3s ease !important;
+    }
+    
+    .nav-premium-btn:hover .nav-icon-wrap {
+      transform: scale(1.1) !important;
+      background: rgba(99, 102, 241, 0.15) !important;
+    }
+    
+    .nav-premium-btn.active .nav-icon-wrap {
+      background: var(--gradient-primary) !important;
+      box-shadow: 0 4px 12px rgba(8, 119, 255, 0.4) !important;
+    }
+    
+    .nav-premium-btn.active .nav-icon-wrap::before {
+      opacity: 1 !important;
+    }
+    
+    .nav-premium-btn .nav-icon-wrap svg {
+      width: 20px !important;
+      height: 20px !important;
+      stroke: #6b7280 !important;
+      fill: none !important;
+      stroke-width: 2 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+      transition: all 0.3s ease !important;
+      position: relative !important;
+      z-index: 1 !important;
+    }
+    
+    .nav-premium-btn:hover .nav-icon-wrap svg {
+      stroke: var(--primary) !important;
+      transform: scale(1.1) !important;
+    }
+    
+    .nav-premium-btn.active .nav-icon-wrap svg {
+      stroke: white !important;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) !important;
+    }
+    
     /* Barra superior decorativa */
     .nav-premium-mobile::before {
       content: '' !important;
@@ -507,6 +567,15 @@ const NavPremium = {
       
       // Agregar delay de animación
       btn.style.animationDelay = `${index * 0.08}s`;
+      
+      // Envolver SVG en contenedor premium
+      const svg = btn.querySelector('svg');
+      if (svg && !btn.querySelector('.nav-icon-wrap')) {
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'nav-icon-wrap';
+        svg.parentNode.insertBefore(iconWrap, svg);
+        iconWrap.appendChild(svg);
+      }
       
       // Agregar indicador
       if (!btn.querySelector('.nav-indicator')) {
