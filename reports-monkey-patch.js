@@ -47,20 +47,28 @@ function patchReportFunctions() {
     };
   }
 
-  // Patch deleteReport para operadores
+  // Patch deleteReport para operadores - usa confirmDeleteReport
   const originalDeleteReport = window.deleteReport;
   if (typeof originalDeleteReport === 'function') {
     window.deleteReport = function(reportId) {
       const report = window.state?.reports?.find(r => r.id === reportId);
       const isOwner = report && (report.user_id === window.state?.user?.id || report.client_id === window.state?.user?.id);
       
+      // Si no es admin ni dueño, no puede eliminar
       if (!ReportPermissions.canDelete() && !isOwner) {
         toast('Solo admins o el creador pueden eliminar reportes', 'bad');
         return;
       }
-      if (!confirm('⚠️ ¿ELIMINAR este reporte? Esta acción es IRREVERSIBLE.')) return;
-      if (!confirm('¿Estás COMPLETAMENTE SEGURO?')) return;
-      return originalDeleteReport.apply(this, arguments);
+      
+      // Usar confirmDeleteReport para confirmación con modal
+      if (typeof window.confirmDeleteReport === 'function') {
+        window.confirmDeleteReport(reportId);
+      } else {
+        // Fallback si confirmDeleteReport no existe
+        if (confirm('¿Eliminar este reporte?')) {
+          return originalDeleteReport.apply(this, arguments);
+        }
+      }
     };
   }
 }
