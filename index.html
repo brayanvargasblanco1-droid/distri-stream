@@ -2057,15 +2057,17 @@
       .product .price { font-size: 15px; font-weight: 700; color: var(--blue); display: block; margin-bottom: 4px; }
       .product button, .product .primary { min-height: 36px; font-size: 11px; padding: 8px; width: 100%; margin-top: 4px; }
       
-      /* MODALES */
-      .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9998; }
-      .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 20px); max-width: 420px; max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); background: var(--panel); border-radius: 16px; border: 1px solid var(--line); z-index: 9999; overflow: hidden; display: flex; flex-direction: column; }
-      .modal-header { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
-      .modal-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
-      .modal-body { padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
-      .modal-footer { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; gap: 10px; flex-wrap: wrap; }
-      .modal-footer button { flex: 1; min-width: 0; }
-      .modal-close { width: 32px; height: 32px; padding: 0; border-radius: 8px; }
+      /* MODALES - Adaptar sin romper la estructura original */
+      .modal { padding: 14px !important; }
+      .modal.show { padding: 14px !important; place-items: start !important; overflow-y: auto !important; }
+      .dialog { width: 100% !important; max-height: 85vh !important; border-radius: 16px !important; margin: 0 !important; }
+      .modal-content { padding: 16px !important; border-radius: 12px !important; }
+      .modal-header { padding: 12px 14px !important; }
+      .modal-header h2 { font-size: 16px !important; }
+      .modal-body { padding: 14px !important; }
+      .modal-footer { padding: 10px 14px !important; display: flex !important; gap: 8px !important; flex-wrap: wrap !important; }
+      .modal-footer button { flex: 1 !important; min-width: 0 !important; }
+      .close { width: 32px !important; height: 32px !important; font-size: 16px !important; }
       
       /* TABLAS */
       .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -12px; padding: 0 12px; }
