@@ -47,12 +47,15 @@ function patchReportFunctions() {
     };
   }
 
-  // Patch deleteReport para agregar confirmación triple
+  // Patch deleteReport para operadores
   const originalDeleteReport = window.deleteReport;
   if (typeof originalDeleteReport === 'function') {
     window.deleteReport = function(reportId) {
-      if (!ReportPermissions.canDelete()) {
-        toast('Solo administradores pueden eliminar reportes', 'bad');
+      const report = window.state?.reports?.find(r => r.id === reportId);
+      const isOwner = report && (report.user_id === window.state?.user?.id || report.client_id === window.state?.user?.id);
+      
+      if (!ReportPermissions.canDelete() && !isOwner) {
+        toast('Solo admins o el creador pueden eliminar reportes', 'bad');
         return;
       }
       if (!confirm('⚠️ ¿ELIMINAR este reporte? Esta acción es IRREVERSIBLE.')) return;

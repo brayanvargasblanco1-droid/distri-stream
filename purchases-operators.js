@@ -323,7 +323,7 @@ function improvedReportsView() {
       </div>
       
       <div class="reports-list" id="reportsList">
-        ${renderReportsList(active.length > 0 ? active : resolved, active.length > 0 ? 'active' : 'resolved')}
+        ${renderReportsList(active, 'active')}
       </div>
       
       <div class="reports-info">

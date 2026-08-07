@@ -439,7 +439,15 @@ function rejectReport(reportId) {
 }
 
 function deleteReport(reportId) {
-  if (!ReportPermissions.canDelete()) { toast('Solo admins pueden eliminar reportes', 'bad'); return; }
+  const report = state.reports.find(r => r.id === reportId);
+  const isOwner = report && (report.user_id === state.user?.id || report.client_id === state.user?.id);
+  
+  // Admin o dueño del reporte puede eliminar
+  if (!ReportPermissions.canDelete() && !isOwner) { 
+    toast('Solo admins o el creador pueden eliminar reportes', 'bad'); 
+    return; 
+  }
+  
   if (!confirm('⚠️ ¿ELIMINAR este reporte? Esta acción es IRREVERSIBLE.')) return;
   if (!confirm('¿Estás SEGURO?')) return;
   console.log('Eliminando:', reportId);
