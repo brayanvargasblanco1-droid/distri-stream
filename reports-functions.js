@@ -535,3 +535,239 @@ function updateReportTabBadges(reports) {
 function generateReportsContainer(reports) {
   return generateReportTabs() + generateActiveReportsSection(reports) + generateResolvedReportsSection(reports);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FUNCIONES DESACOPLADAS DEL DOM (MEJOR TESTABILIDAD)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Recopila datos del formulario de reporte
+function collectReportFormData(orderId) {
+  const getValue = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  };
+  
+  const getRadioValue = (name) => {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : '';
+  };
+  
+  return {
+    orderId: orderId,
+    category: getRadioValue('category'),
+    reason: getValue('rpSubject'),
+    description: getValue('rpDesc'),
+    accountData: getValue('rpAccountData')
+  };
+}
+
+// Valida los datos del formulario
+function validateReportFormData(data) {
+  const errors = [];
+  
+  if (!data.orderId) {
+    errors.push('Debes seleccionar una compra');
+  }
+  
+  if (!data.category) {
+    errors.push('Selecciona una categoría');
+  }
+  
+  if (!data.reason || data.reason.length < 3) {
+    errors.push('El asunto debe tener al menos 3 caracteres');
+  }
+  
+  if (data.reason && data.reason.length > 100) {
+    errors.push('El asunto no puede exceder 100 caracteres');
+  }
+  
+  if (!data.description || data.description.length < 10) {
+    errors.push('La descripción debe tener al menos 10 caracteres');
+  }
+  
+  if (data.description && data.description.length > 1000) {
+    errors.push('La descripción no puede exceder 1000 caracteres');
+  }
+  
+  return { valid: errors.length === 0, errors: errors };
+}
+
+// Prepara los datos para enviar a la API
+function prepareReportApiData(data, order) {
+  return {
+    order_id: data.orderId,
+    product_name: order.product_name || '',
+    account_data: data.accountData || order.delivered_data || '',
+    reason: data.reason,
+    description: data.description,
+    category: data.category || 'otro'
+  };
+}
+
+// Maneja el envío del reporte con todas las validaciones
+async function submitReportWithValidation(orderId) {
+  try {
+    // 1. Recopilar datos del formulario
+    const formData = collectReportFormData(orderId);
+    
+    // 2. Validar datos
+    const validation = validateReportFormData(formData);
+    if (!validation.valid) {
+      showFormErrors(validation.errors);
+      return;
+    }
+    
+    hideFormErrors();
+    
+    // 3. Verificar duplicados usando la función de optimización
+    if (typeof checkDuplicateReport === 'function') {
+      const duplicate = checkDuplicateReport(state.reports, orderId, formData.reason);
+      if (duplicate) {
+        if (!confirm(`Ya tienes un reporte abierto para esta compra (${duplicate.code}). ¿Deseas crear otro?`)) {
+          return;
+        }
+      }
+    }
+    
+    // 4. Confirmar envío
+    if (!confirm('¿Enviar este reporte de soporte?')) {
+      return;
+    }
+    
+    // 5. Encontrar la orden
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) {
+      toast('Compra no encontrada', 'bad');
+      return;
+    }
+    
+    // 6. Preparar y enviar datos
+    showLoading('Enviando reporte...');
+    const apiData = prepareReportApiData(formData, order);
+    
+    await api('reports', {
+      method: 'POST',
+      body: JSON.stringify(apiData)
+    });
+    
+    await boot();
+    toast('✅ Reporte enviado correctamente', 'ok');
+    closeModal();
+    
+  } catch (error) {
+    console.error('Error al enviar reporte:', error);
+    toast(error.message || 'Error al enviar el reporte', 'bad');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FUNCIONES DE BÚSQUEDA OPTIMIZADA
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Búsqueda con debounce usando la función de optimización
+let reportSearchDebounced = null;
+
+function initReportSearch() {
+  if (typeof createDebouncer === 'function') {
+    reportSearchDebounced = createDebouncer((query) => {
+      performReportSearch(query);
+    }, 300);
+  }
+}
+
+function performReportSearch(query) {
+  // Usar búsqueda optimizada si está disponible
+  if (typeof searchReportsOptimized === 'function' && state.reports) {
+    const results = searchReportsOptimized(state.reports, query);
+    renderSearchResults(results);
+    return;
+  }
+  
+  // Fallback a búsqueda original
+  reportSearch = query || '';
+  reportPage = 1;
+  renderApp();
+}
+
+function renderSearchResults(results) {
+  const container = document.getElementById('reportSearchResults');
+  if (!container) return;
+  
+  if (results.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>No se encontraron reportes</p></div>';
+    return;
+  }
+  
+  container.innerHTML = results.map(r => generateReportCard(r)).join('');
+}
+
+function onReportSearchInput(query) {
+  if (reportSearchDebounced) {
+    reportSearchDebounced(query);
+  } else {
+    performReportSearch(query);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FUNCIONES DE ESTADÍSTICAS CON CACHE
+// ══════════════════════════════════════════════════════════════════════════════
+
+function getReportStats() {
+  // Usar cache si está disponible
+  if (typeof ReportStatsCache !== 'undefined') {
+    return ReportStatsCache.get(state.reports);
+  }
+  
+  // Fallback sin cache
+  const my = state.reports || [];
+  return {
+    total: my.length,
+    active: my.filter(r => r.status !== "Resuelto" && r.status !== "Rechazado").length,
+    resolved: my.filter(r => r.status === "Resuelto").length,
+    rejected: my.filter(r => r.status === "Rechazado").length
+  };
+}
+
+function renderReportStats() {
+  const stats = getReportStats();
+  return `
+    <div class="report-stats-summary">
+      <div class="stat-item active">
+        <span class="stat-icon">🚨</span>
+        <span class="stat-value">${stats.active}</span>
+        <span class="stat-label">Activos</span>
+      </div>
+      <div class="stat-item resolved">
+        <span class="stat-icon">✅</span>
+        <span class="stat-value">${stats.resolved}</span>
+        <span class="stat-label">Resueltos</span>
+      </div>
+      <div class="stat-item total">
+        <span class="stat-icon">📊</span>
+        <span class="stat-value">${stats.total}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  INICIALIZACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Auto-inicializar al cargar el DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initReportSearch();
+  });
+} else {
+  initReportSearch();
+}
+
+console.log('✅ reports-functions.js v2.0 cargado');
+console.log('✅ Funciones desacopladas del DOM');
+console.log('✅ Búsqueda optimizada con debounce');
+console.log('✅ Validación centralizada');
