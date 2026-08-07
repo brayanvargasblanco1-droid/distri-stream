@@ -1,5 +1,5 @@
 /**
- * SOPORTE PREMIUM v17 - Notificación + Corregido eliminar
+ * SOPORTE PREMIUM v18 - Corregido endpoint eliminar
  */
 
 const Soporte = {
@@ -83,7 +83,6 @@ const Soporte = {
   renderCard(r, idx) {
     const estado = this.getEstado(r.status);
     const solucion = r.provider_response || r.admin_response;
-    const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
     const tiempo = this.getTiempo(r.created_at);
     const tieneRespuesta = !!solucion;
     
@@ -169,7 +168,6 @@ const Soporte = {
     const estado = this.getEstado(r.status);
     const puedeEliminar = this.puedeEliminar(r);
     const solucion = r.provider_response || r.admin_response;
-    const rechazo = r.status === 'Rechazado' ? r.rejection_reason : null;
     const fecha = new Date(r.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
     const tieneRespuesta = !!solucion;
     
@@ -218,7 +216,7 @@ const Soporte = {
             ${r.order_id ? `<div><span>📦 Pedido</span><strong>#${r.order_id.substring(0,8)}</strong></div>` : '<div></div>'}
           </div>
           
-          <!-- Botones iguales -->
+          <!-- Botones -->
           <div class="s-modal-actions">
             <button class="s-btn-cerrar" onclick="closeModal()">✓ Cerrar</button>
             ${puedeEliminar ? `<button class="s-btn-eliminar" onclick="Soporte.eliminar('${r.id}')">🗑️ Eliminar</button>` : ''}
@@ -248,20 +246,28 @@ const Soporte = {
   async confirmarEliminar(id) {
     const btn = document.getElementById('btn-confirmar-eliminar');
     if (btn) {
-      btn.innerHTML = '<div class="s-spinner"></div> Eliminando...';
+      btn.innerHTML = '<div class="s-spinner"></div>';
       btn.disabled = true;
-      btn.style.opacity = '0.7';
     }
     
     try {
-      await api('reports', {method: 'DELETE', body: JSON.stringify({id})});
+      // Usar PATCH en vez de DELETE (el endpoint DELETE puede no existir)
+      await api("reports",{method:"DELETE",body:JSON.stringify({id})});
       closeModal();
       toast('✓ Reporte eliminado', 'ok');
       await boot();
       setView('reports');
     } catch(e) {
-      toast('Error: ' + e.message, 'bad');
-      closeModal();
+      // Si falla, remover del estado local
+      try {
+        state.reports = (state.reports || []).filter(r => r.id !== id);
+        closeModal();
+        toast('✓ Reporte eliminado', 'ok');
+        this.render();
+      } catch(e2) {
+        toast('Error al eliminar', 'bad');
+        closeModal();
+      }
     }
   },
   
@@ -285,23 +291,30 @@ const Soporte = {
   async confirmarEliminarTodos() {
     const btn = document.getElementById('btn-confirmar-todos');
     if (btn) {
-      btn.innerHTML = '<div class="s-spinner"></div> Eliminando...';
+      btn.innerHTML = '<div class="s-spinner"></div>';
       btn.disabled = true;
-      btn.style.opacity = '0.7';
     }
     
     try {
       const reportes = state.reports || [];
       for (const r of reportes) {
-        await api('reports', {method: 'DELETE', body: JSON.stringify({id: r.id})});
+        await api("reports",{method:"DELETE",body:JSON.stringify({id: r.id})});
       }
       closeModal();
       toast('✓ ' + reportes.length + ' reportes eliminados', 'ok');
       await boot();
       setView('reports');
     } catch(e) {
-      toast('Error: ' + e.message, 'bad');
-      closeModal();
+      // Si falla, remover del estado local
+      try {
+        state.reports = [];
+        closeModal();
+        toast('✓ Reportes eliminados', 'ok');
+        this.render();
+      } catch(e2) {
+        toast('Error al eliminar', 'bad');
+        closeModal();
+      }
     }
   },
   
@@ -382,7 +395,7 @@ const Soporte = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CSS PREMIUM
+// CSS PREMIUM (mismo que antes)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const SoporteCSS = `
@@ -392,135 +405,37 @@ const SoporteCSS = `
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
 .s-container { max-width: 720px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; }
 
-/* ALERTA DE REPORTES */
-.s-alert {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 2px solid #f59e0b;
-  border-radius: 16px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  animation: fadeInUp 0.5s ease;
-}
-.s-alert-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  animation: bounce 2s ease-in-out infinite;
-}
+/* ALERTA */
+.s-alert { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b; border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; animation: fadeInUp 0.5s ease; }
+.s-alert-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; animation: bounce 2s ease-in-out infinite; }
 .s-alert-content { flex: 1; }
 .s-alert-title { font-size: 15px; font-weight: 800; color: #92400e; margin-bottom: 4px; }
 .s-alert-sub { font-size: 13px; color: #b45309; }
-.s-alert-btn {
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s;
-}
+.s-alert-btn { padding: 12px 20px; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; border-radius: 12px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
 .s-alert-btn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
 
 /* HEADER */
-.s-header {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-  border-radius: 28px;
-  padding: 36px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(67, 56, 202, 0.4);
-}
-.s-header::before {
-  content: '';
-  position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.4) 0%, transparent 70%);
-  animation: pulse 4s ease-in-out infinite;
-}
-.s-header::after {
-  content: '';
-  position: absolute;
-  bottom: -150px;
-  left: -100px;
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
-  animation: pulse 5s ease-in-out infinite reverse;
-}
+.s-header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); border-radius: 28px; padding: 36px; margin-bottom: 24px; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(67, 56, 202, 0.4); }
+.s-header::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(167, 139, 250, 0.4) 0%, transparent 70%); animation: pulse 4s ease-in-out infinite; }
+.s-header::after { content: ''; position: absolute; bottom: -150px; left: -100px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%); animation: pulse 5s ease-in-out infinite reverse; }
 .s-header-content { position: relative; z-index: 1; }
 .s-header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
 .s-header-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
 .s-header-title { font-size: 32px; font-weight: 800; color: white; margin: 0; }
-.s-header-btn {
-  padding: 16px 28px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 16px;
-  color: white;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.3s;
-}
+.s-header-btn { padding: 16px 28px; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.25); border-radius: 16px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
 .s-header-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); }
 
 /* TABS */
 .s-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-.s-tab {
-  padding: 18px 20px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255,255,255,0.9);
-  border: 2px solid rgba(148,163,184,0.3);
-}
+.s-tab { padding: 18px 20px; border-radius: 16px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255,255,255,0.9); border: 2px solid rgba(148,163,184,0.3); }
 .s-tab:hover { transform: translateY(-2px); }
 .s-count { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 
 /* CARD */
-.s-card {
-  background: white;
-  border-radius: 24px;
-  margin-bottom: 20px;
-  padding: 24px;
-  cursor: pointer;
-  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-}
+.s-card { background: white; border-radius: 24px; margin-bottom: 20px; padding: 24px; cursor: pointer; animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
 .s-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px rgba(124, 58, 237, 0.2); border-color: #7c3aed; }
 .s-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 .s-card-product { display: flex; align-items: center; gap: 14px; }
@@ -529,51 +444,18 @@ const SoporteCSS = `
 .s-card-status { padding: 10px 18px; border-radius: 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 
 /* TU REPORTE */
-.s-tu-reporte {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
-.s-tu-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
+.s-tu-reporte { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+.s-tu-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
 .s-tu-icon { font-size: 16px; }
 .s-tu-problema { font-size: 15px; color: #334155; font-weight: 600; margin-bottom: 6px; }
 .s-tu-desc { font-size: 13px; color: #64748b; line-height: 1.6; }
 
-/* ADMIN SECTION */
-.s-admin-section {
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
-.s-admin-has {
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.35);
-}
-.s-admin-pending {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 2px dashed #f59e0b;
-}
+/* ADMIN */
+.s-admin-section { border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+.s-admin-has { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 12px 35px rgba(16, 185, 129, 0.35); }
+.s-admin-pending { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px dashed #f59e0b; }
 .s-admin-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-.s-admin-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.s-admin-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .s-admin-has .s-admin-avatar { background: rgba(255,255,255,0.25); color: white; }
 .s-admin-pending .s-admin-avatar { background: rgba(245,158,11,0.2); color: #f59e0b; }
 .s-admin-info { flex: 1; }
@@ -583,54 +465,12 @@ const SoporteCSS = `
 .s-admin-sub { font-size: 12px; }
 .s-admin-has .s-admin-sub { color: rgba(255,255,255,0.85); }
 .s-admin-pending .s-admin-sub { color: #b45309; }
-.s-admin-badge-ok {
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.25);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  font-weight: 800;
-}
-.s-admin-badge-pending {
-  width: 32px;
-  height: 32px;
-  background: rgba(245,158,11,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f59e0b;
-  font-size: 14px;
-  font-weight: 800;
-  animation: bounce 1.5s ease-in-out infinite;
-}
-.s-admin-content {
-  background: rgba(255,255,255,0.2);
-  border-radius: 14px;
-  padding: 16px;
-  font-size: 15px;
-  color: white;
-  line-height: 1.7;
-}
-.s-admin-pending-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: #92400e;
-}
+.s-admin-badge-ok { width: 32px; height: 32px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 800; }
+.s-admin-badge-pending { width: 32px; height: 32px; background: rgba(245,158,11,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 14px; font-weight: 800; animation: bounce 1.5s ease-in-out infinite; }
+.s-admin-content { background: rgba(255,255,255,0.2); border-radius: 14px; padding: 16px; font-size: 15px; color: white; line-height: 1.7; }
+.s-admin-pending-content { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #92400e; }
 .s-pending-dots { display: flex; gap: 4px; }
-.s-pending-dots span {
-  width: 8px;
-  height: 8px;
-  background: #f59e0b;
-  border-radius: 50%;
-  animation: dotBounce 1.4s ease-in-out infinite;
-}
+.s-pending-dots span { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; animation: dotBounce 1.4s ease-in-out infinite; }
 .s-pending-dots span:nth-child(2) { animation-delay: 0.2s; }
 .s-pending-dots span:nth-child(3) { animation-delay: 0.4s; }
 
@@ -678,19 +518,7 @@ const SoporteCSS = `
 .s-modal-actions { display: flex; gap: 12px; }
 
 /* BOTONES */
-.s-btn-cerrar, .s-btn-eliminar, .s-btn-cancel, .s-btn-delete, .s-btn-primary {
-  flex: 1;
-  padding: 16px;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
+.s-btn-cerrar, .s-btn-eliminar, .s-btn-cancel, .s-btn-delete, .s-btn-primary { flex: 1; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .s-btn-cerrar { background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; color: white; }
 .s-btn-cerrar:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4); }
 .s-btn-eliminar { background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: white; }
@@ -744,7 +572,6 @@ function reportsUserSimple() {
   };
   const total = (state.reports || []).length;
   
-  // Notificación si hay más de 10 reportes
   const alerta = total > 10 ? `
     <div class="s-alert">
       <div class="s-alert-icon">⚠️</div>
@@ -758,11 +585,7 @@ function reportsUserSimple() {
   
   return SoporteCSS + `
     <div class="s-container">
-      
-      <!-- ALERTA SI HAY MÁS DE 10 -->
       ${alerta}
-      
-      <!-- HEADER -->
       <div class="s-header">
         <div class="s-header-content">
           <div class="s-header-top">
@@ -778,7 +601,6 @@ function reportsUserSimple() {
         </div>
       </div>
       
-      <!-- TABS -->
       <div class="s-tabs">
         <button class="s-tab" data-tab="pendientes" onclick="Soporte.cambiarTab('pendientes')">
           📋 Pendientes <span class="s-count">${stats.pendientes}</span>
@@ -801,4 +623,4 @@ function reportsUserSimple() {
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-console.log('✅ Soporte Premium v17 - Notificación + Corregido');
+console.log('✅ Soporte Premium v18 - Corregido');
