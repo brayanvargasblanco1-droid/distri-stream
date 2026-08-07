@@ -2702,8 +2702,16 @@
     function checkBalanceAlerts(){
       if(isAdmin()) return;
       const bal = Number(state.user?.balance || 0);
-      if(bal < 10000) toast("Saldo bajo: " + money(bal) + ". Recarga pronto.", "bad");
-      else if(bal < 30000) toast("Saldo: " + money(bal) + ". Considera recargar.", "ok");
+      // Solo mostrar si es <= 2000 y solo una vez por día
+      const today = new Date().toDateString();
+      const lastShown = localStorage.getItem('lowBalanceAlertDate');
+      const lastBalance = localStorage.getItem('lowBalanceAlertBalance') || '0';
+      
+      if(bal <= 2000 && lastShown !== today){
+        toast("Saldo bajo: " + money(bal) + ". Recarga pronto.", "bad");
+        localStorage.setItem('lowBalanceAlertDate', today);
+        localStorage.setItem('lowBalanceAlertBalance', String(bal));
+      }
     }
 
     // ─── NAVEGACION ────────────────────────────────────
@@ -3024,10 +3032,8 @@
     }
     function balanceAlertCard(){
       const bal = Number(state.user?.balance || 0);
-      if(bal > 30000) return "";
-      const cls = bal < 10000 ? "danger" : "info";
-      const msg = bal < 10000 ? "Saldo critico. Recarga urgente para seguir vendiendo." : "Saldo bajo. Considera recargar pronto.";
-      return `<section class="alert-card ${cls}"><b>${msg}</b> Saldo actual: ${money(bal)}</section>`;
+      if(bal > 2000) return ""; // Solo mostrar si es <= 2000
+      return `<section class="alert-card danger"><b>Saldo critico. Recarga urgente para seguir vendiendo.</b> Saldo actual: ${money(bal)}</section>`;
     }
     function quickButton(target,svg,label,cls=""){
       const click=target==="topup"?"openTopup()":`setView('${target}')`;
