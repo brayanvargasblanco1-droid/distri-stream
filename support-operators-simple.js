@@ -1,6 +1,5 @@
 /**
- * SOPORTE PREMIUM v7 - SIMPLE Y CLARO
- * Sin stats, tabs claros, solución visible
+ * SOPORTE PREMIUM v8 - CON HEADER
  */
 
 const Soporte = {
@@ -38,23 +37,21 @@ const Soporte = {
   },
   
   render() {
-    // Actualizar tabs
     document.querySelectorAll('.soporte-tab').forEach(btn => {
       if (btn.dataset.tab === this.tabActual) {
         btn.style.background = '#6366f1';
         btn.style.color = 'white';
         btn.style.borderColor = '#6366f1';
-        btn.querySelector('.tab-count').style.background = 'rgba(255,255,255,0.25)';
-        btn.querySelector('.tab-count').style.color = 'white';
+        btn.querySelector('.count').style.background = 'rgba(255,255,255,0.25)';
+        btn.querySelector('.count').style.color = 'white';
       } else {
         btn.style.background = 'white';
         btn.style.color = '#6b7280';
         btn.style.borderColor = '#e5e7eb';
-        btn.querySelector('.tab-count').style.background = '#f3f4f6';
-        btn.querySelector('.tab-count').style.color = '#6b7280';
+        btn.querySelector('.count').style.background = '#f3f4f6';
+        btn.querySelector('.count').style.color = '#6b7280';
       }
     });
-    
     document.getElementById('soporte_lista').innerHTML = this.renderReportes();
   },
   
@@ -64,8 +61,8 @@ const Soporte = {
     if (reportes.length === 0) {
       const info = {
         pendientes: { icon: '📋', titulo: 'No hay reportes pendientes', sub: 'Todo está en orden 👍' },
-        resueltos: { icon: '✅', titulo: 'No hay reportes resueltos', sub: 'Los reportes resueltos aparecerán aquí' },
-        rechazados: { icon: '❌', titulo: 'No hay reportes rechazados', sub: 'Los reportes rechazados aparecerán aquí' }
+        resueltos: { icon: '✅', titulo: 'No hay reportes resueltos', sub: 'Los resueltos aparecerán aquí' },
+        rechazados: { icon: '❌', titulo: 'No hay reportes rechazados', sub: 'Los rechazados aparecerán aquí' }
       };
       const i = info[this.tabActual];
       return `
@@ -90,7 +87,6 @@ const Soporte = {
     return `
       <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;animation:fadeIn 0.4s ease ${index * 0.05}s both">
         <div style="padding:20px">
-          <!-- Header -->
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
             <div style="flex:1">
               <div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:6px">${escHtml(r.product_name || 'Producto')}</div>
@@ -101,14 +97,8 @@ const Soporte = {
             </div>
           </div>
           
-          <!-- Descripción si existe -->
-          ${r.description ? `
-            <div style="font-size:14px;color:#6b7280;margin-bottom:12px;line-height:1.5">
-              ${escHtml(r.description)}
-            </div>
-          ` : ''}
+          ${r.description ? `<div style="font-size:14px;color:#6b7280;margin-bottom:12px;line-height:1.5">${escHtml(r.description)}</div>` : ''}
           
-          <!-- SOLUCIÓN del administrador -->
           ${solucion ? `
             <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px;margin-bottom:12px">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -118,7 +108,6 @@ const Soporte = {
             </div>
           ` : ''}
           
-          <!-- RECHAZO -->
           ${rechazo ? `
             <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:12px">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -128,16 +117,13 @@ const Soporte = {
             </div>
           ` : ''}
           
-          <!-- Footer -->
           <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f3f4f6">
             <span style="font-size:12px;color:#9ca3af">📅 ${tiempo}</span>
-            <div style="display:flex;gap:8px">
-              ${puedeEliminar ? `
-                <button onclick="Soporte.eliminar('${r.id}')" style="padding:8px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer">
-                  🗑️ Eliminar
-                </button>
-              ` : ''}
-            </div>
+            ${puedeEliminar ? `
+              <button onclick="Soporte.eliminar('${r.id}')" style="padding:8px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer">
+                🗑️ Eliminar
+              </button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -279,7 +265,7 @@ const Soporte = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🏠 RENDER PRINCIPAL
+// 🏠 RENDER PRINCIPAL CON HEADER CUADRO
 // ═══════════════════════════════════════════════════════════════════════════
 
 function reportsUserSimple() {
@@ -294,36 +280,43 @@ function reportsUserSimple() {
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
     <div style="max-width:700px;margin:0 auto">
-      <!-- Header simple -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:1px">Centro de Soporte</div>
-          <h1 style="font-size:24px;font-weight:800;color:#111827;margin:4px 0 0">Mis Reportes</h1>
+      
+      <!-- CUADRITO AZUL/PÚRPURA CON HEADER -->
+      <div style="background:linear-gradient(135deg,#4338ca 0%,#6366f1 50%,#818cf8 100%);border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
+        <div style="position:absolute;bottom:-80px;left:-40px;width:250px;height:250px;background:rgba(255,255,255,0.05);border-radius:50%"></div>
+        
+        <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">Centro de Soporte</div>
+            <h1 style="font-size:26px;font-weight:800;color:white;margin:0">Mis Reportes</h1>
+          </div>
+          <button onclick="Soporte.mostrarCrear()" style="padding:14px 24px;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);border-radius:14px;color:white;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px">
+            ➕ Nuevo Reporte
+          </button>
         </div>
-        <button onclick="Soporte.mostrarCrear()" style="padding:12px 20px;background:#6366f1;border:none;border-radius:12px;color:white;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(99,102,241,0.3)">
-          ➕ Nuevo Reporte
-        </button>
       </div>
       
-      <!-- Tabs claros -->
+      <!-- TABS -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
         <button onclick="Soporte.cambiarTab('pendientes')" data-tab="pendientes" class="soporte-tab ${Soporte.tabActual === 'pendientes' ? 'active' : ''}">
           📋 Pendientes
-          <span class="tab-count" style="padding:4px 10px;background:${Soporte.tabActual === 'pendientes' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'pendientes' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.pendientes}</span>
+          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'pendientes' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'pendientes' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.pendientes}</span>
         </button>
         <button onclick="Soporte.cambiarTab('resueltos')" data-tab="resueltos" class="soporte-tab ${Soporte.tabActual === 'resueltos' ? 'active' : ''}">
           ✅ Resueltos
-          <span class="tab-count" style="padding:4px 10px;background:${Soporte.tabActual === 'resueltos' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'resueltos' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.resueltos}</span>
+          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'resueltos' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'resueltos' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.resueltos}</span>
         </button>
         <button onclick="Soporte.cambiarTab('rechazados')" data-tab="rechazados" class="soporte-tab ${Soporte.tabActual === 'rechazados' ? 'active' : ''}">
           ❌ Rechazados
-          <span class="tab-count" style="padding:4px 10px;background:${Soporte.tabActual === 'rechazados' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'rechazados' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.rechazados}</span>
+          <span class="count" style="padding:4px 10px;background:${Soporte.tabActual === 'rechazados' ? 'rgba(255,255,255,0.25)' : '#f3f4f6'};color:${Soporte.tabActual === 'rechazados' ? 'white' : '#6b7280'};border-radius:20px;font-size:12px;font-weight:700">${stats.rechazados}</span>
         </button>
       </div>
       
       <style>
         .soporte-tab { padding:16px;background:${Soporte.tabActual === 'pendientes' ? '#6366f1' : 'white'};border:2px solid ${Soporte.tabActual === 'pendientes' ? '#6366f1' : '#e5e7eb'};border-radius:14px;font-size:14px;font-weight:700;color:${Soporte.tabActual === 'pendientes' ? 'white' : '#6b7280'};cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px }
         .soporte-tab:hover { border-color:#6366f1 }
+        .soporte-tab.active { background:#6366f1;border-color:#6366f1;color:white }
       </style>
       
       <!-- Lista -->
@@ -337,4 +330,4 @@ function escHtml(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-console.log('✅ Soporte Premium v7 - Simple y claro');
+console.log('✅ Soporte Premium v8 - Con header cuadrito');
