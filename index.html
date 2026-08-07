@@ -8665,25 +8665,6 @@
     // ─── INIT ──────────────────────────────────────────
     const icon=document.getElementById('appleTouchIcon');if(icon)icon.href="assets/distrito-login-brand.png";
     token ? boot().catch(()=>{localStorage.removeItem("dsToken");token="";renderLogin()}) : renderLogin();
-  
-        toast(e.message, "bad");
-      } finally {
-        hideLoading();
-      }
-    }
-    
-    async function deleteReport(id) {
-      try {
-        showLoading("Eliminando...");
-        await api('reports', {method: 'DELETE', body: JSON.stringify({id: id})});
-        toast("Reporte eliminado", "ok");
-        await boot();
-      } catch(e) {
-        toast(e.message, "bad");
-      } finally {
-        hideLoading();
-      }
-    }
 </script>
 <!-- MEJORAS DE REPORTES Y SOPORTE -->
 <link rel="stylesheet" href="reports-styles.css?v=6">
