@@ -314,10 +314,10 @@ function improvedReportsView() {
       </div>
       
       <div class="reports-tabs">
-        <button onclick="switchReportsTab('active')" id="tab_reports_active" class="reports-tab ${active.length > 0 ? 'active' : ''}">
+        <button onclick="switchReportsTab('active')" id="tab_reports_active" class="reports-tab active">
           🔵 En Proceso <span class="tab-count">${active.length}</span>
         </button>
-        <button onclick="switchReportsTab('resolved')" id="tab_reports_resolved" class="reports-tab ${active.length === 0 && resolved.length > 0 ? 'active' : ''}">
+        <button onclick="switchReportsTab('resolved')" id="tab_reports_resolved" class="reports-tab">
           ✅ Resueltos <span class="tab-count">${resolved.length}</span>
         </button>
       </div>
