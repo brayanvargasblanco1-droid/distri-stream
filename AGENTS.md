@@ -98,3 +98,14 @@ runQuickTest();
 - Dark mode mobile-nav arreglado (antes blanco brillante en dark → ahora rgba(17,24,39,.95)).
 - toggleDark ya usa #0a0f1a en su overlay → sin flash de color inconsistente.
 - Validado: JS sintaxis OK, build OK, mock removido, 0 placeholders sin restaurar. Login, dashboard, inventario, publicidad funcionan en light+dark.
+
+## Material de Venta (cliente/revendedor) — mejora UX premium 2026-08-08
+- Antes: cliente/revendedor solo veian un `<h1>` plano + grid de cards basicas (clase `.product` generica de la tienda) con botones Copiar/Enviar.
+- Ahora: **hero premium** (gradiente azul→purpura, icono, glow radial, stats de anuncios disponibles) + **filtro por categoria** (chips: Todos/Promo/Urgente/Info/Aviso) + **cards premium**.
+- `adCard(a,idx)` redisenada: poster con gradiente segun categoria (azul/verde/naranja/rojo) + shine animado, badge de categoria con icono, precio destacado, texto con line-clamp, botones con jerarquia (Copiar primario lleno, WhatsApp cuadrado verde, Editar/Eliminar iconos para admin), animacion de entrada escalonada (stagger via animation-delay).
+- `setAdFilter(cat)` guarda en `window._adFilterCat` y re-renderiza. Solo se muestran chips si hay >1 categoria.
+- Empty state premium (icono SVG en circulo gradiente + titulo + texto).
+- Responsive: grid 2 columnas en mobile, media height ajustada.
+- Dark mode: hero/filtros/cards/empty con overrides coherentes.
+- Sin romper admin: `ads()` admin sigue con tabs Subir/Ver; adCard preserva order-buttons, stats de copias/descargas, editar/eliminar.
+- Funciones intactas: openCopyModal, confirmCopy, shareAdWhatsApp, moveAd, editAd, deleteAd.

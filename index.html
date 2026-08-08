@@ -1402,7 +1402,6 @@
     .ad-stat{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
     .ad-stat svg{width:12px;height:12px;stroke:var(--muted)}
     .ad-expired{position:relative}
-    .ad-expired::after{content:"VENCIDO";position:absolute;top:12px;right:12px;background:rgba(239,68,68,.9);color:#fff;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800;z-index:2}
     .ad-order-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:all .15s;font-size:12px}
     .ad-order-btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(8,119,255,.04)}
     .ad-order-btn:disabled{opacity:.3;cursor:not-allowed}
@@ -1414,6 +1413,85 @@
     .ad-preview-card .body{padding:16px}
     .ad-preview-card h3{margin:0 0 6px;font-size:16px}
     .ad-preview-card p{margin:0 0 12px;font-size:12px;color:var(--muted)}
+
+    /* ─── MATERIAL DE VENTA: HERO + FILTROS + CARDS PREMIUM ─── */
+    .ad-hero{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:24px 28px;margin-bottom:18px;background:linear-gradient(135deg,rgba(8,119,255,.1),rgba(124,58,237,.08));border:1px solid rgba(8,119,255,.15);box-shadow:0 8px 32px rgba(8,119,255,.08)}
+    .ad-hero-glow{position:absolute;top:-60%;right:-20%;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(8,119,255,.18),transparent 65%);pointer-events:none}
+    .ad-hero-content{position:relative;display:flex;align-items:center;gap:18px;z-index:1}
+    .ad-hero-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#0877ff,#7c3aed);display:grid;place-items:center;flex-shrink:0;box-shadow:0 8px 24px rgba(8,119,255,.35)}
+    .ad-hero-icon svg{width:28px;height:28px;stroke:#fff}
+    .ad-hero-text h2{margin:0;font-size:22px;font-weight:900;letter-spacing:-.02em}
+    .ad-hero-text p{margin:4px 0 8px;font-size:13px;color:var(--muted)}
+    .ad-hero-stats{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--text)}
+    .ad-hero-stats b{color:var(--blue);font-size:14px}
+    .ad-hero-dot{width:4px;height:4px;border-radius:50%;background:var(--muted);opacity:.5}
+    body.dark .ad-hero{background:linear-gradient(135deg,rgba(8,119,255,.15),rgba(124,58,237,.1));border-color:rgba(45,58,79,.6);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    body.dark .ad-hero-glow{background:radial-gradient(circle,rgba(8,119,255,.22),transparent 65%)}
+
+    .ad-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .ad-chip{padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);display:inline-flex;align-items:center;gap:5px}
+    .ad-chip:hover{border-color:rgba(8,119,255,.3);color:var(--text);transform:translateY(-1px)}
+    .ad-chip.active{background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(8,119,255,.3)}
+    body.dark .ad-chip{background:rgba(31,41,55,.7);border-color:rgba(45,58,79,.5)}
+
+    .ad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+    .ad-card{overflow:hidden;position:relative;animation:adCardIn .4s cubic-bezier(.2,.8,.2,1) both;display:flex;flex-direction:column}
+    @keyframes adCardIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @media(prefers-reduced-motion:reduce){.ad-card{animation:none}}
+    .ad-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(8,119,255,.15)}
+    .ad-order-wrap{position:absolute;top:8px;left:8px;z-index:3;display:flex;gap:4px;opacity:0;transition:opacity .2s}
+    .ad-card:hover .ad-order-wrap{opacity:1}
+    .ad-media{width:100%;height:170px;overflow:hidden;position:relative;background:var(--soft)}
+    .ad-media img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+    .ad-card:hover .ad-media img{transform:scale(1.05)}
+    .ad-poster{width:100%;height:100%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+    .ad-poster-brand{font-size:10px;font-weight:900;letter-spacing:.3em;color:rgba(255,255,255,.5);z-index:1}
+    .ad-poster-title{font-size:15px;font-weight:1000;color:#fff;text-align:center;padding:0 16px;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,.3);line-height:1.2}
+    .ad-poster-shine{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.12) 50%,transparent 60%);animation:adShine 4s ease-in-out infinite}
+    @keyframes adShine{0%,100%{transform:translate(-30%,-30%)}50%{transform:translate(30%,30%)}}
+    @media(prefers-reduced-motion:reduce){.ad-poster-shine{animation:none}}
+    .ad-poster-promo{background:linear-gradient(135deg,#0877ff,#0057dc)}
+    .ad-poster-info{background:linear-gradient(135deg,#10b981,#059669)}
+    .ad-poster-aviso{background:linear-gradient(135deg,#f59e0b,#d97706)}
+    .ad-poster-urgente{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    .ad-expired-tag{position:absolute;top:10px;right:10px;background:rgba(239,68,68,.92);color:#fff;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800;z-index:2;backdrop-filter:blur(4px)}
+    .ad-body{padding:14px 16px 16px;display:flex;flex-direction:column;flex:1}
+    .ad-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+    .ad-category{font-size:10px;padding:4px 10px}
+    .ad-expiry{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);font-weight:600}
+    .ad-title{font-size:15px;font-weight:800;color:var(--text);margin:0 0 6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px}
+    .ad-copy{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+    .ad-price{font-size:20px;font-weight:1000;color:var(--blue);margin-bottom:12px;letter-spacing:-.02em}
+    body.dark .ad-price{color:#00d4ff;text-shadow:0 0 12px rgba(0,212,255,.3)}
+    .ad-actions{display:flex;gap:8px;align-items:center;margin-top:auto}
+    .ad-copy-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:0;border-radius:10px;font-size:12px;font-weight:700;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(8,119,255,.25)}
+    .ad-copy-btn svg{width:14px;height:14px;stroke:#fff}
+    .ad-copy-btn:hover{box-shadow:0 6px 18px rgba(8,119,255,.4);transform:translateY(-1px)}
+    .ad-whatsapp-btn{flex-shrink:0;width:40px;height:40px;padding:0;border-radius:10px;display:grid;place-items:center}
+    .ad-whatsapp-btn svg{width:18px;height:18px}
+    .ad-whatsapp-btn span{display:none}
+    .ad-edit-btn{flex-shrink:0;width:40px;height:40px;padding:0;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line)}
+    .ad-edit-btn svg{width:16px;height:16px}
+    .ad-del-btn{flex-shrink:0;width:40px;height:40px;padding:0;border-radius:10px;display:grid;place-items:center;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2)}
+    .ad-del-btn svg{width:16px;height:16px;stroke:#ef4444}
+    .ad-del-btn:hover{background:rgba(239,68,68,.18)}
+    body.dark .ad-card{background:var(--panel);border-color:var(--line)}
+    body.dark .ad-media{background:rgba(31,41,55,.5)}
+
+    .ad-empty{background:var(--panel);border-radius:var(--radius);padding:64px 24px;text-align:center;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:10px}
+    .ad-empty-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(8,119,255,.1),rgba(124,58,237,.08));display:grid;place-items:center;margin-bottom:8px}
+    .ad-empty-icon svg{width:32px;height:32px;stroke:var(--blue);opacity:.6}
+    .ad-empty-title{font-size:17px;font-weight:800;color:var(--text)}
+    .ad-empty-text{font-size:13px;color:var(--muted);max-width:280px}
+    body.dark .ad-empty-icon{background:linear-gradient(135deg,rgba(8,119,255,.15),rgba(124,58,237,.1))}
+    @media(max-width:480px){
+      .ad-hero{padding:18px 20px}
+      .ad-hero-text h2{font-size:18px}
+      .ad-hero-icon{width:48px;height:48px}
+      .ad-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+      .ad-media{height:130px}
+      .ad-copy-btn span,.ad-whatsapp-btn span{font-size:11px}
+    }
 
     /* ─── PANEL ADMIN IMPROVEMENTS ─── */
     .today-summary{background:linear-gradient(135deg,rgba(8,119,255,.08),rgba(8,119,255,.02));border:1.5px solid rgba(8,119,255,.15);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px}
@@ -5486,23 +5564,49 @@
         html+=renderAdsGrid(allAds,true);
         html+=`</div>`;
       } else {
-        // Cliente / Revendedor: solo material activo, sin pestañas
-        html+=renderAdsGrid(activeAds,false);
+        // Cliente / Revendedor: hero + filtro + material activo
+        const cats=[...new Set(activeAds.map(a=>a.category||"promo"))];
+        const currentFilter=window._adFilterCat||"all";
+        const filteredAds=currentFilter==="all"?activeAds:activeAds.filter(a=>(a.category||"promo")===currentFilter);
+        const catMeta={promo:{label:"Promo",icon:"🔥"},info:{label:"Info",icon:"ℹ️"},aviso:{label:"Aviso",icon:"📢"},urgente:{label:"Urgente",icon:"⚡"}};
+        html+=`<div class="ad-hero">
+          <div class="ad-hero-glow"></div>
+          <div class="ad-hero-content">
+            <div class="ad-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div>
+            <div class="ad-hero-text">
+              <h2>Material de Venta</h2>
+              <p>Copia el texto o comparte por WhatsApp para vender mas rapido</p>
+              <div class="ad-hero-stats"><span><b>${activeAds.length}</b> ${activeAds.length===1?"anuncio":"anuncios"} disponible${activeAds.length===1?"":"s"}</span>${cats.length>1?`<span class="ad-hero-dot"></span><span>${cats.length} categorias</span>`:""}</div>
+            </div>
+          </div>
+        </div>`;
+        if(cats.length>1){
+          html+=`<div class="ad-filters">
+            <button class="ad-chip ${currentFilter==="all"?"active":""}" onclick="setAdFilter('all')">Todos</button>
+            ${cats.map(c=>{const m=catMeta[c]||catMeta.promo;return `<button class="ad-chip ${currentFilter===c?"active":""}" onclick="setAdFilter('${c}')">${m.icon} ${m.label}</button>`}).join("")}
+          </div>`;
+        }
+        html+=renderAdsGrid(filteredAds,false);
       }
 
       html+=`</section>`;
       return html;
     }
 
+    function setAdFilter(cat){
+      window._adFilterCat=cat;
+      renderApp();
+    }
+
     function renderAdsGrid(adsList,withAdminTools){
       if(adsList.length===0){
-        return `<div style="background:var(--panel);border-radius:16px;padding:60px;text-align:center;border:1px solid var(--line)">
-          <div style="font-size:64px;margin-bottom:16px">📭</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px">No hay material disponible</div>
-          <div style="font-size:14px;color:var(--muted)">${withAdminTools?"Crea un anuncio desde la pestana Subir":"Vuelve pronto, pronto agregaremos material"}</div>
+        return `<div class="ad-empty">
+          <div class="ad-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+          <div class="ad-empty-title">No hay material disponible</div>
+          <div class="ad-empty-text">${withAdminTools?"Crea un anuncio desde la pestana Subir":"Vuelve pronto, pronto agregaremos material de venta"}</div>
         </div>`;
       }
-      return `<div class="store-grid">${adsList.map(adCard).join("")}</div>`;
+      return `<div class="store-grid ad-grid">${adsList.map((a,i)=>adCard(a,i)).join("")}</div>`;
     }
 
     function showAdTab(tab){
@@ -5604,38 +5708,45 @@
       try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}
     }
 
-    function adCard(a){
+    function adCard(a,idx){
       const hasImage=a.image_data||a.file_url;
       const isExpired=a.status==="Vencida"||(a.expiry&&new Date(a.expiry)<new Date());
       const catClass=a.category||"promo";
       const catLabel=({promo:"Promo",info:"Info",aviso:"Aviso",urgente:"Urgente"})[catClass]||"Promo";
+      const catIcon=({promo:"🔥",info:"ℹ️",aviso:"📢",urgente:"⚡"})[catClass]||"🔥";
       const expiryText=a.expiry?`Vence: ${new Date(a.expiry).toLocaleDateString("es-CO")}`:"";
       const waText=encodeURIComponent(`${a.title}\n\n${a.copy_text||a.short_text||""}${a.price?`\nPrecio: ${a.price}`:""}`);
-      return `<article class="card product ${isExpired?"ad-expired":""}" style="overflow:hidden;position:relative">
-        ${isAdmin()?`<div style="position:absolute;top:8px;left:8px;z-index:3;display:flex;gap:4px">
+      const price=a.price||"";
+      const delay=Math.min((idx||0)*60,420);
+      return `<article class="card product ad-card ${isExpired?"ad-expired":""}" style="animation-delay:${delay}ms">
+        ${isAdmin()?`<div class="ad-order-wrap">
           <button class="ad-order-btn" onclick="moveAd('${a.id}',-1)" title="Mover arriba">↑</button>
           <button class="ad-order-btn" onclick="moveAd('${a.id}',1)" title="Mover abajo">↓</button>
         </div>`:""}
-        ${hasImage?`<div style="width:100%;height:160px;overflow:hidden;background:#f0f0f5"><img src="${a.image_data||a.file_url}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover"></div>`:`<div class="poster other"><span class="shine"></span><span class="svc">DISTRITO</span><div class="logo-word">${a.title}</div></div>`}
-        <div class="product-body">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-            <span class="ad-category ${catClass}">${catLabel}</span>
-            ${expiryText?`<span style="font-size:9px;color:var(--muted)">${expiryText}</span>`:""}
+        <div class="ad-media">
+          ${hasImage?`<img src="${a.image_data||a.file_url}" alt="${a.title}" loading="lazy">`:`<div class="ad-poster ad-poster-${catClass}"><span class="ad-poster-shine"></span><span class="ad-poster-brand">DISTRITO</span><div class="ad-poster-title">${a.title}</div></div>`}
+          ${isExpired?`<div class="ad-expired-tag">VENCIDO</div>`:""}
+        </div>
+        <div class="product-body ad-body">
+          <div class="ad-meta">
+            <span class="ad-category ${catClass}">${catIcon} ${catLabel}</span>
+            ${expiryText?`<span class="ad-expiry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${expiryText}</span>`:""}
           </div>
-          <h3>${a.title}</h3>
-          <p class="mini">${a.short_text||a.copy_text||""}</p>
+          <h3 class="ad-title">${a.title}</h3>
+          <p class="ad-copy">${a.short_text||a.copy_text||""}</p>
+          ${price?`<div class="ad-price">${price}</div>`:""}
           ${isAdmin()&&(a.copies||a.downloads)?`<div class="ad-stats">
             ${a.copies?`<span class="ad-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>${a.copies} copias</span>`:""}
             ${a.downloads?`<span class="ad-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>${a.downloads} descargas</span>`:""}
           </div>`:""}
-          <div class="row-actions" style="margin-top:10px">
-            <button class="primary" onclick="openCopyModal('${a.id}','${escapeJs(a.title)}','${escapeJs(a.copy_text||a.short_text||"")}','${escapeJs(a.price||"")}')">${icons.copy} Copiar</button>
-            <button class="ad-whatsapp-btn" onclick="shareAdWhatsApp('${escapeJs(a.title)}','${waText}')">
+          <div class="ad-actions">
+            <button class="primary ad-copy-btn" onclick="openCopyModal('${a.id}','${escapeJs(a.title)}','${escapeJs(a.copy_text||a.short_text||"")}','${escapeJs(price)}')">${icons.copy}<span>Copiar</span></button>
+            <button class="ad-whatsapp-btn" onclick="shareAdWhatsApp('${escapeJs(a.title)}','${waText}')" title="Compartir por WhatsApp">
               <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Enviar
+              <span>Enviar</span>
             </button>
-            ${isAdmin()?`<button class="ghost" onclick="editAd('${a.id}')" style="color:var(--blue)">${icons.admin} Editar</button>`:""}
-            ${isAdmin()?`<button class="danger-btn" onclick="confirmDeleteAd('${a.id}','${escapeJs(a.title)}')" style="display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="flex-shrink:0"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>Eliminar</button>`:""}
+            ${isAdmin()?`<button class="ghost ad-edit-btn" onclick="editAd('${a.id}')" title="Editar">${icons.admin}</button>`:""}
+            ${isAdmin()?`<button class="danger-btn ad-del-btn" onclick="confirmDeleteAd('${a.id}','${escapeJs(a.title)}')" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>`:""}
           </div>
         </div>
       </article>`;
