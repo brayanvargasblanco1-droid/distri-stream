@@ -1,5 +1,5 @@
-const CACHE_NAME = "distrito-v7";
-const ASSETS_TO_CACHE = ["/", "/manifest.json", "/assets/distrito-angel-blue-v1.png"];
+const CACHE_NAME = "distrito-v8";
+const ASSETS_TO_CACHE = ["/", "/manifest.json", "/assets/distrito-angel-blue-v1.png", "/distrito-2026.css?v=4"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS_TO_CACHE)));

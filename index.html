@@ -2046,6 +2046,8 @@
     }
 
   </style>
+  <!-- Visual transformation overlay 2026 (carga al final para sobrescribir) -->
+  <link rel="stylesheet" href="distrito-2026.css?v=4">
 </head>
 <body>
   <div id="root"></div>
@@ -2955,19 +2957,47 @@
         other:`<div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">?</div>`
       };
 
+      const reseller = isReseller();
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+
+      // Metricas por rol
+      const monthOrders = state.orders.filter(o => {
+        const d = new Date(o.created_at || o.expires_at || "");
+        return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+      });
+      const monthRevenue = monthOrders.reduce((s,o) => s + Number(o.amount || 0), 0);
+      const avgTicket = monthOrders.length ? Math.round(monthRevenue / monthOrders.length) : 0;
+      const nextExpiry = expiring.length ? expiring[0] : null;
+      const nextExpiryDays = nextExpiry ? daysLeft(nextExpiry.expires_at) : null;
+      const lowBalance = Number(state.user?.balance || 0) <= 2000;
+      const resellerTagline = reseller
+        ? `${monthOrders.length} ventas este mes`
+        : `${activeOrdersCount} pantallas activas`;
+
       return `
-      <div class="home-container">
+      <div class="home-container home-${reseller ? 'reseller' : 'client'}">
         <!-- HEADER SALUDO -->
         <div class="home-greeting">
           <div class="greeting-text">
             <span class="greeting-hi">${greeting}</span>
-            <h1 class="greeting-name">${firstName} 👋</h1>
+            <h1 class="greeting-name">${firstName} <span class="greeting-emoji">👋</span></h1>
+            <span class="greeting-tagline">${resellerTagline}</span>
           </div>
           <div class="greeting-date">
-            <span class="date-day">${new Date().toLocaleDateString("es-CO", {day:"2-digit"})}</span>
-            <span class="date-month">${new Date().toLocaleDateString("es-CO", {month:"short"})}</span>
+            <span class="date-day">${now.toLocaleDateString("es-CO", {day:"2-digit"})}</span>
+            <span class="date-month">${now.toLocaleDateString("es-CO", {month:"short"})}</span>
           </div>
         </div>
+
+        ${lowBalance ? `
+        <div class="home-alert danger" onclick="openTopup()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Saldo critico. Recarga para seguir ${reseller ? 'vendiendo' : 'comprando'}.</span>
+          <b>Recargar</b>
+        </div>
+        ` : ""}
 
         <!-- CAROUSEL INFO -->
         <div class="carousel" id="homeCarousel">
@@ -2996,7 +3026,7 @@
               <div class="slide-icon">🎬</div>
               <div class="slide-content">
                 <h3>Bienvenido a Distrito Streaming</h3>
-                <p>Compra, vende y gestiona tus pantallas de streaming de forma facil y segura.</p>
+                <p>${reseller ? 'Vende, gestiona y haz crecer tu negocio de pantallas.' : 'Compra, vende y gestiona tus pantallas de streaming de forma facil y segura.'}</p>
               </div>
             </div>
           </div>
@@ -3012,12 +3042,29 @@
         <div class="balance-card">
           <div class="balance-bg"></div>
           <div class="balance-content">
-            <div class="balance-label">Saldo disponible</div>
-            <div class="balance-amount" id="balanceAmount">${money(state.user?.balance || 0)}</div>
+            <div class="balance-top">
+              <div>
+                <div class="balance-label">Saldo disponible</div>
+                <div class="balance-amount" id="balanceAmount">${money(state.user?.balance || 0)}</div>
+              </div>
+              ${reseller ? `
+              <div class="balance-meta">
+                <span class="balance-meta-label">Ventas del mes</span>
+                <span class="balance-meta-value">${money(monthRevenue)}</span>
+              </div>` : nextExpiry ? `
+              <div class="balance-meta">
+                <span class="balance-meta-label">Proxima a vencer</span>
+                <span class="balance-meta-value">${nextExpiryDays < 0 ? 'Vencida' : nextExpiryDays + 'd'}</span>
+              </div>` : ""}
+            </div>
             <div class="balance-actions">
               <button class="balance-btn" onclick="openTopup()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                 Recargar
+              </button>
+              <button class="balance-btn-outline" onclick="setView('store')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                ${reseller ? 'Vender' : 'Comprar'}
               </button>
               <button class="balance-btn-outline" onclick="openQrCode()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -3031,12 +3078,12 @@
         <div class="stats-row">
           <div class="stat-item">
             <div class="stat-value">${activeOrdersCount}</div>
-            <div class="stat-label">Pantallas activas</div>
+            <div class="stat-label">${reseller ? 'Pantallas activas' : 'Pantallas activas'}</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <div class="stat-value">${money(totalSpent)}</div>
-            <div class="stat-label">Total invertido</div>
+            <div class="stat-value">${money(reseller ? monthRevenue : totalSpent)}</div>
+            <div class="stat-label">${reseller ? 'Ingresos del mes' : 'Total invertido'}</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
@@ -3045,32 +3092,44 @@
           </div>
         </div>
 
+        ${reseller && avgTicket > 0 ? `
+        <div class="home-insight">
+          <div class="insight-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+          </div>
+          <div class="insight-text">
+            <span class="insight-title">Ticket promedio</span>
+            <span class="insight-value">${money(avgTicket)} <small>por venta</small></span>
+          </div>
+        </div>
+        ` : ""}
+
         <!-- QUICK ACTIONS MEJORADO -->
         <div class="section-title">Acciones rapidas</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-          <button onclick="setView('store')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">
-            <div style="width:48px;height:48px;border-radius:12px;background:rgba(8,119,255,.1);display:grid;place-items:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <div class="quick-actions-grid">
+          <button class="quick-action-card qa-store" onclick="setView('store')">
+            <div class="qa-icon qa-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
-            <span style="font-size:11px;font-weight:700;color:var(--text)">Tienda</span>
+            <span class="qa-label">${reseller ? 'Vender' : 'Tienda'}</span>
           </button>
-          <button onclick="setView('orders')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">
-            <div style="width:48px;height:48px;border-radius:12px;background:rgba(16,185,129,.1);display:grid;place-items:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" width="24" height="24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 12h6M9 17h3"/></svg>
+          <button class="quick-action-card qa-orders" onclick="setView('orders')">
+            <div class="qa-icon qa-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 12h6M9 17h3"/></svg>
             </div>
-            <span style="font-size:11px;font-weight:700;color:var(--text)">Compras</span>
+            <span class="qa-label">Compras</span>
           </button>
-          <button onclick="setView('history')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">
-            <div style="width:48px;height:48px;border-radius:12px;background:rgba(102,126,234,.1);display:grid;place-items:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" width="24" height="24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <button class="quick-action-card qa-topup" onclick="setView('history')">
+            <div class="qa-icon qa-icon-violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <span style="font-size:11px;font-weight:700;color:var(--text)">Recargar</span>
+            <span class="qa-label">Recargar</span>
           </button>
-          <button onclick="setView('reports')" style="padding:16px 8px;border:1px solid var(--line);border-radius:14px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.transform="translateY(-2px)"" onmouseout="this.style.borderColor="var(--line)";this.style.transform=""">
-            <div style="width:48px;height:48px;border-radius:12px;background:rgba(239,68,68,.1);display:grid;place-items:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="24" height="24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <button class="quick-action-card qa-support" onclick="setView('reports')">
+            <div class="qa-icon qa-icon-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
-            <span style="font-size:11px;font-weight:700;color:var(--text)">Soporte</span>
+            <span class="qa-label">Soporte</span>
           </button>
         </div>
 
@@ -3103,7 +3162,7 @@
         ${recentPurchases.length > 0 ? `
         <!-- COMPRAS RECIENTES -->
         <div class="section-title">
-          <span>Compras recientes</span>
+          <span>${reseller ? 'Ventas recientes' : 'Compras recientes'}</span>
         </div>
         <div class="purchases-list">
           ${recentPurchases.map(o => {
@@ -8573,7 +8632,7 @@
 <script src="nav-simple.js?v=2"></script>
 <!-- Scripts de reportes -->
 <script src="reports-security.js"></script>
-<script src="reports-functions.js?v=5"></script>
+<script src="reports-functions.js?v=6"></script>
 <script src="reports-optimizations.js"></script>
 <script src="reports-monkey-patch.js?v=6"></script>
 

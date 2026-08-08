@@ -37,17 +37,17 @@ const ACTIVE_STATES = [ReportStates.OPEN, ReportStates.REVIEWING, ReportStates.I
 // ══════════════════════════════════════════════════════════════════════════════
 //  VALIDADOR CENTRALIZADO - ReportValidator
 // ══════════════════════════════════════════════════════════════════════════════
-const ReportValidator = {
-  isValidStatus(status) {
-    return Object.values(ReportStates).includes(status);
-  },
+// Extender el ReportValidator definido en reports-security.js (cargado antes)
+// en lugar de redeclarar con const, lo cual lanzaría SyntaxError por redeclaración.
+if (typeof ReportValidator === 'undefined') window.ReportValidator = {};
+Object.assign(ReportValidator, {
   isResolved(status) {
     return RESOLVED_STATES.includes(status);
   },
   isActive(status) {
     return ACTIVE_STATES.includes(status);
   },
-  validateNew(data) {
+  validateNewData(data) {
     const errors = [];
     if (!data.orderId || data.orderId.trim() === '') errors.push('Debes seleccionar una compra');
     if (!data.reason || data.reason.trim().length < 3) errors.push('El asunto debe tener al menos 3 caracteres');
@@ -87,7 +87,7 @@ const ReportValidator = {
       rejectionReason: this.escapeHtml(data.rejectionReason || '')
     };
   }
-};
+});
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  CONTROL DE PERMISOS
@@ -409,7 +409,7 @@ function submitReportWithValidation(orderId) {
   const description = document.getElementById('rpDesc')?.value || '';
   const accountData = document.getElementById('rpAccountData')?.value || '';
   
-  const validation = ReportValidator.validateNew({ orderId: orderId, reason: subject, description: description, category: category, accountData: accountData });
+  const validation = ReportValidator.validateNewData({ orderId: orderId, reason: subject, description: description, category: category, accountData: accountData });
   if (!validation.valid) { showFormErrors(validation.errors); toast('Por favor corrige los errores', 'bad'); return; }
   if (!confirm('¿Enviar este reporte?')) return;
   
