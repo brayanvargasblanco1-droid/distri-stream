@@ -450,7 +450,7 @@
     body.dark .top{background:rgba(10,15,26,.72);border-color:rgba(45,58,79,.4)}
     .top h1{margin-bottom:3px;font-size:26px}
     .top p{font-size:13px;color:var(--muted)}
-    .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
 
     /* ─── USER MENU ─── */
     .user-header{display:flex;align-items:center;gap:6px}
@@ -2876,7 +2876,6 @@
         </nav>
         <main class="main main-content">
           <header class="top">
-            <div><h1>${pageTitle()}</h1><p>${pageSubtitle()}</p></div>
             <div class="top-actions">
               <div class="user-header">
                 ${isReseller() ? `<div class="role-badge reseller">🏷️ REVENDEDOR</div>` : ""}
@@ -5515,13 +5514,20 @@
       const allAds=(state.ads||[]).slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0));
       const activeAds=allAds.filter(a=>a.status!=="Vencida"&&a.status!=="Pausada");
       let html=`<section style="margin-bottom:20px">`;
-      html+=`<div style="margin-bottom:20px">
-        <h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1>
-        <p style="margin:4px 0 0;color:var(--muted);font-size:13px">${isAdmin()?"Crea anuncios para que tus clientes y revendedores compartan":"Copia el texto o comparte por WhatsApp para vender"}</p>
-      </div>`;
       
       // Admin: pestañas Subir / Ver. Cliente/Revendedor: solo grilla.
       if(isAdmin()){
+        html+=`<div class="ad-hero">
+          <div class="ad-hero-glow"></div>
+          <div class="ad-hero-content">
+            <div class="ad-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div>
+            <div class="ad-hero-text">
+              <h2>Material de Venta</h2>
+              <p>Crea anuncios para que tus clientes y revendedores compartan</p>
+              <div class="ad-hero-stats"><span><b>${activeAds.length}</b> ${activeAds.length===1?"anuncio":"anuncios"} activo${activeAds.length===1?"":"s"}</span></div>
+            </div>
+          </div>
+        </div>`;
         html+=`<div style="display:flex;gap:8px;margin-bottom:20px">
           <button onclick="showAdTab('upload')" id="tabUpload" class="ad-tab active">📤 Subir anuncio</button>
           <button onclick="showAdTab('view')" id="tabView" class="ad-tab">📁 Ver material</button>
