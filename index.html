@@ -21,17 +21,22 @@
   <!-- Premium Design System -->
   <link rel="stylesheet" href="premium-styles.css">
   <style>
+    /* Design system tokens — alineados con premium-styles.css (única fuente de verdad) */
     :root{
-      --bg:#f0f0f5;--panel:#fff;--soft:#f5f5fa;--line:#e0e0e8;--text:#1a1a2e;--muted:#6b6b80;
+      --bg:#f0f0f5;--panel:#ffffff;--soft:#f5f5fa;--line:#e0e0e8;--text:#1a1a2e;--muted:#6b6b80;
       --blue:#0877ff;--blue2:#0057dc;--cyan:#27c2ff;--ok:#12a454;--warn:#f59e0b;--bad:#ef4444;
       --purple:#7c3aed;--purple-light:#a78bfa;--purple-dark:#5b21b6;--purple-bg:#f5f3ff;
-      --shadow:0 12px 32px rgba(8,119,255,.08);--shadow2:0 20px 56px rgba(8,119,255,.12);
+      --shadow:0 8px 32px rgba(8,119,255,.08),0 2px 8px rgba(0,0,0,.04);
+      --shadow2:0 16px 48px rgba(8,119,255,.12),0 4px 16px rgba(0,0,0,.06);
       --radius:16px;--radius-sm:12px;--radius-lg:22px;
+      --glow-blue:0 0 24px rgba(8,119,255,.18);
     }
     body.dark{
-      --bg:#071526;--panel:#0d1d31;--soft:#12253b;--line:#1e3652;--text:#eef6ff;--muted:#8da0b8;
+      --bg:#0a0f1a;--panel:#111827;--soft:#1f2937;--line:#2d3a4f;--text:#f3f4f6;--muted:#9ca3af;
       --blue:#0877ff;--blue2:#0057dc;--cyan:#00d4ff;
-      --shadow:0 16px 48px rgba(0,0,0,.28);--shadow2:0 24px 64px rgba(8,119,255,.12);
+      --shadow:0 8px 32px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3);
+      --shadow2:0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(8,119,255,.1);
+      --glow-blue:0 0 24px rgba(8,119,255,.25);
       color-scheme:dark
     }
     *{box-sizing:border-box;margin:0}
@@ -50,8 +55,8 @@
     .muted{color:var(--muted)}
     .hide{display:none!important}
 
-    .app-bg{min-height:100vh;background:linear-gradient(110deg,rgba(255,255,255,.5),rgba(243,240,255,.6)),radial-gradient(circle at 92% 0,rgba(8,119,255,.08),transparent 32%),radial-gradient(circle at 16% 88%,rgba(8,119,255,.06),transparent 28%),var(--bg)}
-    body.dark .app-bg{background:radial-gradient(circle at 90% 0,rgba(8,119,255,.14),transparent 34%),radial-gradient(circle at 12% 88%,rgba(8,119,255,.07),transparent 28%),var(--bg)}
+    .app-bg{min-height:100vh;background:linear-gradient(110deg,rgba(255,255,255,.5),rgba(243,240,255,.6)),radial-gradient(circle at 92% 0,rgba(8,119,255,.08),transparent 32%),radial-gradient(circle at 16% 88%,rgba(124,58,237,.05),transparent 28%),var(--bg)}
+    body.dark .app-bg{background:radial-gradient(circle at 90% 0,rgba(8,119,255,.12),transparent 34%),radial-gradient(circle at 12% 88%,rgba(124,58,237,.06),transparent 28%),var(--bg)}
 
     /* ─── DASHBOARD HOME ─── */
     .dash-grid{display:grid;grid-template-columns:1fr 320px;gap:16px}
@@ -189,13 +194,13 @@
     .hero-sphere.s3{width:18px;height:18px;top:22%;left:15%;animation:floatSphere 6s ease-in-out 1.5s infinite}
     .hero-sphere.s4{width:22px;height:22px;bottom:28%;right:6%;animation:floatSphere 4.5s ease-in-out 2s infinite}
     @keyframes floatSphere{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.05)}}
-    body.dark .login-visual{background:linear-gradient(160deg,#0a1628 0%,#0d1d31 30%,#111f3a 60%,#0a1628 100%)}
+    body.dark .login-visual{background:linear-gradient(160deg,#0a0f1a 0%,#111827 30%,#1f2937 60%,#0a0f1a 100%)}
     body.dark .login-visual::after{background:linear-gradient(180deg,transparent 70%,rgba(10,22,40,.3))}
     body.dark .login-visual::before{background:radial-gradient(circle,rgba(59,130,246,.1) 0%,rgba(59,130,246,.04) 40%,transparent 70%)}
     body.dark .hero-rings .ring{border-color:rgba(8,119,255,.2)}
 
     /* ─── MOBILE HERO ─── */
-    .mobile-hero{display:none;position:relative;width:100%;height:200px;margin:-44px -40px 24px;border-radius:0 0 28px 28px;overflow:hidden;background:linear-gradient(135deg,#0a1628 0%,#0d1d31 40%,#111f3a 100%)}
+    .mobile-hero{display:none;position:relative;width:100%;height:200px;margin:-44px -40px 24px;border-radius:0 0 28px 28px;overflow:hidden;background:linear-gradient(135deg,#0a0f1a 0%,#111827 40%,#1f2937 100%)}
     .mobile-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 80%,rgba(8,119,255,.25) 0%,transparent 60%);animation:mobileGlow 2s ease-in-out infinite alternate}
     .mobile-hero::after{content:"";position:absolute;width:300px;height:300px;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(8,119,255,.15);animation:mobileRing 3s linear infinite}
     @keyframes mobileGlow{0%{opacity:.5;transform:scale(1)}100%{opacity:1;transform:scale(1.1)}}
@@ -216,12 +221,12 @@
     .mobile-hero .hero-rings-m .ring:nth-child(2){width:70%;height:70%;border-color:rgba(8,119,255,.18);animation-delay:.5s}
     .mobile-hero .hero-rings-m .ring:nth-child(3){width:40%;height:40%;border-color:rgba(8,119,255,.24);animation-delay:1s}
 
-    body.dark .mobile-hero{background:linear-gradient(135deg,#050d1a 0%,#0a1628 40%,#0d1d31 100%)}
+    body.dark .mobile-hero{background:linear-gradient(135deg,#0a0f1a 0%,#0a0f1a 40%,#111827 100%)}
     body.dark .hero-sphere{background:radial-gradient(circle at 30% 30%,#3b82f6,#1d4ed8);box-shadow:0 8px 24px rgba(8,119,255,.35),inset 0 -4px 8px rgba(0,0,0,.25)}
     .login-panel{width:min(460px,100%);justify-self:center;background:rgba(255,255,255,.97);border:1px solid rgba(216,230,248,.5);border-radius:28px;box-shadow:0 28px 72px rgba(0,0,0,.07),0 0 0 1px rgba(255,255,255,.9) inset;backdrop-filter:blur(24px);animation:loginIn .55s cubic-bezier(.2,.8,.2,1) both;position:relative;overflow:hidden;padding:44px 40px 36px}
     .login-panel::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(8,119,255,.4),rgba(8,119,255,.3),transparent)}
     .login-panel::after{content:"";position:absolute;top:-60%;right:-40%;width:80%;height:80%;background:radial-gradient(circle,rgba(8,119,255,.025) 0%,transparent 70%);pointer-events:none}
-    body.dark .login-panel{background:rgba(13,29,49,.96);border-color:rgba(30,54,82,.5);box-shadow:0 28px 72px rgba(0,0,0,.35),0 0 0 1px rgba(8,119,255,.08) inset}
+    body.dark .login-panel{background:rgba(17,24,39,.96);border-color:rgba(30,54,82,.5);box-shadow:0 28px 72px rgba(0,0,0,.35),0 0 0 1px rgba(8,119,255,.08) inset}
     body.dark .login-panel::before{background:linear-gradient(90deg,transparent,rgba(8,119,255,.5),rgba(8,119,255,.3),transparent)}
     body.dark .login-panel::after{background:radial-gradient(circle,rgba(8,119,255,.035) 0%,transparent 70%)}
     .login-brand{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:20px}
@@ -235,9 +240,9 @@
     .login-panel>p{text-align:center;color:var(--muted);font-size:13.5px;margin-bottom:22px;line-height:1.65;max-width:310px;margin-left:auto;margin-right:auto}
     .role-title{text-align:center;color:var(--blue);font-size:11px;font-weight:1000;letter-spacing:.14em;margin-bottom:8px}
     .role-toggle{display:grid;grid-template-columns:1fr 1fr;padding:6px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(255,255,255,.6);box-shadow:inset 0 2px 8px rgba(15,23,42,.03)}
-    body.dark .role-toggle{background:rgba(18,37,59,.8)}
+    body.dark .role-toggle{background:rgba(31,41,55,.8)}
     .role-toggle button{border:0;border-radius:13px;background:transparent;color:var(--muted);font-weight:900;padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;transition:all .2s ease}
-    body.dark .role-toggle button{color:#8da0b8}
+    body.dark .role-toggle button{color:#9ca3af}
     .role-toggle button:hover:not(.active){background:var(--soft);color:var(--text)}
     .role-toggle button.active{background:linear-gradient(135deg,#0877ff,#0877ff);color:#fff;box-shadow:0 12px 28px rgba(8,119,255,.25)}
     .role-badge{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:.5px;margin-right:8px}
@@ -278,7 +283,7 @@
     .field{height:50px;margin-top:12px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:14px;background:rgba(255,255,255,.95);padding:0 16px;box-shadow:0 2px 8px rgba(15,23,42,.02),inset 0 1px 2px rgba(255,255,255,.9);transition:border-color .25s ease,box-shadow .25s ease,transform .2s ease}
     .field:hover{border-color:rgba(8,119,255,.25);transform:translateY(-1px)}
     .field:focus-within{border-color:var(--purple);box-shadow:0 0 0 4px rgba(8,119,255,.1),0 4px 16px rgba(8,119,255,.08),inset 0 1px 2px rgba(255,255,255,.9);transform:translateY(-1px)}
-    body.dark .field{background:rgba(18,37,59,.9);border-color:#1e3652;box-shadow:0 2px 8px rgba(0,0,0,.15),inset 0 1px 2px rgba(255,255,255,.03)}
+    body.dark .field{background:rgba(31,41,55,.9);border-color:#2d3a4f;box-shadow:0 2px 8px rgba(0,0,0,.15),inset 0 1px 2px rgba(255,255,255,.03)}
     body.dark .field:hover{border-color:rgba(8,119,255,.4)}
     body.dark .field:focus-within{border-color:#3b82f6;box-shadow:0 0 0 4px rgba(8,119,255,.15),0 4px 16px rgba(8,119,255,.1),inset 0 1px 2px rgba(255,255,255,.03)}
     body.dark .field svg,.body.dark .field .mini-ico svg{stroke:#4da6ff}
@@ -286,10 +291,10 @@
     .field:focus-within svg{stroke:var(--blue);transform:scale(1.1)}
     .mini-ico{display:inline-flex;align-items:center;justify-content:center;min-width:20px}
     .field input{width:100%;outline:0;background:transparent!important;color:var(--text);font-size:15px;font-weight:500;-webkit-text-fill-color:var(--text);caret-color:var(--blue);transition:color .2s}
-    body.dark .field input{background:rgba(18,37,59,.98)!important;-webkit-text-fill-color:#eef6ff!important;color:#eef6ff!important;caret-color:#60a5fa}
+    body.dark .field input{background:rgba(31,41,55,.98)!important;-webkit-text-fill-color:#f3f4f6!important;color:#f3f4f6!important;caret-color:#3d94ff}
     .field input::placeholder{color:var(--muted);-webkit-text-fill-color:var(--muted);font-weight:400}
     input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,textarea:-webkit-autofill,select:-webkit-autofill{-webkit-text-fill-color:var(--text)!important;-webkit-box-shadow:0 0 0 1000px var(--panel) inset!important;transition:background-color 5000s ease-in-out 0s}
-    body.dark input:-webkit-autofill,body.dark input:-webkit-autofill:hover,body.dark input:-webkit-autofill:focus,body.dark textarea:-webkit-autofill,body.dark select:-webkit-autofill{-webkit-text-fill-color:#eef6ff!important;-webkit-box-shadow:0 0 0 1000px rgba(13,29,49,.95) inset!important;background-color:rgba(13,29,49,.95)!important;color:#eef6ff!important}
+    body.dark input:-webkit-autofill,body.dark input:-webkit-autofill:hover,body.dark input:-webkit-autofill:focus,body.dark textarea:-webkit-autofill,body.dark select:-webkit-autofill{-webkit-text-fill-color:#f3f4f6!important;-webkit-box-shadow:0 0 0 1000px rgba(17,24,39,.95) inset!important;background-color:rgba(17,24,39,.95)!important;color:#f3f4f6!important}
     .login-options{display:flex;justify-content:space-between;align-items:center;margin:16px 0 28px;font-size:13px;color:var(--muted)}
     .check{display:flex;gap:8px;align-items:center;cursor:pointer;transition:color .2s}
     .check:hover{color:var(--text)}
@@ -334,9 +339,9 @@
     .download-btn.loading::before{content:"";position:absolute;left:12px;width:20px;height:20px;border:3px solid rgba(255,255,255,.2);border-top-color:#0877ff;border-right-color:#00d4ff;border-radius:50%;animation:spin .7s linear infinite;filter:drop-shadow(0 0 4px rgba(8,119,255,.6))}
     .download-btn.loading::after{content:"";position:absolute;inset:0;border-radius:12px;background:linear-gradient(90deg,transparent,rgba(8,119,255,.1),transparent);animation:btnShimmer 1.5s ease-in-out infinite}
     @keyframes btnShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-    body.dark .download-btn.android{background:linear-gradient(135deg,rgba(30,54,82,.9),rgba(18,37,59,.95));border-color:rgba(8,119,255,.2)}
+    body.dark .download-btn.android{background:linear-gradient(135deg,rgba(30,54,82,.9),rgba(31,41,55,.95));border-color:rgba(8,119,255,.2)}
     body.dark .download-btn.android:hover{background:linear-gradient(135deg,rgba(40,70,100,.95),rgba(25,50,80,1));box-shadow:0 12px 28px rgba(0,0,0,.4),0 0 0 1px rgba(8,119,255,.3)}
-    body.dark .download-btn.ios{background:linear-gradient(135deg,rgba(30,54,82,.9),rgba(18,37,59,.95));border-color:rgba(8,119,255,.2)}
+    body.dark .download-btn.ios{background:linear-gradient(135deg,rgba(30,54,82,.9),rgba(31,41,55,.95));border-color:rgba(8,119,255,.2)}
     body.dark .download-btn.ios:hover{background:linear-gradient(135deg,rgba(40,70,100,.95),rgba(25,50,80,1));box-shadow:0 12px 28px rgba(0,0,0,.4),0 0 0 1px rgba(8,119,255,.3)}
 
     .secure{text-align:center;color:var(--muted);font-weight:600;margin-top:20px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px;opacity:.8}
@@ -363,15 +368,15 @@
     .payment-info-row svg{width:18px;height:18px;stroke:var(--blue);flex-shrink:0}
     .payment-info-row b{font-size:13px}
     .payment-info-row span{font-size:12px;color:var(--muted)}
-    body.dark .payment-tabs{background:rgba(18,37,59,.6);border-color:#1e3652}
-    body.dark .payment-tab.active{background:rgba(13,29,49,.9);color:#60a5fa}
-    body.dark .payment-info{background:rgba(18,37,59,.5);border-color:#1e3652}
+    body.dark .payment-tabs{background:rgba(31,41,55,.6);border-color:#2d3a4f}
+    body.dark .payment-tab.active{background:rgba(17,24,39,.9);color:#3d94ff}
+    body.dark .payment-info{background:rgba(31,41,55,.5);border-color:#2d3a4f}
 
     /* ─── METHOD CARDS ─── */
     .method-card{display:flex;flex-direction:column;align-items:center;padding:20px 12px;border:2px solid var(--line);border-radius:16px;background:var(--panel);cursor:pointer;transition:all .25s;text-align:center}
     .method-card:hover{border-color:rgba(8,119,255,.3);transform:translateY(-2px);box-shadow:0 8px 20px rgba(8,119,255,.1)}
     .method-card.active{border-color:var(--blue);background:rgba(8,119,255,.04);box-shadow:0 4px 16px rgba(8,119,255,.12)}
-    body.dark .method-card{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .method-card{background:rgba(17,24,39,.8);border-color:#2d3a4f}
     body.dark .method-card:hover{border-color:rgba(59,130,246,.4);box-shadow:0 8px 20px rgba(59,130,246,.1)}
     body.dark .method-card.active{border-color:#3b82f6;background:rgba(59,130,246,.08)}
 
@@ -379,16 +384,16 @@
     .quick-amount-btn{padding:12px 8px;border:2px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-size:13px;font-weight:800;cursor:pointer;transition:all .2s}
     .quick-amount-btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
     .quick-amount-btn.active{border-color:var(--blue);background:rgba(8,119,255,.08);color:var(--blue);box-shadow:0 2px 8px rgba(8,119,255,.15)}
-    body.dark .quick-amount-btn{background:rgba(13,29,49,.8);border-color:#1e3652;color:#eef6ff}
-    body.dark .quick-amount-btn:hover{border-color:#3b82f6;color:#60a5fa}
-    body.dark .quick-amount-btn.active{border-color:#3b82f6;background:rgba(59,130,246,.15);color:#60a5fa}
+    body.dark .quick-amount-btn{background:rgba(17,24,39,.8);border-color:#2d3a4f;color:#f3f4f6}
+    body.dark .quick-amount-btn:hover{border-color:#3b82f6;color:#3d94ff}
+    body.dark .quick-amount-btn.active{border-color:#3b82f6;background:rgba(59,130,246,.15);color:#3d94ff}
 
     /* ─── TOPUP AMOUNT BUTTONS ─── */
     .topup-amt{padding:10px 6px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:12px;font-weight:800;cursor:pointer;transition:all .2s}
     .topup-amt:hover{border-color:var(--blue);color:var(--blue)}
     .topup-amt.active{border-color:var(--blue);background:rgba(8,119,255,.08);color:var(--blue)}
-    body.dark .topup-amt{background:rgba(13,29,49,.8);border-color:#1e3652;color:#eef6ff}
-    body.dark .topup-amt.active{border-color:#3b82f6;background:rgba(59,130,246,.15);color:#60a5fa}
+    body.dark .topup-amt{background:rgba(17,24,39,.8);border-color:#2d3a4f;color:#f3f4f6}
+    body.dark .topup-amt.active{border-color:#3b82f6;background:rgba(59,130,246,.15);color:#3d94ff}
 
     /* ─── REGISTER LINK ─── */
     .register-link{text-align:center;margin-top:20px;font-size:14px;color:var(--muted);animation:fadeIn .5s ease .7s both}
@@ -402,8 +407,8 @@
     .hidden{display:none!important}
 
     .app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
-    .side{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.9) 100%);border-right:1px solid rgba(102,126,234,.1);padding:20px 14px;backdrop-filter:blur(20px);display:flex;flex-direction:column;z-index:10}
-    body.dark .side{background:linear-gradient(180deg,rgba(13,29,49,.98) 0%,rgba(8,20,35,.9) 100%);border-right-color:rgba(102,126,234,.15)}
+    .side{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,rgba(255,255,255,.82) 0%,rgba(245,247,252,.72) 100%);border-right:1px solid rgba(102,126,234,.08);padding:20px 14px;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);display:flex;flex-direction:column;z-index:10;box-shadow:1px 0 32px rgba(8,119,255,.04)}
+    body.dark .side{background:linear-gradient(180deg,rgba(17,24,39,.82) 0%,rgba(10,15,26,.72) 100%);border-right-color:rgba(45,58,79,.5);box-shadow:1px 0 32px rgba(0,0,0,.3)}
     .side-brand{display:flex;align-items:center;gap:10px;padding:4px 6px 20px}
     .side-brand img{width:48px;height:48px;border-radius:14px;object-fit:cover}
     .side-brand b{font-size:19px;line-height:.95;display:block}
@@ -441,7 +446,8 @@
     .profile-card .logout-btn:hover{background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)}
 
     .main{padding:22px;min-width:0;overflow-y:auto}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:20;padding-top:8px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;position:sticky;top:0;background:rgba(240,240,245,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);z-index:20;padding:10px 4px;margin:-6px -4px 18px;border-radius:14px;border:1px solid rgba(102,126,234,.06)}
+    body.dark .top{background:rgba(10,15,26,.72);border-color:rgba(45,58,79,.4)}
     .top h1{margin-bottom:3px;font-size:26px}
     .top p{font-size:13px;color:var(--muted)}
     .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
@@ -478,11 +484,11 @@
     .avatar-color-btn:hover{transform:scale(1.15)}
     .avatar-color-btn.selected{border-color:var(--text);transform:scale(1.1)}
     
-    body.dark .header-icon-btn{background:rgba(13,29,49,.85);border-color:#1e3652}
+    body.dark .header-icon-btn{background:rgba(17,24,39,.85);border-color:#2d3a4f}
     body.dark .header-icon-btn:hover{border-color:rgba(8,119,255,.3);background:rgba(8,119,255,.08)}
-    body.dark .header-balance{background:rgba(13,29,49,.85);border-color:#1e3652;color:#eef6ff}
-    body.dark .user-dropdown{background:#0d1d31;border-color:#1e3652;box-shadow:0 16px 48px rgba(0,0,0,.3)}
-    body.dark .user-dropdown-item{color:#eef6ff}
+    body.dark .header-balance{background:rgba(17,24,39,.85);border-color:#2d3a4f;color:#f3f4f6}
+    body.dark .user-dropdown{background:#111827;border-color:#2d3a4f;box-shadow:0 16px 48px rgba(0,0,0,.3)}
+    body.dark .user-dropdown-item{color:#f3f4f6}
     body.dark .user-dropdown-item:hover{background:rgba(8,119,255,.08)}
     .pill{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:8px 14px;box-shadow:0 8px 20px rgba(15,23,42,.04);font-weight:900;display:inline-flex;align-items:center;gap:8px;min-height:42px;font-size:14px;transition:all .18s;white-space:nowrap;color:var(--text);overflow:visible}
     .pill:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(8,119,255,.1)}
@@ -553,7 +559,7 @@
     /* Oscuro tienda */
     body.dark .product{background:var(--panel);border-color:var(--line)}
     body.dark .product h3{color:var(--text)}
-    body.dark .product .price{color:#60a5fa}
+    body.dark .product .price{color:#3d94ff}
     body.dark .product .divider{background:linear-gradient(90deg,transparent,var(--line),transparent)}
     body.dark .product .price-currency{color:var(--muted)}
     
@@ -608,16 +614,16 @@
     .op-action{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--soft);color:var(--blue);display:grid;place-items:center;cursor:pointer;transition:all .18s}
     .op-action:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
     td input{border:1px solid var(--line);border-radius:10px;padding:8px 9px;background:var(--soft);color:var(--text);width:110px;font-weight:800}
-    body.dark td input{background:rgba(18,37,59,.7);color:var(--text);border-color:#1e3652}
+    body.dark td input{background:rgba(31,41,55,.7);color:var(--text);border-color:#2d3a4f}
     td input:disabled{opacity:.5}
     .row-actions{display:flex;gap:7px;flex-wrap:wrap}
     .split{grid-template-columns:1.2fr .8fr}
     .form{display:grid;gap:10px}
     .form label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:2px;display:flex;align-items:center;gap:4px}
     .form input,.form select,.form textarea{width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 12px;background:var(--panel);color:var(--text);outline:none;font-size:14px;transition:border-color .2s,box-shadow .2s}
-    body.dark .form input,body.dark .form select,body.dark .form textarea{background:rgba(18,37,59,.7);color:var(--text);border-color:#1e3652}
-    body.dark .ops-toolbar input,body.dark .ops-toolbar select{background:rgba(18,37,59,.7);color:var(--text);border-color:#1e3652}
-    body.dark td input{background:rgba(18,37,59,.7);color:var(--text);border-color:#1e3652}
+    body.dark .form input,body.dark .form select,body.dark .form textarea{background:rgba(31,41,55,.7);color:var(--text);border-color:#2d3a4f}
+    body.dark .ops-toolbar input,body.dark .ops-toolbar select{background:rgba(31,41,55,.7);color:var(--text);border-color:#2d3a4f}
+    body.dark td input{background:rgba(31,41,55,.7);color:var(--text);border-color:#2d3a4f}
     .form input:focus,.form select:focus,.form textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(8,119,255,.18)}
     .form textarea{min-height:90px;resize:vertical}
     .list{display:grid;gap:8px}
@@ -626,7 +632,7 @@
     .list-row.compact-order{grid-template-columns:100px 1fr auto}
     .ops-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:12px}
     .ops-toolbar input,.ops-toolbar select{border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 11px;background:var(--panel);color:var(--text);font-size:14px}
-    body.dark .ops-toolbar input,body.dark .ops-toolbar select{background:rgba(18,37,59,.7);color:var(--text);border-color:#1e3652}
+    body.dark .ops-toolbar input,body.dark .ops-toolbar select{background:rgba(31,41,55,.7);color:var(--text);border-color:#2d3a4f}
     .ops-toolbar input{min-width:220px;flex:1}
     .client-data{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
     .client-data span{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;font-size:11px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -638,7 +644,7 @@
     .dialog-head h2{margin:0;font-size:20px}
     .close{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--soft);color:var(--text);font-weight:1000;font-size:16px;transition:all .18s}
     .close:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
-    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#071526;color:#fff;border-radius:var(--radius);padding:12px 18px;box-shadow:0 14px 28px rgba(0,0,0,.25);transition:all .25s cubic-bezier(.2,.8,.2,1);z-index:150;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#0a0f1a;color:#fff;border-radius:var(--radius);padding:12px 18px;box-shadow:0 14px 28px rgba(0,0,0,.25);transition:all .25s cubic-bezier(.2,.8,.2,1);z-index:150;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .toast.ok{background:#075c32}.toast.ok::before{content:"✓"}.toast.bad{background:#8b1c1c}.toast.bad::before{content:"✕"}
     .alerts-panel{position:fixed;right:18px;top:68px;width:min(380px,calc(100vw - 20px));background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);padding:12px;z-index:55;display:none}
@@ -719,12 +725,14 @@
     .balance-btn-outline svg{width:18px;height:18px}
     
     /* Stats Row */
-    .stats-row{display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;padding:16px}
-    .stat-item{flex:1;text-align:center}
-    .stat-value{font-size:20px;font-weight:900;color:var(--text)}
-    .stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+    .stats-row{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.7);backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);border:1px solid rgba(102,126,234,.08);border-radius:16px;margin:0 16px 20px;padding:18px 16px;box-shadow:0 4px 20px rgba(8,119,255,.05);transition:box-shadow .3s ease,border-color .3s ease}
+    .stats-row:hover{border-color:rgba(8,119,255,.18);box-shadow:0 8px 32px rgba(8,119,255,.1)}
+    .stat-item{flex:1;text-align:center;transition:transform .2s ease}
+    .stat-item:hover{transform:translateY(-2px)}
+    .stat-value{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.02em}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
     .stat-divider{width:1px;height:40px;background:var(--line)}
-    .stat-alert{color:#ef4444}
+    .stat-alert{color:#ef4444;text-shadow:0 0 12px rgba(239,68,68,.4)}
     
     /* Section Title */
     .section-title{display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin:0 0 12px;font-size:15px;font-weight:800;color:var(--text)}
@@ -787,14 +795,14 @@
     body.dark .balance-bg{background:radial-gradient(circle,rgba(8,119,255,.4),transparent 70%)}
     body.dark .balance-btn{background:#fff;color:#0d2137}
     body.dark .balance-btn-outline{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
-    body.dark .stats-row{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .stats-row{background:rgba(17,24,39,.7);border-color:rgba(45,58,79,.4)}
     body.dark .stat-value{color:var(--text)}
-    body.dark .stat-divider{background:#1e3652}
+    body.dark .stat-divider{background:var(--line)}
     body.dark .section-title{color:var(--text)}
-    body.dark .quick-card{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .quick-card{background:rgba(17,24,39,.8);border-color:#2d3a4f}
     body.dark .quick-card span{color:var(--text)}
     body.dark .quick-card:hover{border-color:var(--blue)}
-    body.dark .expiring-list,.dark .purchases-list{background:rgba(13,29,49,.8);border-color:#1e3652}
+    body.dark .expiring-list,.dark .purchases-list{background:rgba(17,24,39,.8);border-color:#2d3a4f}
     body.dark .expiring-name,.dark .purchase-name{color:var(--text)}
     body.dark .support-card{background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,33,182,.1));border-color:rgba(124,58,237,.3)}
     body.dark .support-card-body p,.dark .support-list li{color:var(--text)}
@@ -802,7 +810,7 @@
     .premium-card:hover::before{opacity:.25}
 
     /* Card themes */
-    .premium-card.blue{background:linear-gradient(135deg,#0a1628 0%,#0d2847 50%,#0a1e3d 100%)}
+    .premium-card.blue{background:linear-gradient(135deg,#0a0f1a 0%,#0d2847 50%,#0a1e3d 100%)}
     .premium-card.blue::before{background:radial-gradient(circle at 50% 60%,rgba(8,119,255,.4) 0%,transparent 70%)}
     .premium-card.blue::after{background:radial-gradient(circle,rgba(8,119,255,.3),transparent 70%);animation-delay:0s}
     .premium-card.green{background:linear-gradient(135deg,#0a1a14 0%,#0d2e1f 50%,#0a2018 100%)}
@@ -834,7 +842,7 @@
     /* Center number */
     .premium-center{position:absolute;inset:0;display:grid;place-items:center;z-index:3}
     .premium-num{font-size:28px;font-weight:1000;color:#fff;text-shadow:0 0 20px currentColor;line-height:1}
-    .premium-card.blue .premium-num{color:#60a5fa;text-shadow:0 0 20px rgba(8,119,255,.6)}
+    .premium-card.blue .premium-num{color:#3d94ff;text-shadow:0 0 20px rgba(8,119,255,.6)}
     .premium-card.green .premium-num{color:#34d399;text-shadow:0 0 20px rgba(16,185,129,.6)}
     .premium-card.orange .premium-num{color:#fbbf24;text-shadow:0 0 20px rgba(245,158,11,.6)}
     .premium-card.red .premium-num{color:#f87171;text-shadow:0 0 20px rgba(239,68,68,.6)}
@@ -953,7 +961,7 @@
     .status-chip{border:1px solid var(--line);background:var(--soft);border-radius:var(--radius);padding:9px;font-size:11px;font-weight:900}
     .status-chip b{display:block;font-size:17px}
     .pay-card{display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center;background:linear-gradient(135deg,#fff,#eef7ff);border:1px solid var(--line);border-radius:var(--radius);padding:11px}
-    body.dark .pay-card{background:rgba(18,37,59,.6)}
+    body.dark .pay-card{background:rgba(31,41,55,.6)}
     .pay-card img{width:100%;border-radius:10px}
 
     .limit-bar{height:6px;border-radius:999px;background:var(--soft);overflow:hidden;margin-top:4px}
@@ -1038,7 +1046,7 @@
     .product{background:#fff;border:none;position:relative}
     .product::before{content:"";position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(135deg,rgba(8,119,255,.15),rgba(8,119,255,.06),rgba(8,119,255,.02));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
     .product:hover::before{background:linear-gradient(135deg,rgba(8,119,255,.3),rgba(8,119,255,.12),rgba(8,119,255,.05))}
-    body.dark .product{background:linear-gradient(180deg,#12253b,#0d1d31);border:none}
+    body.dark .product{background:linear-gradient(180deg,#1f2937,#111827);border:none}
     body.dark .product::before{background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(8,119,255,.1),rgba(0,212,255,.05))}
     body.dark .product:hover::before{background:linear-gradient(135deg,rgba(0,212,255,.35),rgba(8,119,255,.15),rgba(0,212,255,.08))}
 
@@ -1138,7 +1146,7 @@
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
     @media(max-width:1020px){
-      .login{grid-template-columns:1fr;padding:0;gap:0;align-content:center;background:linear-gradient(180deg,#0a1628 0%,#0d1d31 40%,#111f3a 100%);min-height:100vh;min-height:100dvh}
+      .login{grid-template-columns:1fr;padding:0;gap:0;align-content:center;background:linear-gradient(180deg,#0a0f1a 0%,#111827 40%,#1f2937 100%);min-height:100vh;min-height:100dvh}
       .login-visual{display:none}
       .mobile-hero{display:block}
       .login-panel{padding:0;max-width:100%;border-radius:0;background:var(--panel);border:none;box-shadow:0 -20px 60px rgba(0,0,0,.2);animation:loginIn .5s cubic-bezier(.2,.8,.2,1) both;position:relative;overflow:hidden}
@@ -1163,7 +1171,7 @@
       .secure{margin-top:16px;font-size:11px}
       .app{grid-template-columns:1fr}
       .side{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;z-index:20;padding:8px 6px env(safe-area-inset-bottom,8px);border-top:1px solid var(--line);border-right:0;border-radius:var(--radius) var(--radius) 0 0;background:var(--panel);backdrop-filter:blur(16px)}
-      body.dark .side{background:rgba(13,29,49,.95)}
+      body.dark .side{background:rgba(17,24,39,.95)}
       .side-brand,.nav-title{display:none}
       .profile-card{display:none!important}
       .nav{display:flex;overflow-x:auto;gap:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 8px}
@@ -1259,39 +1267,39 @@
     }
 
     /* ─── DARK MODE: OVERRIDE COMPLETO ─── */
-    body.dark .pill{background:rgba(13,29,49,.95);border:1px solid rgba(8,119,255,.35);color:#eef6ff;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+    body.dark .pill{background:rgba(17,24,39,.95);border:1px solid rgba(8,119,255,.35);color:#f3f4f6;box-shadow:0 2px 12px rgba(0,0,0,.25)}
     body.dark .pill small{color:#93c5fd}
-    body.dark .card{background:rgba(13,29,49,.85);border-color:#1e3652}
-    body.dark .list-row{background:rgba(13,29,49,.85);border-color:#1e3652}
-    body.dark .copy-box{background:rgba(18,37,59,.7);border-color:#1e3652;color:var(--text)}
-    body.dark .admin-action{background:rgba(18,37,59,.6);border-color:#1e3652}
-    body.dark .status-chip{background:rgba(18,37,59,.6);border-color:#1e3652}
-    body.dark .analytics-card{background:rgba(18,37,59,.5);border-color:#1e3652}
-    body.dark .analytics-row{border-color:#1e3652}
+    body.dark .card{background:rgba(17,24,39,.85);border-color:#2d3a4f}
+    body.dark .list-row{background:rgba(17,24,39,.85);border-color:#2d3a4f}
+    body.dark .copy-box{background:rgba(31,41,55,.7);border-color:#2d3a4f;color:var(--text)}
+    body.dark .admin-action{background:rgba(31,41,55,.6);border-color:#2d3a4f}
+    body.dark .status-chip{background:rgba(31,41,55,.6);border-color:#2d3a4f}
+    body.dark .analytics-card{background:rgba(31,41,55,.5);border-color:#2d3a4f}
+    body.dark .analytics-row{border-color:#2d3a4f}
     body.dark .tag{background:rgba(18,60,40,.5);color:#6ee7a0}
     body.dark .tag.warn{background:rgba(80,50,10,.5);color:#fbbf24}
     body.dark .tag.bad{background:rgba(80,20,20,.5);color:#f87171}
     body.dark .tag.personal{background:rgba(50,20,80,.5);color:#c4b5fd}
     body.dark .tag.sharable{background:rgba(10,40,70,.5);color:#7dd3fc}
-    body.dark .close{background:rgba(18,37,59,.7);border-color:#1e3652;color:var(--text)}
-    body.dark .ghost{background:rgba(18,37,59,.6);border-color:#1e3652;color:var(--blue)}
+    body.dark .close{background:rgba(31,41,55,.7);border-color:#2d3a4f;color:var(--text)}
+    body.dark .ghost{background:rgba(31,41,55,.6);border-color:#2d3a4f;color:var(--blue)}
     body.dark .ghost:hover{background:rgba(25,50,80,.7)}
-    body.dark .profile-card{background:rgba(13,29,49,.85);border-color:#1e3652}
-    body.dark .profile-card .logout-btn{background:rgba(18,37,59,.7);border-color:#1e3652;color:var(--muted)}
+    body.dark .profile-card{background:rgba(17,24,39,.85);border-color:#2d3a4f}
+    body.dark .profile-card .logout-btn{background:rgba(31,41,55,.7);border-color:#2d3a4f;color:var(--muted)}
     body.dark .profile-card .logout-btn:hover{background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.3)}
-    body.dark .profile-stat{background:rgba(18,37,59,.6)}
-    body.dark .profile-action{background:rgba(18,37,59,.6);border-color:#1e3652}
+    body.dark .profile-stat{background:rgba(31,41,55,.6)}
+    body.dark .profile-action{background:rgba(31,41,55,.6);border-color:#2d3a4f}
     body.dark .profile-action:hover{background:rgba(25,50,80,.7)}
-    body.dark .quick-btn{background:rgba(13,29,49,.85);border-color:#1e3652}
+    body.dark .quick-btn{background:rgba(17,24,39,.85);border-color:#2d3a4f}
     body.dark .success-pulse{background:linear-gradient(135deg,rgba(18,164,84,.15),rgba(18,164,84,.08));color:#4ade80}
-    body.dark .alert-card{background:rgba(18,37,59,.6);border-color:#1e3652}
+    body.dark .alert-card{background:rgba(31,41,55,.6);border-color:#2d3a4f}
     body.dark .alert-card.danger{border-left-color:#ef4444}
     body.dark .alert-card.info{border-left-color:#3b82f6}
-    body.dark .limit-bar{background:rgba(18,37,59,.7)}
+    body.dark .limit-bar{background:rgba(31,41,55,.7)}
     body.dark .product-body{color:var(--text)}
-    body.dark .client-data span{background:rgba(18,37,59,.6);border-color:#1e3652;color:var(--text)}
-    body.dark .report-status .status-chip{background:rgba(18,37,59,.6);border-color:#1e3652}
-    body.dark .pwa-banner{background:rgba(13,29,49,.95);border-color:#1e3652}
+    body.dark .client-data span{background:rgba(31,41,55,.6);border-color:#2d3a4f;color:var(--text)}
+    body.dark .report-status .status-chip{background:rgba(31,41,55,.6);border-color:#2d3a4f}
+    body.dark .pwa-banner{background:rgba(17,24,39,.95);border-color:#2d3a4f}
     body.dark .top h1{color:var(--text)}
     body.dark .top p{color:var(--muted)}
     body.dark .card h2{color:var(--text)}
@@ -1300,17 +1308,17 @@
 
     /* ─── DARK MODE: DASHBOARD ─── */
     body.dark .saldo-card{background:linear-gradient(135deg,#0d2240,#1a3a6a);box-shadow:0 12px 32px rgba(0,0,0,.3)}
-    body.dark .expiring-card{background:rgba(13,29,49,.95);border-color:#1e3652}
-    body.dark .expiring-card .card-header{border-color:#1e3652}
+    body.dark .expiring-card{background:rgba(17,24,39,.95);border-color:#2d3a4f}
+    body.dark .expiring-card .card-header{border-color:#2d3a4f}
     body.dark .expiring-table th{background:#0d2240}
-    body.dark .expiring-table td{border-color:#1e3652;color:#eef6ff}
+    body.dark .expiring-table td{border-color:#2d3a4f;color:#f3f4f6}
     body.dark .expiring-table tr:hover{background:rgba(8,119,255,.06)}
-    body.dark .compras-card{background:rgba(13,29,49,.95);border-color:#1e3652}
-    body.dark .compras-card .card-header{border-color:#1e3652}
-    body.dark .compra-item{border-color:#1e3652}
+    body.dark .compras-card{background:rgba(17,24,39,.95);border-color:#2d3a4f}
+    body.dark .compras-card .card-header{border-color:#2d3a4f}
+    body.dark .compra-item{border-color:#2d3a4f}
     body.dark .compra-item:hover{background:rgba(8,119,255,.06)}
-    body.dark .compra-item .compra-name{color:#eef6ff}
-    body.dark .carousel{background:#0a1628}
+    body.dark .compra-item .compra-name{color:#f3f4f6}
+    body.dark .carousel{background:#0a0f1a}
     body.dark .carousel-slide::before{background:linear-gradient(135deg,rgba(13,34,64,.6),rgba(26,58,106,.3))}
 
     /* ─── DARK MODE: PRODUCT CARDS ─── */
@@ -1319,43 +1327,43 @@
     body.dark .product .primary{background:linear-gradient(135deg,#0891ff,#00d4ff);box-shadow:0 8px 24px rgba(0,150,255,.3)}
     body.dark .product .primary:hover{box-shadow:0 12px 32px rgba(0,150,255,.45)}
     body.dark .product .mini{color:rgba(255,255,255,.45)}
-    body.dark .product-body{color:#eef6ff}
-    body.dark .product h3{color:#eef6ff}
+    body.dark .product-body{color:#f3f4f6}
+    body.dark .product h3{color:#f3f4f6}
     body.dark .product .stock{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.1)}
     body.dark .product.unavailable{opacity:.35}
 
     /* ─── DARK MODE: TABLE ─── */
-    body.dark .table-wrap{background:rgba(13,29,49,.95);border-color:#1e3652}
-    body.dark th{background:#0a1628;color:#8da0b8;border-color:#1e3652}
-    body.dark td{border-color:#1e3652;color:#eef6ff}
+    body.dark .table-wrap{background:rgba(17,24,39,.95);border-color:#2d3a4f}
+    body.dark th{background:#0a0f1a;color:#9ca3af;border-color:#2d3a4f}
+    body.dark td{border-color:#2d3a4f;color:#f3f4f6}
     body.dark tr:hover{background:rgba(8,119,255,.06)}
 
     /* ─── DARK MODE: MODAL ─── */
     body.dark .modal{background:rgba(5,11,21,.7)}
-    body.dark .dialog{background:rgba(13,29,49,.98);border-color:#1e3652}
-    body.dark .dialog .modal-content,body.dark .dialog .modal-header{background:rgba(13,29,49,.98);border-color:#1e3652}
+    body.dark .dialog{background:rgba(17,24,39,.98);border-color:#2d3a4f}
+    body.dark .dialog .modal-content,body.dark .dialog .modal-header{background:rgba(17,24,39,.98);border-color:#2d3a4f}
     body.dark .dialog .btn-close{background:#1e293b;border-color:#334155;color:#f1f5f9}
     body.dark .dialog .modal-header h2{color:#f1f5f9}
     body.dark .dialog .bulk-summary,.body.dark .dialog .bulk-accounts-list,.body.dark .dialog .bulk-account-item,.body.dark .dialog .stat-box,.body.dark .dialog .month-row,.body.dark .dialog .link-display{background:#1e293b}
     body.dark .dialog .text-muted{color:#94a3b8}
 
     /* ─── DARK MODE: FORMS ─── */
-    body.dark .form input,body.dark .form select,body.dark .form textarea{background:rgba(18,37,59,.8);border-color:#1e3652;color:#eef6ff}
+    body.dark .form input,body.dark .form select,body.dark .form textarea{background:rgba(31,41,55,.8);border-color:#2d3a4f;color:#f3f4f6}
     body.dark .form input:focus,body.dark .form select:focus,body.dark .form textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(8,119,255,.2)}
 
     /* ─── DARK MODE: NAV ─── */
-    body.dark .nav button{color:#8da0b8}
+    body.dark .nav button{color:#9ca3af}
     body.dark .nav button:hover:not(.active){background:rgba(102,126,234,.1)}
     body.dark .nav button:hover:not(.active) svg{stroke:#a78bfa}
     body.dark .nav button.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
     body.dark .nav button.active svg{stroke:#fff}
 
     /* ─── DARK MODE: MISC ─── */
-    body.dark .toast{background:#071526}
+    body.dark .toast{background:#0a0f1a}
     body.dark .toast.ok{background:#075c32}
     body.dark .toast.bad{background:#8b1c1c}
     body.dark .loading-overlay{background:#0a0f1a}
-    body.dark a{color:#60a5fa}
+    body.dark a{color:#3d94ff}
     body.dark .status-badge.completed{background:rgba(16,185,129,.15);color:#4ade80;border-color:rgba(16,185,129,.25)}
     body.dark .status-badge.pending{background:rgba(245,158,11,.15);color:#fbbf24;border-color:rgba(245,158,11,.25)}
     body.dark .status-badge.failed{background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.25)}
@@ -1367,18 +1375,21 @@
     body.dark td{border-color:var(--line);color:var(--text)}
     body.dark .empty-state,body.dark .empty{color:var(--muted)}
     body.dark .btn,body.dark button{color:var(--text)}
-    body.dark select{background:rgba(18,37,59,.9);color:var(--text);border-color:var(--line)}
+    body.dark select{background:rgba(31,41,55,.9);color:var(--text);border-color:var(--line)}
     body.dark .modal-overlay,body.dark .modal-backdrop{background:rgba(0,0,0,.7)}
     body.dark .modal-content,body.dark .modal-box,body.dark .modal{background:var(--panel);color:var(--text);border-color:var(--line)}
     body.dark .order-btn,body.dark .action-btn{color:#fff}
     body.dark .report-btn{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.3)}
     body.dark .report-btn:hover{background:rgba(239,68,68,.2)}
-    body.dark .op-id{color:#60a5fa}
+    body.dark .op-id{color:#3d94ff}
     body.dark .offline-banner{background:#7f1d1d}
-    body.dark .pull-indicator{background:rgba(13,29,49,.95);border-color:#3b82f6}
-    body.dark .pull-text{background:rgba(13,29,49,.95);border-color:#1e3652;color:#8da0b8}
+    body.dark .pull-indicator{background:rgba(17,24,39,.95);border-color:#3b82f6}
+    body.dark .pull-text{background:rgba(17,24,39,.95);border-color:#2d3a4f;color:#9ca3af}
 
     /* ─── ADS SECTION IMPROVEMENTS ─── */
+    .ad-tab{padding:10px 20px;border:0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--soft);color:var(--muted);transition:all .2s}
+    .ad-tab.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(8,119,255,.25)}
+    .ad-tab:hover{transform:translateY(-1px)}
     .ad-category{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
     .ad-category.promo{background:rgba(8,119,255,.12);color:#0877ff}
     .ad-category.info{background:rgba(16,185,129,.12);color:#10b981}
@@ -1792,6 +1803,14 @@
       }
       .mobile-nav button span {
         transition: all 0.25s ease !important;
+      }
+      body.dark .mobile-nav {
+        background: rgba(17, 24, 39, 0.95) !important;
+        border-top-color: rgba(45, 58, 79, 0.5) !important;
+        box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4) !important;
+      }
+      body.dark .mobile-nav button {
+        color: #9ca3af !important;
       }
       /* BOTONES GRANDES Y TÁCTILES */
       button, .btn, .primary, .ghost, button[type], button[class] {
@@ -5413,345 +5432,185 @@
     }
 
     // ─── PUBLICIDAD ────────────────────────────────────
+    window._adSelectedFile=null;
     function ads(){
-      const allAds = state.ads || [];
-      const activeAds = allAds.filter(a => a.status !== "Vencida");
-      const images = activeAds.filter(a => a.category === "imagen");
-      const videos = activeAds.filter(a => a.category === "video");
+      const allAds=(state.ads||[]).slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0));
+      const activeAds=allAds.filter(a=>a.status!=="Vencida"&&a.status!=="Pausada");
+      let html=`<section style="margin-bottom:20px">`;
+      html+=`<div style="margin-bottom:20px">
+        <h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1>
+        <p style="margin:4px 0 0;color:var(--muted);font-size:13px">${isAdmin()?"Crea anuncios para que tus clientes y revendedores compartan":"Copia el texto o comparte por WhatsApp para vender"}</p>
+      </div>`;
       
-      let html = '<section style="margin-bottom:20px">';
-      
-      // Header
-      html += '<div style="margin-bottom:20px">';
-      html += '<h1 style="margin:0;font-size:22px;font-weight:800">📢 Material de Venta</h1>';
-      html += '<p style="margin:4px 0 0;color:var(--muted);font-size:13px">' + (isAdmin() ? "Sube contenido para que tus operadores vendan" : "Copia y comparte para vender") + '</p>';
-      html += '</div>';
-      
-      // Pestañas
-      html += '<div style="display:flex;gap:8px;margin-bottom:20px">';
-      html += '<button onclick="showAdTab(\'upload\')" id="tabUpload" style="padding:12px 24px;border:0;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#10b981;color:#fff">📤 Subir Archivo</button>';
-      html += '<button onclick="showAdTab(\'view\')" id="tabView" style="padding:12px 24px;border:0;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:var(--soft);color:var(--muted)">📁 Ver Material</button>';
-      html += '</div>';
-      
-      // TAB: SUBIR
-      html += '<div id="tabContentUpload" style="display:block">';
-      html += '<div style="background:var(--panel);border-radius:16px;padding:30px;border:1px solid var(--line)">';
-      
-      // Tipo de archivo
-      html += '<div style="margin-bottom:24px">';
-      html += '<div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text)">¿Qué vas a subir?</div>';
-      html += '<div style="display:flex;gap:12px">';
-      html += '<button onclick="selectAdTipo(\'imagen\')" id="btnImagen" style="flex:1;padding:20px;border:2px solid #10b981;border-radius:12px;background:rgba(16,185,129,.1);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">';
-      html += '<span style="font-size:40px">🖼️</span>';
-      html += '<span style="font-size:14px;font-weight:700;color:#10b981">Imagen</span>';
-      html += '</button>';
-      html += '<button onclick="selectAdTipo(\'video\')" id="btnVideo" style="flex:1;padding:20px;border:2px solid var(--line);border-radius:12px;background:var(--soft);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">';
-      html += '<span style="font-size:40px">🎬</span>';
-      html += '<span style="font-size:14px;font-weight:700;color:var(--muted)">Video</span>';
-      html += '</button>';
-      html += '</div>';
-      html += '</div>';
-      
-      // Zona de soltar archivo
-      html += '<div id="dropZone" onclick="document.getElementById(\'adFileInput\').click()" style="border:3px dashed var(--line);border-radius:16px;padding:50px 30px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:20px;background:var(--soft)" ondragover="event.preventDefault();this.style.borderColor=\'#10b981\';this.style.background=\'rgba(16,185,129,.05)\'" ondragleave="this.style.borderColor=\'var(--line)\';this.style.background=\'var(--soft)\'">';
-      html += '<div style="font-size:60px;margin-bottom:16px" id="dropIcon">📁</div>';
-      html += '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px" id="dropText">Arrastra el archivo aqui</div>';
-      html += '<div style="font-size:14px;color:var(--muted)">o haz clic para seleccionar</div>';
-      html += '</div>';
-      html += '<input id="adFileInput" type="file" accept="image/*,video/*" style="display:none" onchange="handleAdFileSelect(event)">';
-      
-      // Preview
-      html += '<div id="previewArea" style="display:none;margin-bottom:20px">';
-      html += '<div style="background:var(--soft);border-radius:12px;padding:16px;text-align:center">';
-      html += '<div id="previewContent"></div>';
-      html += '<div style="margin-top:12px;font-size:14px;font-weight:700;color:#10b981" id="fileName"></div>';
-      html += '</div>';
-      html += '</div>';
-      
-      // Boton publicar
-      html += '<button onclick="createAd()" id="btnPublicar" disabled style="width:100%;padding:16px;border:0;border-radius:12px;background:#6b7280;color:#fff;font-size:16px;font-weight:700;cursor:not-allowed;opacity:0.6">📤 Publicar</button>';
-      html += '</div>';
-      html += '</div>';
-      
-      // TAB: VER MATERIAL
-      html += '<div id="tabContentView" style="display:none">';
-      
-      // Imagenes
-      if (images.length > 0) {
-        html += '<div style="margin-bottom:30px">';
-        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
-        html += '<span style="font-size:28px">🖼️</span>';
-        html += '<span style="font-size:18px;font-weight:700">Imagenes</span>';
-        html += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">' + images.length + '</span>';
-        html += '</div>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">';
-        images.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line)">';
-          html += '<div style="height:160px;background:#f0f0f5"><img src="' + (ad.image_data || '') + '" style="width:100%;height:100%;object-fit:cover" alt=""></div>';
-          html += '<div style="padding:12px;display:flex;gap:8px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="flex:1;padding:10px;border:0;border-radius:8px;background:#10b981;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📥 Descargar</button>';
-          if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer">🗑️</button>';
-          }
-          html += '</div></div>';
-        });
-        html += '</div></div>';
+      // Admin: pestañas Subir / Ver. Cliente/Revendedor: solo grilla.
+      if(isAdmin()){
+        html+=`<div style="display:flex;gap:8px;margin-bottom:20px">
+          <button onclick="showAdTab('upload')" id="tabUpload" class="ad-tab active">📤 Subir anuncio</button>
+          <button onclick="showAdTab('view')" id="tabView" class="ad-tab">📁 Ver material</button>
+        </div>`;
+        // TAB: SUBIR
+        html+=`<div id="tabContentUpload" style="display:block">
+          <div style="background:var(--panel);border-radius:16px;padding:24px;border:1px solid var(--line)">
+            <div class="form">
+              <label>Titulo del anuncio<input id="adTitle" oninput="updateAdPreview()" placeholder="Ej: Netflix Premium 1 mes"></label>
+              <label>Texto para copiar / compartir<textarea id="adCopy" rows="3" oninput="updateAdPreview()" placeholder="Texto que el cliente copiara al vender"></textarea></label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <label>Precio (opcional)<input id="adPrice" oninput="updateAdPreview()" placeholder="$5.000"></label>
+                <label>Categoria<select id="adCategory" onchange="updateAdPreview()">
+                  <option value="promo">Promo</option>
+                  <option value="info">Informativo</option>
+                  <option value="aviso">Aviso</option>
+                  <option value="urgente">Urgente</option>
+                </select></label>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <label>Estado<select id="adStatus"><option value="Activa">Activa</option><option value="Pausada">Pausada</option><option value="Vencida">Vencida</option></select></label>
+                <label>Vence el (opcional)<input id="adExpiry" type="date"></label>
+              </div>
+              <label>Imagen (opcional)</label>
+              <div class="ad-dropzone" onclick="document.getElementById('adFileInput').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleAdDrop(event)">
+                <div style="font-size:13px;color:var(--muted)">Clic o arrastra una imagen aqui</div>
+              </div>
+              <input id="adFileInput" type="file" accept="image/*" style="display:none" onchange="handleAdFileSelect(event)">
+              <div id="adPreview" style="display:none"></div>
+            </div>
+            <div style="margin-top:16px">
+              <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.05em">Vista previa</div>
+              <div id="adLivePreview"></div>
+            </div>
+            <button class="primary" onclick="createAd()" style="width:100%;margin-top:16px">📤 Publicar anuncio</button>
+          </div>
+        </div>`;
+        // TAB: VER MATERIAL (admin)
+        html+=`<div id="tabContentView" style="display:none">`;
+        html+=renderAdsGrid(allAds,true);
+        html+=`</div>`;
+      } else {
+        // Cliente / Revendedor: solo material activo, sin pestañas
+        html+=renderAdsGrid(activeAds,false);
       }
-      
-      // Videos
-      if (videos.length > 0) {
-        html += '<div style="margin-bottom:30px">';
-        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">';
-        html += '<span style="font-size:28px">🎬</span>';
-        html += '<span style="font-size:18px;font-weight:700">Videos</span>';
-        html += '<span style="background:#8b5cf6;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">' + videos.length + '</span>';
-        html += '</div>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">';
-        videos.forEach(ad => {
-          html += '<div style="background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid var(--line)">';
-          html += '<div style="height:100px;background:#1a1a2e;display:flex;align-items:center;justify-content:center">';
-          html += '<span style="font-size:48px;color:#fff">▶️</span>';
-          html += '</div>';
-          html += '<div style="padding:12px;display:flex;gap:8px">';
-          html += '<button onclick="downloadAd(\'' + ad.id + '\')" style="flex:1;padding:10px;border:0;border-radius:8px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📥 Descargar</button>';
-          if (isAdmin()) {
-            html += '<button onclick="deleteAd(\'' + ad.id + '\')" style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);cursor:pointer">🗑️</button>';
-          }
-          html += '</div></div>';
-        });
-        html += '</div></div>';
-      }
-      
-      if (activeAds.length === 0) {
-        html += '<div style="background:var(--panel);border-radius:16px;padding:60px;text-align:center;border:1px solid var(--line)">';
-        html += '<div style="font-size:64px;margin-bottom:16px">📭</div>';
-        html += '<div style="font-size:18px;font-weight:700;margin-bottom:8px">No hay material</div>';
-        html += '<div style="font-size:14px;color:var(--muted)">Ve a "Subir Archivo" para agregar contenido</div>';
-        html += '</div>';
-      }
-      
-      html += '</div>'; // fin tab view
-      html += '</section>';
+
+      html+=`</section>`;
       return html;
     }
-    
+
+    function renderAdsGrid(adsList,withAdminTools){
+      if(adsList.length===0){
+        return `<div style="background:var(--panel);border-radius:16px;padding:60px;text-align:center;border:1px solid var(--line)">
+          <div style="font-size:64px;margin-bottom:16px">📭</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px">No hay material disponible</div>
+          <div style="font-size:14px;color:var(--muted)">${withAdminTools?"Crea un anuncio desde la pestana Subir":"Vuelve pronto, pronto agregaremos material"}</div>
+        </div>`;
+      }
+      return `<div class="store-grid">${adsList.map(adCard).join("")}</div>`;
+    }
+
     function showAdTab(tab){
-      document.getElementById("tabContentUpload").style.display = tab === "upload" ? "block" : "none";
-      document.getElementById("tabContentView").style.display = tab === "view" ? "block" : "none";
-      document.getElementById("tabUpload").style.background = tab === "upload" ? "#10b981" : "var(--soft)";
-      document.getElementById("tabUpload").style.color = tab === "upload" ? "#fff" : "var(--muted)";
-      document.getElementById("tabView").style.background = tab === "view" ? "#10b981" : "var(--soft)";
-      document.getElementById("tabView").style.color = tab === "view" ? "#fff" : "var(--muted)";
+      const up=$("#tabContentUpload"),vw=$("#tabContentView");
+      if(up)up.style.display=tab==="upload"?"block":"none";
+      if(vw)vw.style.display=tab==="view"?"block":"none";
+      const tu=$("#tabUpload"),tv=$("#tabView");
+      if(tu){tu.classList.toggle("active",tab==="upload")}
+      if(tv){tv.classList.toggle("active",tab==="view")}
     }
-    
-    function selectAdTipo(tipo){
-      window._selectedTipo = tipo;
-      const isImg = tipo === "imagen";
-      document.getElementById("dropIcon").textContent = isImg ? "🖼️" : "🎬";
-      document.getElementById("dropText").textContent = isImg ? "Arrastra una imagen aqui" : "Arrastra un video aqui";
-      document.getElementById("adFileInput").accept = isImg ? "image/*" : "video/*";
-      
-      // Estilo de botones
-      const imgBtn = document.getElementById("btnImagen");
-      const vidBtn = document.getElementById("btnVideo");
-      
-      if (isImg) {
-        imgBtn.style.borderColor = "#10b981";
-        imgBtn.style.background = "rgba(16,185,129,.1)";
-        imgBtn.querySelector("span:last-child").style.color = "#10b981";
-        vidBtn.style.borderColor = "var(--line)";
-        vidBtn.style.background = "var(--soft)";
-        vidBtn.querySelector("span:last-child").style.color = "var(--muted)";
+
+    function handleAdDrop(e){
+      e.preventDefault();e.currentTarget.classList.remove("dragover");
+      const file=e.dataTransfer.files[0];
+      if(file){window._adSelectedFile=file;showAdFilePreview(file)}
+    }
+    function handleAdFileSelect(e){
+      const file=e.target.files[0];
+      if(file){window._adSelectedFile=file;showAdFilePreview(file)}
+    }
+    function showAdFilePreview(file){
+      const box=$("#adPreview");
+      if(!box)return;
+      const sizeText=(file.size/1024).toFixed(0)+" KB";
+      if(file.type.startsWith("image/")){
+        const url=URL.createObjectURL(file);
+        box.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--soft);border:1px solid var(--line);border-radius:10px"><img src="${url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover"><div><b style="font-size:12px">${file.name}</b><br><span class="muted" style="font-size:11px">${sizeText}</span></div><button onclick="clearAdFile()" style="margin-left:auto;background:none;border:0;color:var(--bad);cursor:pointer;font-size:18px">&times;</button></div>`;
+        box.style.display="block";
+        setTimeout(()=>URL.revokeObjectURL(url),5000);
       } else {
-        vidBtn.style.borderColor = "#8b5cf6";
-        vidBtn.style.background = "rgba(139,92,246,.1)";
-        vidBtn.querySelector("span:last-child").style.color = "#8b5cf6";
-        imgBtn.style.borderColor = "var(--line)";
-        imgBtn.style.background = "var(--soft)";
-        imgBtn.querySelector("span:last-child").style.color = "var(--muted)";
+        box.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--soft);border:1px solid var(--line);border-radius:10px"><div><b style="font-size:12px">${file.name}</b><br><span class="muted" style="font-size:11px">${sizeText}</span></div><button onclick="clearAdFile()" style="margin-left:auto;background:none;border:0;color:var(--bad);cursor:pointer;font-size:18px">&times;</button></div>`;
+        box.style.display="block";
       }
+      updateAdPreview();
     }
-    
-    function handleAdFileSelect(event){
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      window._adFile = file;
-      document.getElementById("fileName").textContent = file.name;
-      
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById("previewContent").innerHTML = "<img src=\"" + e.target.result + "\" style=\"max-height:200px;border-radius:8px\">";
-        };
-        reader.readAsDataURL(file);
-        window._adImageData = reader.result;
-      } else {
-        document.getElementById("previewContent").innerHTML = "<div style=\"font-size:60px\">🎬</div><div style=\"font-size:14px;margin-top:8px\">" + file.name + "</div>";
-        window._adImageData = "video:" + file.name;
-      }
-      
-      document.getElementById("previewArea").style.display = "block";
-      document.getElementById("btnPublicar").disabled = false;
-      document.getElementById("btnPublicar").style.background = "#10b981";
-      document.getElementById("btnPublicar").style.cursor = "pointer";
-      document.getElementById("btnPublicar").style.opacity = "1";
+    function clearAdFile(){window._adSelectedFile=null;const b=$("#adPreview");if(b){b.innerHTML="";b.style.display="none"}updateAdPreview()}
+    function updateAdPreview(){
+      const title=($("#adTitle")||{}).value||"";
+      const copy=($("#adCopy")||{}).value||"";
+      const price=($("#adPrice")||{}).value||"";
+      const category=($("#adCategory")||{}).value||"promo";
+      const box=$("#adLivePreview");
+      if(!box)return;
+      if(!title&&!copy&&!window._adSelectedFile){box.innerHTML=`<p class="muted" style="font-size:12px">Escribe un titulo o texto para ver como se vera el anuncio.</p>`;return}
+      const catLabel={promo:"Promo",info:"Info",aviso:"Aviso",urgente:"Urgente"}[category]||"Promo";
+      const file=window._adSelectedFile;
+      const imgHtml=file&&file.type.startsWith("image/")?`<img src="${URL.createObjectURL(file)}" style="width:100%;height:140px;object-fit:cover;border-radius:10px 10px 0 0">`:`<div style="height:80px;background:linear-gradient(135deg,rgba(8,119,255,.1),rgba(8,119,255,.05));border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--blue)">${title||"Titulo"}</div>`;
+      box.innerHTML=`<div class="ad-preview-card">${imgHtml}<div class="body"><span class="ad-category ${category}" style="margin-bottom:6px;display:inline-flex">${catLabel}</span><h3>${title||"Titulo del anuncio"}</h3><p>${copy||"Texto del anuncio..."}</p>${price?`<div style="font-size:16px;font-weight:900;color:var(--blue)">${price}</div>`:""}</div></div>`;
     }
-    
+
     async function createAd(){
-      const file = window._adFile;
-      if (!file) return toast("Selecciona un archivo", "bad");
-      
-      const tipo = window._selectedTipo || "imagen";
-      const titles = {imagen: "Imagen", video: "Video"};
-      const title = titles[tipo];
-      
-      // Si es imagen, convertir a base64
-      let image_data = null;
-      if (file.type.startsWith("image/")) {
-        image_data = await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result);
-          reader.readAsDataURL(file);
-        });
-      }
-      
-      try {
-        showLoading("Subiendo archivo...");
-        await api("ads", {method: "POST", body: JSON.stringify({title, category: tipo, image_data, status: "Activo"})});
-        toast("Archivo publicado", "ok");
-        window._adFile = null;
-        window._selectedTipo = null;
-        document.getElementById("previewArea").style.display = "none";
-        document.getElementById("btnPublicar").disabled = true;
-        document.getElementById("btnPublicar").style.background = "#6b7280";
-        document.getElementById("btnPublicar").style.cursor = "not-allowed";
-        document.getElementById("btnPublicar").style.opacity = "0.6";
+      try{
+        showLoading("Publicando material...");
+        const file=window._adSelectedFile;
+        const title=$("#adTitle").value.trim();
+        const copy=$("#adCopy").value.trim();
+        const price=$("#adPrice").value.trim();
+        const status=$("#adStatus").value;
+        const category=$("#adCategory").value;
+        const expiry=$("#adExpiry").value;
+        const order=Number($("#adOrder")?.value)||0;
+        if(!title)return toast("Ingresa un titulo","bad");
+        if(!copy)return toast("Ingresa el texto para copiar","bad");
+        const fullCopy=[copy,price?`Precio: ${price}`:""].filter(Boolean).join("\n");
+        let imageData="";
+        if(file&&file.type.startsWith("image/")){
+          imageData=await compressAndConvertToBase64(file);
+        }
+        await api("ads",{method:"POST",body:JSON.stringify({title,short_text:copy.slice(0,80),copy_text:fullCopy,status,category,expiry,order,file_name:file?.name||"",file_url:"",image_data:imageData,price})});
+        toast("Anuncio publicado","ok");
+        window._adSelectedFile=null;
         await boot();
-      } catch(e) { toast(e.message, "bad"); }
-      finally { hideLoading(); }
+      }catch(e){toast(e.message,"bad")}
+      finally{hideLoading()}
     }
-    
-    function downloadAd(id){
-      const ad = state.ads.find(a => a.id === id);
-      if (!ad || !ad.image_data || ad.image_data.startsWith("video:")) return toast("Descarga no disponible", "bad");
-      const link = document.createElement("a");
-      link.href = ad.image_data;
-      link.download = (ad.title || "archivo") + ".jpg";
-      link.click();
-    }
-    
-    async function deleteAd(id){
-      if (!confirm("¿Eliminar este material?")) return;
-      try {
-        showLoading("Eliminando...");
-        await api("ads/" + id, {method: "DELETE", body: JSON.stringify({id})});
-        toast("Material eliminado", "ok");
-        await boot();
-      } catch(e) { toast(e.message, "bad"); }
-      finally { hideLoading(); }
-    }
-    
-    function showAdTab(tab){
-      document.getElementById("tabContentUpload").style.display = tab === "upload" ? "block" : "none";
-      document.getElementById("tabContentView").style.display = tab === "view" ? "block" : "none";
-      document.getElementById("tabUpload").style.background = tab === "upload" ? "#10b981" : "var(--soft)";
-      document.getElementById("tabUpload").style.color = tab === "upload" ? "#fff" : "var(--muted)";
-      document.getElementById("tabView").style.background = tab === "view" ? "#10b981" : "var(--soft)";
-      document.getElementById("tabView").style.color = tab === "view" ? "#fff" : "var(--muted)";
-    }
-    
-    function selectAdTipo(tipo){
-      const types = {imagen: {icon: "🖼️", accept: "image/*"}, video: {icon: "🎬", accept: "video/*"}, payday: {icon: "💰", accept: "image/*"}, martes: {icon: "🎉", accept: "image/*"}};
-      document.getElementById("uploadIcon").textContent = types[tipo].icon;
-      document.getElementById("adFileInput").accept = types[tipo].accept;
-      window._selectedTipo = tipo;
-      ["tipoImagen","tipoVideo","tipoPayday","tipoMartes"].forEach(id => {
-        document.getElementById(id).style.borderColor = id === "tipo" + tipo.charAt(0).toUpperCase() + tipo.slice(1) ? "#10b981" : "var(--line)";
-        document.getElementById(id).style.background = id === "tipo" + tipo.charAt(0).toUpperCase() + tipo.slice(1) ? "rgba(16,185,129,.1)" : "var(--soft)";
+
+    function compressAndConvertToBase64(file,maxWidth=800,quality=0.8){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=(e)=>{
+          const img=new Image();
+          img.onload=()=>{
+            const canvas=document.createElement("canvas");
+            let w=img.width,h=img.height;
+            if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
+            canvas.width=w;canvas.height=h;
+            canvas.getContext("2d").drawImage(img,0,0,w,h);
+            resolve(canvas.toDataURL("image/jpeg",quality));
+          };
+          img.onerror=reject;
+          img.src=e.target.result;
+        };
+        reader.onerror=reject;
+        reader.readAsDataURL(file);
       });
     }
-    
-    function handleAdDrop(event){
-      event.preventDefault();
-      const file = event.dataTransfer.files[0];
-      if (file) {
-        document.getElementById("adFileInput").files = event.dataTransfer.files;
-        handleAdFileSelect({target: {files: [file]}});
-      }
-    }
-    
-    function handleAdFileSelect(event){
-      const file = event.target.files[0];
-      if (!file) return;
-      window._adImageData = null;
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById("adPreviewImg").innerHTML = "<img src=\"" + e.target.result + "\" style=\"max-height:200px;border-radius:8px\">";
-          document.getElementById("adPreviewContainer").style.display = "block";
-          window._adImageData = e.target.result;
-          document.getElementById("btnPublicar").disabled = false;
-          document.getElementById("btnPublicar").style.background = "#10b981";
-          document.getElementById("btnPublicar").style.cursor = "pointer";
-        };
-        reader.readAsDataURL(file);
-      } else {
-        document.getElementById("adPreviewImg").innerHTML = "<div style=\"font-size:48px\">🎬</div><div style=\"font-size:12px;margin-top:8px\">" + file.name + "</div>";
-        document.getElementById("adPreviewContainer").style.display = "block";
-        window._adImageData = "video:" + file.name;
-        document.getElementById("btnPublicar").disabled = false;
-        document.getElementById("btnPublicar").style.background = "#10b981";
-        document.getElementById("btnPublicar").style.cursor = "pointer";
-      }
-    }
-    
-    async function createAd(){
-      const tipo = window._selectedTipo || "imagen";
-      const titles = {imagen: "Imagen", video: "Video", payday: "Payday", martes: "Martes"};
-      const title = titles[tipo];
-      const image_data = window._adImageData;
-      try {
-        showLoading("Subiendo...");
-        await api("ads", {method: "POST", body: JSON.stringify({title, category: tipo, image_data, status: "Activo"})});
-        toast("Material publicado", "ok");
-        window._selectedTipo = null;
-        window._adImageData = null;
-        await boot();
-      } catch(e) { toast(e.message, "bad"); }
-      finally { hideLoading(); }
-    }
-    
-    function downloadAd(id){
-      const ad = state.ads.find(a => a.id === id);
-      if (!ad) return;
-      if (ad.image_data) {
-        const link = document.createElement("a");
-        link.href = ad.image_data;
-        link.download = ad.title + ".jpg";
-        link.click();
-      }
-    }
-    
+
     async function deleteAd(id){
-      if (!confirm("¿Eliminar este material?")) return;
-      try {
-        showLoading("Eliminando...");
-        await api("ads/" + id, {method: "DELETE", body: JSON.stringify({id})});
-        toast("Material eliminado", "ok");
-        await boot();
-      } catch(e) { toast(e.message, "bad"); }
-      finally { hideLoading(); }
+      try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}
     }
-    
+
     function adCard(a){
-      const hasFile = a.file_url || a.file_name;
-      const hasImage = a.image_data || a.file_url;
-      const isExpired = a.status==="Vencida" || (a.expiry && new Date(a.expiry) < new Date());
-      const catClass = a.category||"promo";
-      const catLabel = ({promo:"Promo",info:"Info",aviso:"Aviso",urgente:"Urgente"})[catClass]||"Promo";
-      const expiryText = a.expiry ? `Vence: ${new Date(a.expiry).toLocaleDateString("es-CO")}` : "";
-      const waText = encodeURIComponent(`${a.title}\n\n${a.copy_text||a.short_text||""}${a.price?`\nPrecio: ${a.price}`:""}`);
+      const hasImage=a.image_data||a.file_url;
+      const isExpired=a.status==="Vencida"||(a.expiry&&new Date(a.expiry)<new Date());
+      const catClass=a.category||"promo";
+      const catLabel=({promo:"Promo",info:"Info",aviso:"Aviso",urgente:"Urgente"})[catClass]||"Promo";
+      const expiryText=a.expiry?`Vence: ${new Date(a.expiry).toLocaleDateString("es-CO")}`:"";
+      const waText=encodeURIComponent(`${a.title}\n\n${a.copy_text||a.short_text||""}${a.price?`\nPrecio: ${a.price}`:""}`);
       return `<article class="card product ${isExpired?"ad-expired":""}" style="overflow:hidden;position:relative">
         ${isAdmin()?`<div style="position:absolute;top:8px;left:8px;z-index:3;display:flex;gap:4px">
           <button class="ad-order-btn" onclick="moveAd('${a.id}',-1)" title="Mover arriba">↑</button>
@@ -5781,102 +5640,7 @@
         </div>
       </article>`;
     }
-    async function createAd(){
-      try{
-        showLoading("Publicando material...");
-        const file=window._adSelectedFile;
-        const title=$("#adTitle").value.trim();
-        const copy=$("#adCopy").value.trim();
-        const price=$("#adPrice").value.trim();
-        const category=$("#adCategory").value;
-        const expiry=$("#adExpiry").value;
-        const order=Number($("#adOrder").value);
-        if(!title) return toast("Ingresa un titulo","bad");
-        if(!copy) return toast("Ingresa el texto para copiar","bad");
-        const fullCopy=[copy,price?`Precio: ${price}`:""].filter(Boolean).join("\n");
-        let imageData="";
-        if(file && file.type.startsWith("image/")){
-          imageData=await compressAndConvertToBase64(file);
-        }
-        await api("ads",{method:"POST",body:JSON.stringify({title,short_text:copy.slice(0,80),copy_text:fullCopy,status:"Activa",category,expiry,order,file_name:file?.name||"",file_url:file&&!imageData?URL.createObjectURL(file):"",image_data:imageData,price})});
-        toast("Anuncio publicado","ok");
-        window._adSelectedFile=null;
-        window._editingAdId=null;
-        await boot();
-      }catch(e){toast(e.message,"bad")}
-      finally{hideLoading()}
-    }
-    function fileToBase64(file){
-      return new Promise((resolve,reject)=>{
-        const reader=new FileReader();
-        reader.onload=()=>resolve(reader.result);
-        reader.onerror=reject;
-        reader.readAsDataURL(file);
-      });
-    }
-    function compressAndConvertToBase64(file,maxWidth=800,quality=0.8){
-      return new Promise((resolve,reject)=>{
-        const reader=new FileReader();
-        reader.onload=(e)=>{
-          const img=new Image();
-          img.onload=()=>{
-            const canvas=document.createElement("canvas");
-            let w=img.width,h=img.height;
-            if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
-            canvas.width=w;canvas.height=h;
-            canvas.getContext("2d").drawImage(img,0,0,w,h);
-            resolve(canvas.toDataURL("image/jpeg",quality));
-          };
-          img.onerror=reject;
-          img.src=e.target.result;
-        };
-        reader.onerror=reject;
-        reader.readAsDataURL(file);
-      });
-    }
-    window._adSelectedFile=null;
-    function handleAdDrop(e){
-      e.preventDefault();e.currentTarget.classList.remove("dragover");
-      const file=e.dataTransfer.files[0];
-      if(file){window._adSelectedFile=file;showAdFilePreview(file)}
-    }
-    function handleAdFileSelect(e){
-      const file=e.target.files[0];
-      if(file){window._adSelectedFile=file;showAdFilePreview(file)}
-    }
-    function showAdFilePreview(file){
-      const box=$("#adPreview");
-      if(!box)return;
-      if(file.type.startsWith("image/")){
-        const url=URL.createObjectURL(file);
-        box.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--soft);border:1px solid var(--line);border-radius:10px"><img src="${url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover"><div><b style="font-size:12px">${file.name}</b><br><span class="muted" style="font-size:11px">${(file.size/1024).toFixed(0)} KB</span></div><button onclick="clearAdFile()" style="margin-left:auto;background:none;border:0;color:var(--bad);cursor:pointer;font-size:18px">&times;</button></div>`;
-        box.style.display="block";
-        setTimeout(()=>URL.revokeObjectURL(url),5000);
-      } else {
-        box.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--soft);border:1px solid var(--line);border-radius:10px"><div><b style="font-size:12px">${file.name}</b><br><span class="muted" style="font-size:11px">${(file.size/1024).toFixed(0)} KB</span></div><button onclick="clearAdFile()" style="margin-left:auto;background:none;border:0;color:var(--bad);cursor:pointer;font-size:18px">&times;</button></div>`;
-        box.style.display="block";
-      }
-      updateAdPreview();
-    }
-    function clearAdFile(){window._adSelectedFile=null;const b=$("#adPreview");if(b){b.innerHTML="";b.style.display="none"}}
-    function updateAdPreview(){
-      const title=($("#adTitle")||{}).value||"";
-      const copy=($("#adCopy")||{}).value||"";
-      const price=($("#adPrice")||{}).value||"";
-      const category=($("#adCategory")||{}).value||"promo";
-      const box=$("#adLivePreview");
-      if(!box)return;
-      if(!title&&!copy){box.innerHTML=`<p class="muted" style="font-size:12px">Escribe un titulo para ver como se vera el anuncio.</p>`;return}
-      const catLabel={promo:"Promo",info:"Info",aviso:"Aviso",urgente:"Urgente"}[category]||"Promo";
-      const file=window._adSelectedFile;
-      const imgHtml=file&&file.type.startsWith("image/")?`<img src="${URL.createObjectURL(file)}" style="width:100%;height:140px;object-fit:cover;border-radius:10px 10px 0 0">`:`<div style="height:80px;background:linear-gradient(135deg,rgba(8,119,255,.1),rgba(8,119,255,.05));border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--blue)">${title||"Titulo"}</div>`;
-      box.innerHTML=`<div class="ad-preview-card">${imgHtml}<div class="body"><span class="ad-category ${category}" style="margin-bottom:6px;display:inline-flex">${catLabel}</span><h3>${title||"Titulo del anuncio"}</h3><p>${copy||"Texto del anuncio..."}</p>${price?`<div style="font-size:16px;font-weight:900;color:var(--blue)">${price}</div>`:""}</div></div>`;
-    }
-    function copyAdText(id,text){
-      copyText(text);
-      api("ads",{method:"PATCH",body:JSON.stringify({id,increment_copies:true})}).catch(()=>{});
-      toast("Texto copiado","ok");
-    }
+
     function openCopyModal(id,title,text,price){
       const fullText=[text,price?`Precio: ${price}`:""].filter(Boolean).join("\n");
       const ad=state.ads.find(a=>a.id===id);
@@ -5943,7 +5707,6 @@
       if(newIdx<0||newIdx>=state.ads.length)return;
       const arr=[...state.ads];
       [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
-      // Guardar nuevo orden
       try{
         const updates=arr.map((a,i)=>api("ads",{method:"PATCH",body:JSON.stringify({id:a.id,order:i})}));
         await Promise.all(updates);
@@ -5951,19 +5714,6 @@
         renderApp();
       }catch(e){toast("Error al reordenar","bad")}
     }
-    function previewAdFile(){
-      const file=$("#adFile").files[0], box=$("#adPreview");
-      if(!file){box.textContent="Sin archivo seleccionado.";box.className="copy-box muted";return}
-      if(file.type.startsWith("image/")){
-        const url=URL.createObjectURL(file);
-        box.innerHTML=`<b>${file.name}</b> <span class="muted">(${(file.size/1024).toFixed(0)} KB)</span><br><img src="${url}" style="max-width:100%;border-radius:10px;margin-top:6px">`;
-        setTimeout(()=>URL.revokeObjectURL(url),5000);
-      } else {
-        box.innerHTML=`<b>${file.name}</b> <span class="muted">(${(file.size/1024).toFixed(0)} KB)</span>`;
-      }
-      box.className="copy-box";
-    }
-    async function deleteAd(id){try{showLoading("Eliminando...");await api("ads",{method:"DELETE",body:JSON.stringify({id})});toast("Material eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
 
     function editAd(id){
       const a=state.ads.find(x=>x.id===id);
@@ -6019,7 +5769,6 @@
         if(!title) return toast("Ingresa un titulo","bad");
         const fullCopy=[copy,price?`Precio: ${price}`:""].filter(Boolean).join("\n");
         const updateData={id,title,short_text:copy.slice(0,80),copy_text:fullCopy,status,category,expiry,price};
-        // Si hay nueva imagen, comprimir y convertir a base64
         const newImg=$("#editAdImageInput")?.files[0];
         if(newImg && newImg.type.startsWith("image/")){
           updateData.image_data=await compressAndConvertToBase64(newImg);
@@ -6031,7 +5780,6 @@
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
-
     // ─── USUARIOS ──────────────────────────────────────
     let usersTab="clientes";
     function getFilteredUsers(){
