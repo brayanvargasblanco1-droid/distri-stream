@@ -1,3 +1,4 @@
+-- activacion preview branching (push reactivacion) 
 -- Distrito Streaming - esquema inicial de base de datos
 -- Tablas: profiles, products, inventory, orders, reports, topups, ads, settings.
 
