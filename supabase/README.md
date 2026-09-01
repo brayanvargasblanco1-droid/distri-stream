@@ -10,6 +10,37 @@ de Supabase del proyecto Distrito Streaming.
 | `config.toml` | Configuracion del proyecto para el CLI de Supabase |
 | `migrations/20260901000000_initial_schema.sql` | Esquema inicial: profiles, products, inventory, orders, reports, topups, ads, settings |
 | `functions/distrito-api/index.ts` | Edge function principal (esqueleto generico; la API completa vive en el dashboard |
+| `setup-secrets.sh` | Script que configura los 3 secretos de Supabase desde variables de entorno |
+
+## Secretos necesarios
+
+El CLI de Supabase exige un access token para cualquier operacion:
+`Access token not provided. Supply an access token by running supabase login o setting the SUPABASE_ACCESS_TOKEN environment variable.`
+
+Configura estos 3 secretos como variables de entorno ( nunca los pegues en el chat ni en el repo):
+
+| Variable | De donde se obtiene | Formato |
+|---|---|---|
+| `SUPABASE_ACCESS_TOKEN` | Supabase Dashboard > Account Settings > Access Tokens | `sbp_...` |
+| `SUPABASE_DB_PASSWORD` | Supabase Dashboard > Project Settings > Database (password del rol `postgres` | texto |
+| `SUPABASE_PROJECT_ID` | La URL del API del proyecto: `https://tavfcrekyxnwrohsmncx.supabase.co` | `tavfcrekyxnwrohsmncx` |
+
+### Uso del script
+
+```bash
+export SUPABASE_ACCESS_TOKEN=sbp_tu_token
+export SUPABASE_DB_PASSWORD=tu_password
+export SUPABASE_PROJECT_ID=tavfcrekyxnwrohsmncx
+./supabase/setup-secrets.sh
+```
+
+El script valida el formato, vincula el proyecto (link),, aplica las
+migraciones ( `db push`) y setea los secretos de la edge function. Si algo
+falla, muestra un error claro sin imprimir valores secretos.**
+
+> El token de Supabase se genera solour una vez y empieza por `sbp_`.
+> Si no lo tienes a mano, crea uno nuevo en
+> **Dashboard de Supabase > Account Settings > Access Tokens > Generate new token**.
 
 ## Stack
 
