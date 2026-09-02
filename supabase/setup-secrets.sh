@@ -3,7 +3,7 @@
 # Uso: exporta las 3 variables y ejecuta este script.
 set -uo pipefail
 
-PROJECT_ID="${SUPABASE_PROJECT_ID:-tavfcrekyxnwrohsmncx}"
+PROJECT_ID="${SUPABASE_PROJECT_ID:-qbdhcnhplamatydsqkae}"
 ACCESS_TOKEN="${SUPABASE_ACCESS_TOKEN:-}"
 DB_PASSWORD="${SUPABASE_DB_PASSWORD:-}"
 

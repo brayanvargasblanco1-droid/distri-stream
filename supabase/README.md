@@ -23,14 +23,14 @@ Configura estos 3 secretos como variables de entorno ( nunca los pegues en el ch
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | Supabase Dashboard > Account Settings > Access Tokens | `sbp_...` |
 | `SUPABASE_DB_PASSWORD` | Supabase Dashboard > Project Settings > Database (password del rol `postgres` | texto |
-| `SUPABASE_PROJECT_ID` | La URL del API del proyecto: `https://tavfcrekyxnwrohsmncx.supabase.co` | `tavfcrekyxnwrohsmncx` |
+| `SUPABASE_PROJECT_ID` | La URL del API del proyecto: `https://qbdhcnhplamatydsqkae.supabase.co` | `qbdhcnhplamatydsqkae` |
 
 ### Uso del script
 
 ```bash
 export SUPABASE_ACCESS_TOKEN=sbp_tu_token
 export SUPABASE_DB_PASSWORD=tu_password
-export SUPABASE_PROJECT_ID=tavfcrekyxnwrohsmncx
+export SUPABASE_PROJECT_ID=qbdhcnhplamatydsqkae
 ./supabase/setup-secrets.sh
 ```
 
@@ -54,8 +54,8 @@ falla, muestra un error claro sin imprimir valores secretos.**
 Requisitos: [Supabase CLI](https://supabase.com/docs/guides/cli) instalado.
 
 ```bash
-# 1) Vincular el proyecto remoto (project ref: tavfcrekyxnwrohsmncx)
-supabase link --project-ref tavfcrekyxnwrohsmncx
+# 1) Vincular el proyecto remoto (project ref: qbdhcnhplamatydsqkae)
+supabase link --project-ref qbdhcnhplamatydsqkae
 
 # 2) Aplicar las migraciones pendientes al remoto
 supabase db push
@@ -71,9 +71,9 @@ supabase start
 ## Como deployar la edge function
 
 ```bash
-supabase functions deploy distrito-api --project-ref tavfcrekyxnwrohsmncx
-supabase secrets set SUPABASE_URL=https://tavfcrekyxnwrohsmncx.supabase.co --project-ref tavfcrekyxnwrohsmncx
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key --project-ref tavfcrekyxnwrohsmncx
+supabase functions deploy distrito-api --project-ref qbdhcnhplamatydsqkae
+supabase secrets set SUPABASE_URL=https://qbdhcnhplamatydsqkae.supabase.co --project-ref qbdhcnhplamatydsqkae
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key --project-ref qbdhcnhplamatydsqkae
 ```
 
 La edge function versionada aqui es un **esqueleto generico** que lista tablas
@@ -112,4 +112,4 @@ Fuente: `index.html` (buscar `api("...")`).
 - Las politicas RLS son basicas; la gestion real la hace el edge function
   con `service_role` (excluido de RLS por defecto)..
 - La URL del API en `index.html`:
-  `https://tavfcrekyxnwrohsmncx.supabase.co/functions/v1/distrito-api`
+  `https://qbdhcnhplamatydsqkae.supabase.co/functions/v1/distrito-api`
