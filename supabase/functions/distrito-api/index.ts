@@ -100,13 +100,39 @@ Deno.serve(async (req) => {
   if (path === "login" && method === "POST") {
     let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
     const { email, password } = body;
-    if (!email || !password) return error("Correo o contrasena incorrectos");
+
+    // Validacion de campos vacios
+    if (!email && !password) return json({ error: "Ingresa tu correo y tu contrasena.", field: "all" }, 400);
+    if (!email) return json({ error: "Ingresa tu correo electronico.", field: "email" }, 400);
+    if (!password) return json({ error: "Ingresa tu contrasena.", field: "password" }, 400);
+
+    // Validacion de formato de correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return json({ error: "El formato del correo es invalido. Ejemplo: nombre@dominio.com", field: "email" }, 400);
+
+    // Verificar si el correo existe en la base
+    const { data: existingUser } = await supabase.from("profiles").select("id, email, status").eq("email", email).maybeSingle();
+    if (!existingUser) {
+      return json({ error: "Este correo no esta registrado. Revisa que este bien escrito o crea una cuenta.", field: "email" }, 400);
+    }
+
+    // Verificar si la cuenta esta bloqueada/inactiva ANTES de validar la contrasena
+    if (existingUser.status === "Bloqueado" || existingUser.status === "Inactivo") {
+      return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: existingUser.status }, 403);
+    }
+
     const { data: sessionData, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
     if (loginErr) {
       const msg = (loginErr.message || "").toLowerCase();
-      if (msg.includes("blocked") || msg.includes("disabled") || msg.includes("banned")) return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
-      return error("Correo o contrasena incorrectos");
+      if (msg.includes("blocked") || msg.includes("disabled") || msg.includes("banned")) {
+        return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true }, 403);
+      }
+      if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials") || msg.includes("password") || msg.includes("wrong")) {
+        return json({ error: "La contrasena es incorrecta. Verifica que la hayas escrito bien.", field: "password" }, 400);
+      }
+      return json({ error: "No se pudo iniciar sesion: " + (loginErr.message || "error desconocido"), field: "all" }, 400);
     }
+
     const authId = sessionData?.user?.id;
     const accessToken = sessionData?.session?.access_token;
     const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authId).maybeSingle();
