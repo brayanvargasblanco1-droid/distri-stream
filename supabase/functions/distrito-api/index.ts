@@ -1,35 +1,470 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-Deno.serve(async (req: Request): Promise<Response> => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-distrito-session",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+};
+
+const ALLOWED_TABLES = new Set(["products", "inventory", "orders", "reports", "topups", "ads", "settings", "profiles"]);
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function error(msg, status = 400) {
+  return json({ error: msg }, status);
+}
+
+function randomCode(prefix) {
+  return prefix + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+Deno.serve(async (req) => {
+  try {
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/functions\/v1\/distrito-api/, "");
+  let segs = url.pathname.split("/").filter(Boolean);
+  if (segs[0] === "functions" && segs[1] === "v1") segs = segs.slice(3);
+  else if (segs[0] === "distrito-api") segs = segs.slice(1);
+  let path = segs.join("/");
   const method = req.method;
-  const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
 
   if (method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+  if (path === "health" && method === "GET") return json({ ok: true }, 200);
 
-  if (path === "/health") return new Response("distrito-api ok", { status: 200, headers: corsHeaders });
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL"),
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+  const token = req.headers.get("x-distrito-session") || "";
+  let authUser = null;
+  if (token) {
+    const { data: au, error: auErr } = await supabase.auth.getUser(token);
+    if (!auErr && au && au.user) authUser = au.user;
+  }
 
-  const token = req.headers.get("x-distrito-session");
-  const authUser = token ? await supabase.auth.getUser(token) : null;
-  if (!authUser || authUser.error || !authUser.data.user) return new Response("No autorizado", { status: 401, headers: corsHeaders });
+  // REGISTER
+  if (path === "register" && method === "POST") {
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { name, email, phone, password, role, referrer_id } = body;
+    if (!name || !email || !password) return error("name, email y password son requeridos");
+    if (String(password).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+    const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+    if (existing) return error("Ya existe una cuenta con este correo");
+    const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password });
+    if (signUpErr) return error(signUpErr.message || "No se pudo crear la cuenta");
+    const authId = signUpData?.user?.id;
+    if (!authId) return error("No se pudo crear el usuario en Supabase Auth");
+    const { error: profileErr } = await supabase.from("profiles").insert({
+      id: authId,
+      name,
+      email,
+      phone: phone || null,
+      role: roleNorm,
+      balance: 0,
+      margin: 1000,
+      status: "Activo",
+      referrer_id: referrer_id || null,
+    });
+    if (profileErr) return error("No se pudo crear el perfil: " + profileErr.message);
+    return json({ ok: true, id: authId }, 201);
+  }
 
-  const table = path.split("/")[1] || "";
-  if (!["products", "inventory", "orders", "reports", "topups", "ads", "settings", "profiles"].includes(table)) return new Response("Ruta no encontrada", { status: 404, headers: corsHeaders });
+  // CHECK-USER-STATUS
+  if (path === "check-user-status" && method === "POST") {
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { email } = body;
+    if (!email) return error("email requerido");
+    const { data: profile } = await supabase.from("profiles").select("status, email").eq("email", email).maybeSingle();
+    if (!profile) return json({ exists: false }, 200);
+    return json({
+      exists: true,
+      blocked: profile.status === "Bloqueado" || profile.status === "Inactivo",
+      status: profile.status,
+    }, 200);
+  }
 
-  const body = method === "GET" ? null : await req.json();
+  // LOGIN
+  if (path === "login" && method === "POST") {
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { email, password } = body;
+    if (!email || !password) return error("Correo o contrasena incorrectos");
+    const { data: sessionData, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+    if (loginErr) {
+      const msg = (loginErr.message || "").toLowerCase();
+      if (msg.includes("blocked") || msg.includes("disabled") || msg.includes("banned")) return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
+      return error("Correo o contrasena incorrectos");
+    }
+    const authId = sessionData?.user?.id;
+    const accessToken = sessionData?.session?.access_token;
+    const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authId).maybeSingle();
+    if (profileErr || !profile) return error("No se encontro el perfil del usuario");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") {
+      return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
+    }
+    return json({ token: accessToken, user: profile }, 200);
+  }
 
-  let query = supabase.from(table).select("*");
-  for (const key in body || { }) query = query.eq(key, body[key]);
+  // BOOTSTRAP
+  if (path === "bootstrap" && (method === "GET" || method === "POST")) {
+    if (!authUser) return error("No autorizado", 401);
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+    if (!profile) return error("Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
+    const isAdmin = profile.role === "Administrador";
+    const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes] = await Promise.all([
+      supabase.from("products").select("*").order("created_at", { ascending: true }).limit(1000),
+      supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(1000),
+      supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("topups").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("ads").select("*").order("created_at", { ascending: true }).limit(500),
+      supabase.from("settings").select("*").limit(100),
+      isAdmin ? supabase.from("profiles").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
+      isAdmin ? supabase.from("inventory").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
+    ]);
+    const settingsMap = {};
+    for (const row of (sRes.data || [])) settingsMap[row.key] = row.value;
+    return json({
+      user: profile,
+      products: pRes.data || [],
+      orders: oRes.data || [],
+      reports: rRes.data || [],
+      topups: tRes.data || [],
+      ads: aRes.data || [],
+      users: uRes.data || [],
+      inventory: iRes.data || [],
+      settings: settingsMap,
+      notifications: [],
+    }, 200);
+  }
 
-  if (method === "GET") query = query.limit(1000);
+  // BUY
+  if (path === "buy" && method === "POST") {
+    if (!authUser) return error("No autorizado", 401);
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+    if (profileErr || !profile) return error("Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
+    const productId = body.product_id;
+    const quantity = Math.max(1, Math.min(10, Number(body.quantity || 1)));
+    const { data: product } = await supabase.from("products").select("*").eq("id", productId).maybeSingle();
+    if (!product) return error("Producto no encontrado");
+    if (product.status !== "Activo") return error("Producto no disponible");
+    if (Number(product.stock || 0) < quantity) return error("Stock insuficiente");
+    const base = Number(product.provider_price ?? product.base_price ?? 0);
+    const margin = Number(profile.margin ?? 0);
+    const isAdmin = profile.role === "Administrador";
+    const price = isAdmin ? Number(product.base_price ?? base) : base + Math.max(0, margin);
+    const total = price * quantity;
+    if (!isAdmin && Number(profile.balance || 0) < total) return error("Saldo insuficiente");
+    const { data: invRows, error: invErr } = await supabase.from("inventory").select("*").eq("product_id", productId).eq("status", "Disponible").limit(quantity);
+    if (invErr) return error(invErr.message);
+    const available = invRows || [];
+    if (available.length < quantity) return error("No hay cuentas disponibles para este producto");
+    const taken = available.slice(0, quantity);
+    const { data: orderInserts, error: orderErr } = await supabase.from("orders").insert(
+      taken.map((acc, i) => ({
+        user_id: authUser.id,
+        product_id: productId,
+        product_name: product.name,
+        client_name: profile.name || profile.email,
+        quantity: 1,
+        amount: total,
+        total: total,
+        provider_price: base,
+        delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | "),
+        credentials: [acc.email, acc.password].filter(Boolean).join(" | "),
+        status: "Entregado",
+        code: randomCode("ORD"),
+        expires_at: acc.expiry_date ? new Date(acc.expiry_date + "T00:00:00").toISOString() : null,
+      }))).select("id");
+    if (orderErr) return error(orderErr.message);
+    const { error: invUpdErr } = await supabase.from("inventory").update({
+      status: "Entregada",
+      delivery_date: new Date().toISOString(),
+      assigned_user_id: authUser.id,
+    }).in("id", taken.map(a => a.id));
+    if (invUpdErr) return error(invUpdErr.message);
+    const { error: stockErr } = await supabase.from("products").update({
+      stock: Math.max(0, Number(product.stock || 0)) - taken.length,
+    }).eq("id", productId);
+    if (stockErr) return error(stockErr.message);
+    const newBalance = isAdmin ? profile.balance : Number(profile.balance || 0) - total;
+    if (!isAdmin) {
+      await supabase.from("profiles").update({ balance: newBalance }).eq("id", authUser.id);
+    }
+    const finalOrders = orderInserts.map((row, i) => {
+      const acc = taken[i] || {};
+      return { ...row, delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | ") };
+    });
+    return json({ orders: finalOrders, balance: newBalance }, 200);
+  }
 
-  const { data: rows, error: err } = await query;
-  if (err) return new Response(err.message, { status: 400, headers: corsHeaders });
-
-  // Para crear/registrar usuarios se usa el panel de Supabase o la ruta /bootstrap.
- 
- return new Response(JSON.stringify(rows), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  // CRUD GENERICO
+  if (ALLOWED_TABLES.has(path.split("/")[0]) && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(method)) {
+    if (!authUser) return error("No autorizado", 401);
+    const { data: profile, error: profErr } = await supabase.from("profiles").select("role, status, id").eq("id", authUser.id).maybeSingle();
+    if (profErr || !profile) return error("Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
+    const table = path.split("/")[0];
+    const resourceId = path.split("/")[1] || null;
+    const isAdmin = profile.role === "Administrador";
+    if (method === "GET") {
+      if (!isAdmin) {
+        if (["orders", "reports", "topups"].includes(table)) {
+          const { data: rows } = await supabase.from(table).select("*").eq("user_id", authUser.id).limit(1000);
+          return json(rows || [], 200);
+        }
+        return json([], 200);
+      }
+      const { data: rows } = await supabase.from(table).select("*").limit(1000);
+      return json(rows || [], 200);
+    }
+    let body: any = {};
+    try { body = await req.json() || {}; } catch {}
+    // users POST
+    if (table === "users" && method === "POST") {
+      if (!isAdmin) return error("Solo administradores pueden crear usuarios", 403);
+      const { name, email, password, role, balance, margin } = body;
+      if (!name || !email || !password) return error("name, email y password son requeridos");
+      const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+      if (existing) return error("Ya existe una cuenta con este correo");
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password });
+      if (signUpErr) return error(signUpErr.message || "No se pudo crear el usuario");
+      const authId = signUpData?.user?.id;
+      if (!authId) return error("No se pudo crear el usuario");
+      const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
+      const { error: profileErr } = await supabase.from("profiles").insert({
+        id: authId,
+        name,
+        email,
+        role: roleNorm,
+        balance: Number(balance || 0),
+        margin: Number(margin || 1000),
+        status: "Activo",
+      });
+      if (profileErr) return error(profileErr.message);
+      return json({ ok: true, id: authId }, 201);
+    }
+    // users PATCH
+    if (table === "users" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden editar usuarios", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      delete patch.password;
+      delete patch.increment_copies;
+      const { data, error: updErr } = await supabase.from("profiles").update(patch).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // users DELETE
+    if (table === "users" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar usuarios", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("profiles").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // ads increment_copies
+    if (table === "ads" && method === "PATCH" && body.increment_copies) {
+      const { data: row } = await supabase.from("ads").select("copies").eq("id", body.id).maybeSingle();
+      const copies = Number(row?.copies || 0) + 1;
+      const { error: updErr } = await supabase.from("ads").update({ copies }).eq("id", body.id);
+      if (updErr) return error(updErr.message);
+      return json({ ok: true }, 200);
+    }
+    // settings PUT
+    if (table === "settings" && method === "PUT") {
+      if (!isAdmin) return error("Solo administradores pueden editar configuracion", 403);
+      const { key, value } = body;
+      if (!key) return error("key requerido");
+      const { data, error: upsertErr } = await supabase.from("settings").upsert({ key, value, updated_at: new Date().toISOString() }).select("*");
+      if (upsertErr) return error(upsertErr.message);
+      return json(data || [], 200);
+    }
+    // reports POST
+    if (table === "reports" && method === "POST") {
+      const { order_id, product_name, account_data, reason, description } = body;
+      const { data: order } = await supabase.from("orders").select("*").eq("id", order_id || "").maybeSingle();
+      if (order && !isAdmin && order.user_id !== authUser.id) return error("No autorizado", 403);
+      const { data, error: insErr } = await supabase.from("reports").insert({
+        user_id: authUser.id,
+        order_id: order_id || null,
+        product_name: product_name || order?.product_name || null,
+        client_name: profile.name || profile.email || null,
+        account_data: account_data || null,
+        reason: reason || null,
+        description: description || null,
+        status: "Abierto",
+      }).select("*");
+      if (insErr) return error(insErr.message);
+      return json(data || [], 201);
+    }
+    // topups POST
+    if (table === "topups" && method === "POST") {
+      const { amount, method: payMethod, reference } = body;
+      const { data, error: insErr } = await supabase.from("topups").insert({
+        user_id: authUser.id,
+        amount: Number(amount || 0),
+        method: payMethod || "WhatsApp",
+        reference: reference || null,
+        status: "Pendiente",
+      }).select("*");
+      if (insErr) return error(insErr.message);
+      return json(data || [], 201);
+    }
+    // inventory POST
+    if (table === "inventory" && method === "POST") {
+      if (!isAdmin) return error("Solo administradores pueden gestionar inventario", 403);
+      const { data, error: insErr } = await supabase.from("inventory").insert({ ...body, status: body.status || "Disponible" }).select("*");
+      if (insErr) return error(insErr.message);
+      return json(data || [], 201);
+    }
+    // inventory PATCH
+    if (table === "inventory" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden editar inventario", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      const { data, error: updErr } = await supabase.from("inventory").update(patch).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // inventory DELETE
+    if (table === "inventory" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar cuentas", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("inventory").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // products POST
+    if (table === "products" && method === "POST") {
+      if (!isAdmin) return error("Solo administradores pueden gestionar productos", 403);
+      const { data, error: insErr } = await supabase.from("products").insert({ ...body, status: body.status || "Activo" }).select("*");
+      if (insErr) return error(insErr.message);
+      return json(data || [], 201);
+    }
+    // products PATCH
+    if (table === "products" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden editar productos", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      const { data, error: updErr } = await supabase.from("products").update(patch).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // products DELETE
+    if (table === "products" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar productos", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("products").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // reports PATCH
+    if (table === "reports" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden actualizar reportes", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      const { data, error: updErr } = await supabase.from("reports").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // reports DELETE
+    if (table === "reports" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar reportes", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("reports").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // topups PATCH
+    if (table === "topups" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden aprobar recargas", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      const { data: row } = await supabase.from("topups").select("*").eq("id", id).maybeSingle();
+      if (!row) return error("Recarga no encontrada", 404);
+      if (patch.status === "Aprobada") {
+        const { data: owner } = await supabase.from("profiles").select("balance").eq("id", row.user_id).maybeSingle();
+        const newBal = Number(owner?.balance ?? 0) + Number(row.amount || 0);
+        const { error: balErr } = await supabase.from("profiles").update({ balance: newBal }).eq("id", row.user_id);
+        if (balErr) return error(balErr.message);
+      }
+      const { data, error: updErr } = await supabase.from("topups").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // topups DELETE
+    if (table === "topups" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar recargas", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("topups").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // ads POST
+    if (table === "ads" && method === "POST") {
+      if (!isAdmin) return error("Solo administradores pueden gestionar material", 403);
+      const { data, error: insErr } = await supabase.from("ads").insert({ ...body, copies: 0 }).select("*");
+      if (insErr) return error(insErr.message);
+      return json(data || [], 201);
+    }
+    // ads PATCH
+    if (table === "ads" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden editar material", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const patch = { ...body };
+      delete patch.id;
+      delete patch.increment_copies;
+      const { data, error: updErr } = await supabase.from("ads").update(patch).eq("id", id);
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    // ads DELETE
+    if (table === "ads" && method === "DELETE") {
+      if (!isAdmin) return error("Solo administradores pueden eliminar material", 403);
+      const id = resourceId || body.id;
+      if (!id) return error("id requerido");
+      const { error: delErr } = await supabase.from("ads").delete().eq("id", id);
+      if (delErr) return error(delErr.message);
+      return json({ ok: true }, 200);
+    }
+    // settings PATCH
+    if (table === "settings" && method === "PATCH") {
+      if (!isAdmin) return error("Solo administradores pueden editar configuracion", 403);
+      const { key, value } = body;
+      if (!key) return error("key requerido");
+      const { data, error: updErr } = await supabase.from("settings").upsert({ key, value, updated_at: new Date().toISOString() }).select("*");
+      if (updErr) return error(updErr.message);
+      return json(data || [], 200);
+    }
+    return error("Ruta no encontrada: [" + path + "] method=" + method, 404);
+  }
+  return error("Ruta no encontrada FINAL path=[" + path + "] method=" + method, 404);
+  } catch (e) {
+    return error("EXCEPCION: " + (e && e.message ? e.message : String(e)), 500);
+  }
 });
