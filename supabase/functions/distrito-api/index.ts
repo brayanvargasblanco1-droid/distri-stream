@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
 };
 
-const ALLOWED_TABLES = new Set(["products", "inventory", "orders", "reports", "topups", "ads", "settings", "profiles"]);
+const ALLOWED_TABLES = new Set(["products", "inventory", "orders", "reports", "topups", "ads", "settings", "profiles", "users"]);
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -235,9 +235,13 @@ Deno.serve(async (req) => {
       if (!name || !email || !password) return error("name, email y password son requeridos");
       const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
       if (existing) return error("Ya existe una cuenta con este correo");
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password });
-      if (signUpErr) return error(signUpErr.message || "No se pudo crear el usuario");
-      const authId = signUpData?.user?.id;
+      const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (createErr) return error(createErr.message || "No se pudo crear el usuario");
+      const authId = created?.user?.id;
       if (!authId) return error("No se pudo crear el usuario");
       const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
       const { error: profileErr } = await supabase.from("profiles").insert({
