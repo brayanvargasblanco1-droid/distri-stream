@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   let path = segs.join("/");
   const method = req.method;
 
-  if (method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+  if (method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (path === "health" && method === "GET") return json({ ok: true }, 200);
 
   const supabase = createClient(
