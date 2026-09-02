@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       phone: phone || null,
       role: roleNorm,
       balance: 0,
-      margin: 1000,
+      margin: 100,
       status: "Activo",
       referrer_id: referrer_id || null,
     });
@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
         email,
         role: roleNorm,
         balance: Number(balance || 0),
-        margin: Number(margin || 1000),
+        margin: Number(margin || 100),
         status: "Activo",
       });
       if (profileErr) return error(profileErr.message);
