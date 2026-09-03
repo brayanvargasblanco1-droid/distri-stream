@@ -18,6 +18,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Fuente Inter local (funciona sin conexion a Google) -->
+  <style>
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-ExtraBold.woff2') format('woff2');font-weight:800;font-display:swap}
+    @font-face{font-family:'Inter';src:url('assets/fonts/Inter-Black.woff2') format('woff2');font-weight:900;font-display:swap}
+  </style>
   <!-- Premium Design System -->
   <link rel="stylesheet" href="premium-styles.css">
   <style>
@@ -1067,27 +1076,61 @@
     .main::-webkit-scrollbar-thumb{background:rgba(8,119,255,.3);border-radius:999px}
     .main::-webkit-scrollbar-thumb:hover{background:rgba(8,119,255,.5)}
 
-        /* ─── LOADING MINIMALISTA (pantalla con importador) ─── */
-    .loading-overlay{position:fixed!important;inset:0!important;z-index:99998!important;background:#0a0f1a!important;display:none!important;align-items:center;justify-content:center;transition:opacity .35s ease}
+            /* ─── LOADING PREMIUM ─── */
+    .loading-overlay{position:fixed!important;inset:0!important;z-index:99998!important;background:radial-gradient(circle at 20% 20%,rgba(8,119,255,.18),transparent 45%),radial-gradient(circle at 80% 25%,rgba(124,58,237,.16),transparent 45%),radial-gradient(circle at 50% 90%,rgba(0,212,255,.12),transparent 50%),#070b16!important;display:none!important;align-items:center!important;justify-content:center!important;overflow:hidden}
     .loading-overlay.show{display:flex!important}
-    .loading-overlay.oculto{opacity:0!important;pointer-events:none!important}
-    .loader-container{position:relative;display:flex;flex-direction:column;align-items:center;gap:26px;width:220px;text-align:center}
-    .loader-logo{position:relative;width:62px;height:62px;display:flex;align-items:center;justify-content:center;font-size:30px;border-radius:16px;background:linear-gradient(135deg,#0877ff,#00d4ff);box-shadow:0 10px 30px rgba(8,119,255,.45);animation:logoPulse 1.9s ease-in-out infinite}
-    .loader-logo:before{content:"";position:absolute;inset:-6px;border-radius:20px;background:linear-gradient(135deg,#0877ff,#00d4ff,#7c3aed,#0877ff);background-size:300% 300%;filter:blur(14px);opacity:.55;z-index:-1;animation:gradientMove 3s ease infinite}
-    .loader-logo .logo-inner{position:relative;z-index:2;font-weight:bold;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3)}
-    @keyframes logoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-    @keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    .loading-text{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px}
-    .loading-sub{font-size:12px;color:#7a8aa6;margin-top:-18px}
-    .loader-dots{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:18px}
-    .loader-dots span{width:7px;height:7px;border-radius:50%;background:#0877ff;opacity:.25;animation:dotBounce 1.2s ease-in-out infinite}
-    .loader-dots span:nth-child(2){background:#00d4ff;animation-delay:.15s}
-    .loader-dots span:nth-child(3){background:#0877ff;animation-delay:.3s}
-    .loader-dots span:nth-child(4){background:#7c3aed;animation-delay:.45s}
-    @keyframes dotBounce{0%,100%{transform:translateY(0);opacity:.25}50%{transform:translateY(-7px);opacity:1}}
-    .loading-progress{width:100%;height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
-    .loading-progress .bar{height:100%;width:10%;border-radius:999px;background:linear-gradient(90deg,#0877ff,#00d4ff,#0877ff);background-size:200% 100%;animation:barLoad 1.4s ease-in-out infinite;box-shadow:0 0 10px rgba(0,212,255,.6)}
-    @keyframes barLoad{0%{width:8%}50%{width:90%}100%{width:8%}}
+    .loading-overlay.oculto{opacity:0!important;pointer-events:none!important;transition:opacity .4s ease}
+
+    /* Fondo de particulas / orbes */
+    .loader-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+    .loader-particles span{position:absolute;bottom:-14px;width:6px;height:6px;border-radius:50%;background:#00d4ff;opacity:0;animation:loaderRise linear infinite}
+    .loader-particles span:nth-of-type(1){left:8%;animation-duration:9s;animation-delay:0s}
+    .loader-particles span:nth-of-type(2){left:22%;width:4px;height:4px;animation-duration:7s;animation-delay:1.2s}
+    .loader-particles span:nth-of-type(3){left:36%;width:7px;height:7px;background:#0877ff;animation-duration:11s;animation-delay:.4s}
+    .loader-particles span:nth-of-type(4){left:52%;width:5px;height:5px;animation-duration:8s;animation-delay:2s}
+    .loader-particles span:nth-of-type(5){left:66%;width:4px;height:4px;background:#7c3aed;animation-duration:10s;animation-delay:.8s}
+    .loader-particles span:nth-of-type(6){left:78%;width:6px;height:6px;animation-duration:6.5s;animation-delay:1.6s}
+    .loader-particles span:nth-of-type(7){left:90%;width:5px;height:5px;animation-duration:12s;animation-delay:.2s}
+    .loader-particles span:nth-of-type(8){left:14%;width:3px;height:3px;animation-duration:8.5s;animation-delay:2.4s}
+    @keyframes loaderRise{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:.8}85%{opacity:.4}100%{transform:translateY(-110vh) scale(1.4);opacity:0}}
+
+    /* Tarjeta de cristal */
+    .loader-card{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:22px;padding:44px 48px 40px;border-radius:28px;background:rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.08);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);text-align:center;max-width:400px}
+
+    /* Logo con anillos expansivos */
+    .loader-logo-wrap{position:relative;width:84px;height:84px;display:flex;align-items:center;justify-content:center}
+    .loader-logo{position:relative;width:76px;height:76px;display:flex;align-items:center;justify-content:center;font-size:36px;border-radius:22px;background:linear-gradient(135deg,#0877ff,#00d4ff 55%,#7c3aed);color:#fff;font-weight:900;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.35);box-shadow:0 12px 40px rgba(8,119,255,.5);animation:loaderGlow 2.4s ease-in-out infinite;z-index:2}
+    @keyframes loaderGlow{0%,100%{box-shadow:0 12px 40px rgba(8,119,255,.45)}50%{box-shadow:0 12px 60px rgba(0,212,255,.7)}}
+    .loader-logo-wrap::before,.loader-logo-wrap::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid rgba(0,212,255,.35);animation:loaderRipple 2.2s ease-out infinite}
+    .loader-logo-wrap::after{animation-delay:1.1s}
+    @keyframes loaderRipple{0%{transform:scale(.75);opacity:.9;border-color:rgba(0,212,255,.5)}70%{transform:scale(1.6);opacity:0;border-color:rgba(124,58,237,.2)}100%{opacity:0}}
+
+    .loader-title{font-size:19px;font-weight:800;color:#fff;letter-spacing:.4px}
+    .loader-sub{font-size:12.5px;color:#7f8db0;margin-top:-14px;font-weight:500;min-height:16px}
+
+    /* Puntos */
+    .loader-dots{display:flex;gap:7px;justify-content:center;height:16px}
+    .loader-dots span{width:7px;height:7px;border-radius:50%;background:#00d4ff;opacity:.2;animation:dotBounce 1.1s ease-in-out infinite}
+    .loader-dots span:nth-child(1){animation-delay:0s}
+    .loader-dots span:nth-child(2){animation-delay:.12s;background:#0877ff}
+    .loader-dots span:nth-child(3){animation-delay:.24s;background:#7c3aed}
+    .loader-dots span:nth-child(4){animation-delay:.36s;background:#00d4ff}
+    @keyframes dotBounce{0%,100%{transform:translateY(0) scale(1);opacity:.25}50%{transform:translateY(-6px) scale(1.15);opacity:1}}
+
+    /* Barra de progreso con porcentaje */
+    .loader-progress{width:220px;height:5px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
+    .loader-progress .bar{height:100%;width:12%;border-radius:999px;background:linear-gradient(90deg,#0877ff,#00d4ff,#0877ff);background-size:250% 100%;animation:barLoad 1.5s ease-in-out infinite,barShimmer .9s linear infinite;box-shadow:0 0 14px rgba(0,212,255,.6)}
+    .loader-pct{position:absolute;right:0;top:-18px;font-size:11px;font-weight:800;color:#00d4ff}
+    @keyframes barLoad{0%{width:8%}50%{width:92%}100%{width:8%}}
+    @keyframes barShimmer{0%{background-position:0% 0%}100%{background-position:250% 0%}}
+
+    /* Marca inferior */
+    .loader-brand{font-size:11px;color:#5a6782;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-top:2px}
+    .loader-brand b{color:#7f8db0;font-weight:800}
+
+    /* Animacion del texto del estado */
+    .loader-status-anim{animation:statusFade .5s ease}
+    @keyframes statusFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* ─── SKELETON LOADERS ─── */
     .skeleton{background:linear-gradient(90deg,var(--soft) 25%,rgba(8,119,255,.08) 50%,var(--soft) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
@@ -1235,8 +1278,10 @@
       .table-wrap{border-radius:12px}
       .modal{padding:8px}
       .alerts-panel{right:8px;left:8px;width:auto}
-      .loader-container{width:200px}
-      .loader-logo{width:54px;height:54px;font-size:26px}
+      .loader-card{padding:32px 28px 28px;border-radius:22px}
+      .loader-logo{width:64px;height:64px;font-size:30px}
+      .loader-logo-wrap{width:72px;height:72px}
+      .loader-progress{width:180px}
     }
     @media(max-width:380px){
       .store-grid{grid-template-columns:1fr}
@@ -2042,14 +2087,16 @@
 <body>
   <div id="root"></div>
   <div id="loading" class="loading-overlay oculto">
-    <div class="loader-container">
-      <div class="loader-logo"><span class="logo-inner">DS</span></div>
+    <div class="loader-particles" id="loaderParticles"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="loader-card">
+      <div class="loader-logo-wrap"><div class="loader-logo">DS</div></div>
       <div>
-        <div class="loading-text" id="loaderStatus">Cargando...</div>
-        <div class="loading-sub" id="loaderSub">Conectando con el servidor</div>
+        <div class="loader-title" id="loaderStatus">Cargando...</div>
+        <div class="loader-sub" id="loaderSub">Conectando con el servidor</div>
       </div>
       <div class="loader-dots" id="loaderDots"><span></span><span></span><span></span><span></span></div>
-      <div class="loading-progress"><div class="bar"></div></div>
+      <div class="loader-progress"><div class="bar"></div><span class="loader-pct" id="loaderPct"></span></div>
+      <div class="loader-brand">Distrito <b>Streaming</b></div>
     </div>
   </div>
   <div id="offline" class="offline-banner">Sin conexion a internet - Algunas funciones pueden no estar disponibles</div>
@@ -2313,16 +2360,19 @@
       if(!el) return;
       const status=el.querySelector("#loaderStatus");
       const sub=el.querySelector("#loaderSub");
-      if(status) status.textContent=msg;
+      const pct=el.querySelector("#loaderPct");
+      if(status){ status.textContent=msg; status.classList.remove("loader-status-anim"); void status.offsetWidth; status.classList.add("loader-status-anim"); }
       if(sub){
         const steps=LOADING_STEPS[stepKey]||LOADING_STEPS.generic;
         sub.textContent=steps[0];
         sub.dataset.steps=JSON.stringify(steps);
         sub.dataset.step="0";
       }
+      if(pct) pct.textContent="";
       el.classList.remove("oculto");
       el.classList.add("show");
       clearInterval(loaderInterval);
+      let fakePct=0;
       loaderInterval=setInterval(()=>{
         if(sub && sub.dataset.steps){
           const steps=JSON.parse(sub.dataset.steps);
@@ -2331,12 +2381,16 @@
           sub.dataset.step=String(next);
           sub.textContent=steps[next];
         }
-      },1200);
+        // Progreso simulado que avanza hasta 85% (el 100% lo pone hideLoading)
+        fakePct=Math.min(85, fakePct + (Math.random()*6+2));
+        if(pct) pct.textContent=Math.round(fakePct)+"%";
+      },500);
     }
     // Actualiza mensaje y subtexto durante un proceso multi-paso
     function setLoadingProgress(msg, pct){
-      const el=$("#loading"), status=el?.querySelector("#loaderStatus"), sub=el?.querySelector("#loaderSub");
-      if(status) status.textContent=msg;
+      const el=$("#loading"), status=el?.querySelector("#loaderStatus"), sub=el?.querySelector("#loaderSub"), pctEl=el?.querySelector("#loaderPct");
+      if(status){ status.textContent=msg; status.classList.remove("loader-status-anim"); void status.offsetWidth; status.classList.add("loader-status-anim"); }
+      if(pctEl && typeof pct==="number") pctEl.textContent=Math.round(pct)+"%";
       if(sub && typeof pct==="number"){
         const steps=JSON.parse(sub.dataset.steps||"[]");
         if(steps.length){
@@ -2350,11 +2404,17 @@
       const el=$("#loading");
       if(!el) return;
       clearInterval(loaderInterval);
-      el.classList.add("oculto");
+      const pct=el.querySelector("#loaderPct");
+      if(pct) pct.textContent="100%";
+      // Pequeña pausa para que se vea el 100% y luego fade-out
       setTimeout(()=>{
-        el.classList.remove("show");
-        el.classList.remove("oculto");
-      },350);
+        el.classList.add("oculto");
+        setTimeout(()=>{
+          el.classList.remove("show");
+          el.classList.remove("oculto");
+          if(pct) pct.textContent="";
+        },420);
+      },120);
     }
     function checkOnline(){
       const banner=$("#offline");
