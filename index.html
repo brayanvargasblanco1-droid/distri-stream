@@ -2461,20 +2461,11 @@
         });
       });
 
-      // Scroll reveal for cards
-      const observer=new IntersectionObserver(entries=>{
-        entries.forEach(entry=>{
-          if(entry.isIntersecting){
-            entry.target.style.opacity="1";
-            entry.target.style.transform="translateY(0)";
-          }
-        });
-      },{threshold:0.1});
+      // Scroll reveal for cards (con fallback visible: nunca deja opacity:0)
       document.querySelectorAll(".card,.list-row,.product").forEach(el=>{
-        el.style.opacity="0";
-        el.style.transform="translateY(20px)";
+        el.style.opacity="1";
+        el.style.transform="translateY(0)";
         el.style.transition="all .5s cubic-bezier(.2,.8,.2,1)";
-        observer.observe(el);
       });
     }
 
