@@ -2894,13 +2894,13 @@
     function navItems(){
       if(isAdmin()) return [
         ["admin","Panel",icons.admin],["users","Usuarios",icons.users],["payments","Recargas",icons.wallet],["reports","Reportes",icons.reports],
-        ["store","Inventario",icons.store],["ads","Publicidad",icons.ads],["analytics","Estudios",icons.chart],["settings","Datos de pago",icons.admin]
+        ["store","Inventario",icons.store],["ads","Publicidad",icons.ads],["analytics","Estudios",icons.chart],["audit","Auditoria",icons.reports],["settings","Datos de pago",icons.admin]
       ];
       return [["home","Inicio",icons.home],["store","Tienda",icons.store],["orders","Compras",icons.orders],["history","Movimientos",icons.history],["reports","Soporte",icons.reports],["ads","Material",icons.ads]];
     }
     function setView(view){state.view=view;renderApp()}
     function pageTitle(){
-      return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
+      return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",audit:"Auditoria",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
     }
     function pageSubtitle(){
       if(isAdmin()) return "";
@@ -2974,7 +2974,7 @@
       setTimeout(()=>{initPullToRefresh();initEffects();if(state.view==="home")startCarousel()},100);
     }
     function renderView(){
-      return ({home,store,orders,history,reports,ads,users,payments,admin,analytics,settings,inventory}[state.view] || home)();
+      return ({home,store,orders,history,reports,ads,users,payments,admin,analytics,audit,settings,inventory}[state.view] || home)();
     }
 
     // ─── HOME ──────────────────────────────────────────
@@ -3382,6 +3382,58 @@
     // Variables globales para paginación de actividad
     window.adminActivityTab = window.adminActivityTab || 'all';
     window.adminActivityPage = window.adminActivityPage || 1;
+
+    // ─── AUDITORIA (solo admin) ────────────────────────
+    let auditLogs = [];
+    async function audit(){
+      if(!isAdmin()) return setView('home');
+      showLoading("Cargando auditoria...");
+      try{
+        auditLogs = await api("audit-log");
+      }catch(e){ auditLogs = []; }
+      hideLoading();
+      const actionLabels = {
+        register:"Registro",user_create:"Crear usuario",user_update:"Editar usuario",user_delete:"Eliminar usuario",
+        user_password_reset:"Restablecer clave",topup_update:"Recarga",report_update:"Reporte"
+      };
+      const actionColors = {
+        register:"#10b981",user_create:"#667eea",user_update:"#0877ff",user_delete:"#ef4444",
+        user_password_reset:"#f59e0b",topup_update:"#f59e0b",report_update:"#ef4444"
+      };
+      const rows = auditLogs.map(a=>{
+        const user = state.users.find(u=>u.id===a.user_id) || {};
+        const who = a.user_id ? (user.name || user.email || a.user_id.slice(0,8)) : "Sistema";
+        const label = actionLabels[a.action] || a.action;
+        const color = actionColors[a.action] || "#6b7280";
+        const details = a.details ? JSON.stringify(a.details) : "";
+        return `<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+          <div style="width:36px;height:36px;border-radius:10px;background:${color}18;color:${color};display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0">${(label[0]||"?").toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:800;color:${color}">${label}</span>
+              <span style="font-size:11px;color:var(--muted)">${formatDate(a.created_at)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text);margin-top:2px">${escapeHTML(who)} <span style="color:var(--muted)">· ${escapeHTML(a.table_name||"")}${a.record_id?" · "+escapeHTML(String(a.record_id).slice(0,8)):""}</span></div>
+            ${details ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-family:monospace;word-break:break-all">${escapeHTML(details)}</div>` : ""}
+          </div>
+        </div>`;
+      }).join("");
+      return `
+        <section class="card" style="padding:0;overflow:hidden">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--line)">
+            <div style="font-size:10px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">CONTROL Y TRAZABILIDAD</div>
+            <h2 style="margin:0;font-size:20px;font-weight:900">Auditoria de acciones</h2>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Registro de quién hizo qué en la plataforma</p>
+          </div>
+          <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="setView('admin')" style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer">← Volver al panel</button>
+            <button onclick="audit()" style="padding:8px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:11px;font-weight:700;cursor:pointer">↻ Actualizar</button>
+          </div>
+          <div style="display:grid;gap:10px;padding:16px 20px">
+            ${auditLogs.length ? rows : '<div style="text-align:center;padding:40px 20px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">📋</div><div style="font-size:14px;font-weight:700">Sin registros de auditoria aun</div><div style="font-size:12px;margin-top:4px">Las acciones de admin (crear/editar/eliminar usuarios, recargas, reportes) quedaran registradas aqui.</div></div>'}
+          </div>
+        </section>`;
+    }
     
     function renderAdminActivityRows(){
       const tab = window.adminActivityTab || 'all';
