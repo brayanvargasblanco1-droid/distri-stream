@@ -3031,10 +3031,15 @@
           ${renderView()}
         </main>
       </div>`;
-      setTimeout(()=>{initPullToRefresh();initEffects();if(state.view==="home")startCarousel()},100);
+      setTimeout(()=>{initPullToRefresh();initEffects();if(typeof Tienda!=="undefined"&&document.querySelector(".t-tab"))Tienda.render();if(state.view==="home")startCarousel()},100);
     }
     function renderView(){
-      return ({home,store,orders,history,reports,ads,users,payments,admin,analytics,audit,settings,inventory}[state.view] || home)();
+      if(state.view === "audit" && isAdmin() && !window.__auditLoading && !window.__suppressAuditLoad){
+        window.__auditLoading = true;
+        audit().finally(()=>{ window.__auditLoading = false; });
+        return `<section class="card" style="padding:60px;text-align:center;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">📋</div>Cargando auditoria...</section>`;
+      }
+      return ({home,store,orders,history,reports,ads,users,payments,admin,analytics,audit:auditView,settings,inventory}[state.view] || home)();
     }
 
     // ─── HOME ──────────────────────────────────────────
@@ -3452,6 +3457,10 @@
         auditLogs = await api("audit-log");
       }catch(e){ auditLogs = []; }
       hideLoading();
+      renderApp();
+    }
+    function auditView(){
+      if(!isAdmin()) return setView('home');
       const actionLabels = {
         register:"Registro",user_create:"Crear usuario",user_update:"Editar usuario",user_delete:"Eliminar usuario",
         user_password_reset:"Restablecer clave",topup_update:"Recarga",report_update:"Reporte"

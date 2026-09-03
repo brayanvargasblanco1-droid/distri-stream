@@ -215,8 +215,8 @@ const TiendaCSS = `
   border-radius: 24px;
   padding: 24px;
   position: relative;
-  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  opacity: 1;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05);
@@ -239,7 +239,7 @@ const TiendaCSS = `
 }
 .t-badge-available { background: linear-gradient(135deg, #10b981, #059669); color: white; }
 .t-badge-urgent { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; animation: bounce 1s ease-in-out infinite; }
-.t-badge-sold { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+.t-badge-sold { background: linear-gradient(135deg, #6b7280, #4b5563); color: #fff; box-shadow: 0 2px 8px rgba(107,114,128,0.35); }
 
 .t-card-logo { margin: 20px 0; }
 .t-logo { width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
@@ -357,10 +357,10 @@ function improvedStoreView() {
       
       <!-- TABS -->
       <div class="t-tabs">
-        <button class="t-tab" data-filtro="disponibles" onclick="Tienda.cambiarFiltro('disponibles')">
+        <button class="t-tab" data-filtro="disponibles" onclick="Tienda.cambiarFiltro('disponibles')" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:#f59e0b;box-shadow:0 8px 25px rgba(245,158,11,0.4)">
           ✓ Disponibles (${disponibles.length})
         </button>
-        <button class="t-tab" data-filtro="agotados" onclick="Tienda.cambiarFiltro('agotados')">
+        <button class="t-tab" data-filtro="agotados" onclick="Tienda.cambiarFiltro('agotados')" style="background:rgba(255,255,255,0.9);color:#64748b;border-color:rgba(148,163,184,0.3)">
           ❌ Agotados (${agotados.length})
         </button>
       </div>
