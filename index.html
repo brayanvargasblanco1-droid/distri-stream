@@ -1359,7 +1359,9 @@
     body.dark .product .mini{color:rgba(255,255,255,.45)}
     body.dark .product-body{color:#f3f4f6}
     body.dark .product h3{color:#f3f4f6}
-    body.dark .product .stock{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.1)}
+    body.dark .product .stock{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.35)}
+    body.dark .product .stock.low{background:linear-gradient(135deg,#d97706,#b45309);box-shadow:0 2px 8px rgba(245,158,11,.35)}
+    body.dark .product .stock.out{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 8px rgba(239,68,68,.35)}
     body.dark .product.unavailable{opacity:.35}
 
     /* ─── DARK MODE: TABLE ─── */
@@ -4603,7 +4605,7 @@
       const isPersonal = p.shared === false || String(p.share_type||"").toLowerCase() === "personal";
       const ops = operatorCount(p.id);
       const stockClass = available ? (Number(p.stock) <= 2 ? 'low' : '') : 'out';
-      const stockText = available ? (Number(p.stock) <= 2 ? `¡Solo ${p.stock}!` : `${p.stock} disponibles`) : 'Agotado';
+      const stockText = available ? (Number(p.stock) <= 2 ? `¡Solo ${p.stock}!` : 'DISPONIBLE') : 'AGOTADO';
       const logos = {
         netflix:`<div style="width:64px;height:64px;background:#E50914;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(229,9,20,.3)"><span style="font-family:Arial,sans-serif;font-size:40px;font-weight:700;color:#fff;line-height:1">N</span></div>`,
         spotify:`<div style="width:64px;height:64px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(29,185,84,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="#191414"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></div>`,
