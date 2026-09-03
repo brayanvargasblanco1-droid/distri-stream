@@ -215,6 +215,15 @@ Deno.serve(async (req) => {
     }, 200);
   }
 
+  // AUDIT-LOG (solo admin: ver trazabilidad de acciones)
+  if (path === "audit-log" && method === "GET") {
+    if (!authUser) return error("No autorizado", 401);
+    const { data: prof } = await supabase.from("profiles").select("role").eq("id", authUser.id).maybeSingle();
+    if (!prof || prof.role !== "Administrador") return error("Solo administradores", 403);
+    const { data: rows } = await supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(500);
+    return json(rows || [], 200);
+  }
+
   // BUY
   if (path === "buy" && method === "POST") {
     if (!authUser) return error("No autorizado", 401);
@@ -334,12 +343,25 @@ Deno.serve(async (req) => {
       if (!isAdmin) return error("Solo administradores pueden editar usuarios", 403);
       const id = resourceId || body.id;
       if (!id) return error("id requerido");
+      // Un admin no puede cambiar su propio rol ni bloquearse a si mismo
+      if (id === authUser.id && (body.role || body.status)) {
+        return error("No puedes cambiar tu propio rol o estado", 403);
+      }
       const patch = { ...body };
       delete patch.id;
-      delete patch.password;
       delete patch.increment_copies;
+      const hasPassword = patch.password !== undefined && patch.password !== null && patch.password !== "";
+      const newPassword = patch.password;
+      delete patch.password;
+      if (hasPassword) {
+        if (String(newPassword).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+        const { error: pwdErr } = await supabase.auth.admin.updateUserById(id, { password: newPassword });
+        if (pwdErr) return error(pwdErr.message || "No se pudo restablecer la contrasena");
+        await audit(supabase, authUser.id, "user_password_reset", "profiles", id, {});
+      }
       const { data, error: updErr } = await supabase.from("profiles").update(patch).eq("id", id);
       if (updErr) return error(updErr.message);
+      await audit(supabase, authUser.id, "user_update", "profiles", id, patch);
       return json(data || [], 200);
     }
     // users DELETE
@@ -347,6 +369,7 @@ Deno.serve(async (req) => {
       if (!isAdmin) return error("Solo administradores pueden eliminar usuarios", 403);
       const id = resourceId || body.id;
       if (!id) return error("id requerido");
+      if (id === authUser.id) return error("No puedes eliminar tu propia cuenta", 403);
       await audit(supabase, authUser.id, "user_delete", "profiles", id);
       const { error: delErr } = await supabase.from("profiles").delete().eq("id", id);
       if (delErr) return error(delErr.message);
