@@ -23,6 +23,20 @@ function randomCode(prefix) {
   return prefix + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+async function audit(supabase, userId, action, tableName, recordId, details = null) {
+  try {
+    await supabase.from("audit_log").insert({
+      user_id: userId,
+      action,
+      table_name: tableName,
+      record_id: recordId ? String(recordId) : null,
+      details: details || null,
+    });
+  } catch (_) {
+    // La auditoria no debe romper la operacion principal
+  }
+}
+
 Deno.serve(async (req) => {
   try {
   const url = new URL(req.url);
@@ -79,6 +93,7 @@ Deno.serve(async (req) => {
       referrer_id: referrer_id || null,
     }, { onConflict: "id" });
     if (profileErr) return error("No se pudo crear el perfil: " + profileErr.message);
+    await audit(supabase, authId, "register", "profiles", authId, { email, role: roleNorm, referrer_id: referrer_id || null });
     return json({ ok: true, id: authId }, 201);
   }
 
@@ -94,6 +109,30 @@ Deno.serve(async (req) => {
       blocked: profile.status === "Bloqueado" || profile.status === "Inactivo",
       status: profile.status,
     }, 200);
+  }
+
+  // FORGOT-PASSWORD
+  if (path === "forgot-password" && method === "POST") {
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { email } = body;
+    if (!email) return error("email requerido");
+    const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+    // No revelar si el correo existe por seguridad; simpre responder ok
+    if (existing) {
+      await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://distrito-streaming-vercel-ashen.vercel.app/?reset=1" });
+    }
+    return json({ ok: true }, 200);
+  }
+
+  // RESET-PASSWORD
+  if (path === "reset-password" && method === "POST") {
+    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    const { token, password } = body;
+    if (!token || !password) return error("token y password son requeridos");
+    if (String(password).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+    const { error: updErr } = await supabase.auth.updateUser(token, { password });
+    if (updErr) return error(updErr.message || "No se pudo restablecer la contrasena");
+    return json({ ok: true }, 200);
   }
 
   // LOGIN
@@ -287,6 +326,7 @@ Deno.serve(async (req) => {
         status: "Activo",
       }, { onConflict: "id" });
       if (profileErr) return error(profileErr.message);
+      await audit(supabase, authUser.id, "user_create", "profiles", authId, { email, role: roleNorm, balance: Number(balance || 0) });
       return json({ ok: true, id: authId }, 201);
     }
     // users PATCH
@@ -307,6 +347,7 @@ Deno.serve(async (req) => {
       if (!isAdmin) return error("Solo administradores pueden eliminar usuarios", 403);
       const id = resourceId || body.id;
       if (!id) return error("id requerido");
+      await audit(supabase, authUser.id, "user_delete", "profiles", id);
       const { error: delErr } = await supabase.from("profiles").delete().eq("id", id);
       if (delErr) return error(delErr.message);
       return json({ ok: true }, 200);
@@ -420,6 +461,7 @@ Deno.serve(async (req) => {
       if (!id) return error("id requerido");
       const patch = { ...body };
       delete patch.id;
+      await audit(supabase, authUser.id, "report_update", "reports", id, patch);
       const { data, error: updErr } = await supabase.from("reports").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
       if (updErr) return error(updErr.message);
       return json(data || [], 200);
@@ -442,6 +484,7 @@ Deno.serve(async (req) => {
       delete patch.id;
       const { data: row } = await supabase.from("topups").select("*").eq("id", id).maybeSingle();
       if (!row) return error("Recarga no encontrada", 404);
+      await audit(supabase, authUser.id, "topup_update", "topups", id, { status: patch.status, amount: row.amount, user_id: row.user_id });
       if (patch.status === "Aprobada") {
         const { data: owner } = await supabase.from("profiles").select("balance").eq("id", row.user_id).maybeSingle();
         const newBal = Number(owner?.balance ?? 0) + Number(row.amount || 0);
