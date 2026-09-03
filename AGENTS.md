@@ -109,3 +109,29 @@ runQuickTest();
 - Dark mode: hero/filtros/cards/empty con overrides coherentes.
 - Sin romper admin: `ads()` admin sigue con tabs Subir/Ver; adCard preserva order-buttons, stats de copias/descargas, editar/eliminar.
 - Funciones intactas: openCopyModal, confirmCopy, shareAdWhatsApp, moveAd, editAd, deleteAd.
+## Alineación esquema ↔ app real — 2026-09-03
+- **Migración `20260903000000_align_schema_with_app.sql`**: añade las columnas que el backend/frontend usan y que no existían:
+  - `profiles`: avatar_emojia, avatar_color_index
+  - `products`: provider_price, base_price, share_type
+  - `inventory`: email, password, profile, pin, expiry_date, status, delivery_date, assigned_user_id
+  - `orders`: amount, code, provider_price, delivered_data, credentials, expires_at; `order_code` ya no es NOT NULL (el backend inserta `code`)
+  - `reports`: user_id, order_id, product_name, client_name, account_data, reason, status (Abierto/En revision/Resuelto/Rechazado); `report_type` y `title` ya no son NOT NULL
+  - `ads`: copies
+  - `topups`: notes
+  - **Nueva tabla** `audit_log` (user_id,d action,d table_name,d record_id,d details,d created_at).
+- **RLS endurecida**: cada tabla tiene políticas por rol (perfil propio,d ordenes/reports/topups propios,d admin ve todo via service_role; audit_log inaccesible al publico). El edge function usa service_role (salta RLS), así que el frontend sigue funcionando igual.
+
+
+
+## Endpoints nuevos(backends)
+- `POST forgot-password` `{email}` → `supabase.auth.resetPasswordForEmail` (enlace → `/?reset=1#access_token=...&type=recovery`).
+- `POST reset-password` `{token,d password}` → `supabase.auth.updateUser`.
+- Auditoría automática en: register,d user_create,d user_delete,d report_update,d topup_update.
+
+
+
+## Frontend (persistencia real)
+- `saveProfile()` y `saveAvatarChoice()` ahora hacen PATCH a `/users` (persisten en DB); el localStorage es solo espejo después de confirmar).
+.
+- Aprobación/rechazo de recargas ahora dependen 100% de la API (si la API falla,d se muestra error; se eliminó el fallback silencioso a localStorage `dsTopups`).
+- Modal "Olvidaste tu contraseña?" (`forgotPassword()`) + manejo de `?reset=1#access_token=...&type=recovery` (`handlePasswordReset()` → `sendResetPassword()`).
