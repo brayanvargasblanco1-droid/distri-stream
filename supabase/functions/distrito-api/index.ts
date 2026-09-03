@@ -57,11 +57,17 @@ Deno.serve(async (req) => {
     const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
     if (existing) return error("Ya existe una cuenta con este correo");
     const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
-    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password });
-    if (signUpErr) return error(signUpErr.message || "No se pudo crear la cuenta");
-    const authId = signUpData?.user?.id;
+    // admin.createUser (con email_confirm) no envia email y no dispara el rate limit de SMTP
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (createErr) return error(createErr.message || "No se pudo crear la cuenta");
+    const authId = created?.user?.id;
     if (!authId) return error("No se pudo crear el usuario en Supabase Auth");
-    const { error: profileErr } = await supabase.from("profiles").insert({
+    // upsert para tolerar el trigger handle_new_user que ya inserta el perfil
+    const { error: profileErr } = await supabase.from("profiles").upsert({
       id: authId,
       name,
       email,
@@ -71,7 +77,7 @@ Deno.serve(async (req) => {
       margin: 100,
       status: "Activo",
       referrer_id: referrer_id || null,
-    });
+    }, { onConflict: "id" });
     if (profileErr) return error("No se pudo crear el perfil: " + profileErr.message);
     return json({ ok: true, id: authId }, 201);
   }
@@ -244,7 +250,8 @@ Deno.serve(async (req) => {
       const authId = created?.user?.id;
       if (!authId) return error("No se pudo crear el usuario");
       const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
-      const { error: profileErr } = await supabase.from("profiles").insert({
+      // upsert para tolerar el trigger handle_new_user que ya inserta el perfil
+      const { error: profileErr } = await supabase.from("profiles").upsert({
         id: authId,
         name,
         email,
@@ -252,7 +259,7 @@ Deno.serve(async (req) => {
         balance: Number(balance || 0),
         margin: Number(margin || 100),
         status: "Activo",
-      });
+      }, { onConflict: "id" });
       if (profileErr) return error(profileErr.message);
       return json({ ok: true, id: authId }, 201);
     }

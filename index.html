@@ -6621,8 +6621,13 @@
     }
     async function createUser(){
       try{
+        const name=$("#nuName").value.trim(), email=$("#nuEmail").value.trim(), pass=$("#nuPass").value;
+        if(!name) return toast("Ingresa el nombre completo","bad");
+        if(!email) return toast("Ingresa el correo electrónico","bad");
+        if(!pass) return toast("Ingresa una contraseña temporal","bad");
+        if(pass.length < 6) return toast("La contraseña debe tener al menos 6 caracteres","bad");
         showLoading("Creando usuario...");
-        await api("users",{method:"POST",body:JSON.stringify({name:$("#nuName").value,email:$("#nuEmail").value,password:$("#nuPass").value,role:$("#nuRole").value,balance:Number($("#nuBalance").value||0),margin:Math.min(999.99, Number($("#nuMargin").value||500))})});
+        await api("users",{method:"POST",body:JSON.stringify({name,email,password:pass,role:$("#nuRole").value,balance:Number($("#nuBalance").value||0),margin:Math.min(999.99, Number($("#nuMargin").value||500))})});
         closeModal(); toast("Usuario creado","ok"); await boot();
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
