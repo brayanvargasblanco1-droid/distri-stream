@@ -214,6 +214,24 @@ async function creditReferralCommission(
   }
 }
 
+// Sincroniza products.stock con el conteo REAL de cuentas Disponibles del
+// inventario. products.stock es lo que la tienda muestra y /buy valida, así que
+// debe reflejar siempre cuántas cuentas hay listas para entregar. Se invoca tras
+// cada alta/edición/baja de inventario (nunca rompe la operación principal).
+async function syncProductStock(supabase: any, productId: string | null | undefined) {
+  if (!productId) return;
+  try {
+    const { count } = await supabase
+      .from("inventory")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", productId)
+      .eq("status", "Disponible");
+    await supabase.from("products").update({ stock: count ?? 0 }).eq("id", productId);
+  } catch (_) {
+    // Best-effort: si falla, /buy igual reclama contra el inventario real
+  }
+}
+
 async function audit(supabase: any, userId: string, action: string, tableName: string, recordId: string | null, details: any = null) {
   try {
     await supabase.from("audit_log").insert({
@@ -1033,6 +1051,8 @@ Deno.serve(async (req) => {
       if (!isAdmin) return error(req, "Solo administradores pueden gestionar inventario", 403);
       const { data, error: insErr } = await supabase.from("inventory").insert({ ...body, status: body.status || "Disponible" }).select("*");
       if (insErr) return dbError(req, "insert", insErr);
+      // Nueva cuenta disponible -> el producto gana +1 en la tienda
+      await syncProductStock(supabase, (data && data[0] && data[0].product_id) || body.product_id);
       return json(req, data || [], 201);
     }
     // inventory PATCH
@@ -1042,8 +1062,14 @@ Deno.serve(async (req) => {
       if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
+      const { data: prev } = await supabase.from("inventory").select("product_id, status").eq("id", id).maybeSingle();
       const { data, error: updErr } = await supabase.from("inventory").update(patch).eq("id", id);
       if (updErr) return dbError(req, "update", updErr);
+      // Si cambió el producto o el estado (Disponible <-> Entregada), refrescar stock
+      await syncProductStock(supabase, prev && prev.product_id);
+      if (patch.product_id && (!prev || patch.product_id !== prev.product_id)) {
+        await syncProductStock(supabase, patch.product_id);
+      }
       return json(req, data || [], 200);
     }
     // inventory DELETE
@@ -1051,8 +1077,11 @@ Deno.serve(async (req) => {
       if (!isAdmin) return error(req, "Solo administradores pueden eliminar cuentas", 403);
       const id = resourceId || body.id;
       if (!id) return error(req, "id requerido");
+      const { data: victim } = await supabase.from("inventory").select("product_id").eq("id", id).maybeSingle();
       const { error: delErr } = await supabase.from("inventory").delete().eq("id", id);
       if (delErr) return dbError(req, "delete", delErr);
+      // Cuenta eliminada -> el producto pierde +1 en la tienda
+      await syncProductStock(supabase, victim && victim.product_id);
       return json(req, { ok: true }, 200);
     }
     // products POST
