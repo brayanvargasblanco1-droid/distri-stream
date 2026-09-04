@@ -1078,8 +1078,13 @@
 
             /* ─── LOADING PREMIUM ─── */
     .loading-overlay{position:fixed!important;inset:0!important;z-index:99998!important;background:radial-gradient(circle at 20% 20%,rgba(8,119,255,.18),transparent 45%),radial-gradient(circle at 80% 25%,rgba(124,58,237,.16),transparent 45%),radial-gradient(circle at 50% 90%,rgba(0,212,255,.12),transparent 50%),#070b16!important;display:none!important;align-items:center!important;justify-content:center!important;overflow:hidden}
-    .loading-overlay.show{display:flex!important}
-    .loading-overlay.oculto{opacity:0!important;pointer-events:none!important;transition:opacity .4s ease}
+    /* Transición suave: el overlay arranca transparente y se funde a su opacidad
+       al mostrarse; al ocultarse (clase .oculto) hace el fade inverso. Se usa
+       opacity + transition (no una animación con fill-mode, que bloquearía el
+       fade-out al ocultarlo). */
+    .loading-overlay{opacity:0!important;transition:opacity .38s ease}
+    .loading-overlay.show{display:flex!important;opacity:1!important}
+    .loading-overlay.oculto{opacity:0!important;pointer-events:none!important}
 
     /* Fondo de particulas / orbes */
     .loader-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
@@ -1105,8 +1110,8 @@
     .loader-logo-wrap::after{animation-delay:1.1s}
     @keyframes loaderRipple{0%{transform:scale(.75);opacity:.9;border-color:rgba(0,212,255,.5)}70%{transform:scale(1.6);opacity:0;border-color:rgba(124,58,237,.2)}100%{opacity:0}}
 
-    .loader-title{font-size:19px;font-weight:800;color:#fff;letter-spacing:.4px}
-    .loader-sub{font-size:12.5px;color:#7f8db0;margin-top:-14px;font-weight:500;min-height:16px}
+    .loader-title{font-size:19px;font-weight:800;color:#fff;letter-spacing:.4px;line-height:1.3}
+    .loader-sub{font-size:12.5px;color:#7f8db0;margin-top:4px;font-weight:500;line-height:1.4;min-height:17px}
 
     /* Puntos */
     .loader-dots{display:flex;gap:7px;justify-content:center;height:16px}
@@ -2085,6 +2090,21 @@
   </style>
   <!-- Visual transformation overlay 2026 (carga al final para sobrescribir) -->
   <link rel="stylesheet" href="distrito-2026.css?v=5">
+  <style>
+    /* Banner PWA: encima de la barra móvil (nav fija z 9999). Regla global al
+       final del <head> para ganar la cascada siempre. */
+    @media (max-width: 768px){
+      #pwa-banner.pwa-banner.show{
+        z-index: 10001 !important;
+        /* La barra móvil mide ~129px: el banner flota justo encima sin taparla */
+        bottom: 140px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        border-radius: 16px !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
@@ -2364,6 +2384,7 @@
     function showLoading(msg="Cargando...", stepKey="generic"){
       const el=$("#loading");
       if(!el) return;
+      window.__hidingLoader=false; window.__hidingCallbacks=[];
       const status=el.querySelector("#loaderStatus");
       const sub=el.querySelector("#loaderSub");
       const pct=el.querySelector("#loaderPct");
@@ -2406,12 +2427,21 @@
         }
       }
     }
-    function hideLoading(){
+    function hideLoading(onHidden){
       const el=$("#loading");
-      if(!el) return;
+      if(!el) return typeof onHidden==="function" && onHidden();
+      // Idempotente: si ya se está ocultando, registrar el callback y no
+      // reiniciar el contador (evita que dos llamadas encadenadas pisen el fade).
+      if(window.__hidingLoader){
+        if(typeof onHidden==="function") window.__hidingCallbacks.push(onHidden);
+        return;
+      }
       clearInterval(loaderInterval);
       const pct=el.querySelector("#loaderPct");
       if(pct) pct.textContent="100%";
+      window.__hidingLoader=true;
+      window.__hidingCallbacks=[];
+      if(typeof onHidden==="function") window.__hidingCallbacks.push(onHidden);
       // Pequeña pausa para que se vea el 100% y luego fade-out
       setTimeout(()=>{
         el.classList.add("oculto");
@@ -2419,7 +2449,11 @@
           el.classList.remove("show");
           el.classList.remove("oculto");
           if(pct) pct.textContent="";
-        },420);
+          const cbs=window.__hidingCallbacks||[];
+          window.__hidingLoader=false;
+          window.__hidingCallbacks=[];
+          cbs.forEach(cb=>{try{cb()}catch(e){console.error(e)}});
+        },380);
       },120);
     }
     function checkOnline(){
@@ -2966,7 +3000,10 @@
         }
         if($("#rememberMe")?.checked){localStorage.dsRememberEmail=email}else{localStorage.removeItem("dsRememberEmail")}
         setLoadingProgress("Cargando tu panel...", 70);
-        await boot(); toast("Bienvenido, " + state.user.name,"ok");
+        await boot();
+        // El render del panel ocurre tras el fade del loader; el saludo va
+        // después para no aparecer mientras aún se está desvaneciendo.
+        hideLoading(()=>toast("Bienvenido, " + state.user.name,"ok"));
       }catch(e){
         // IMPORTANTE: solo mostrar "cuenta bloqueada" si el SERVIDOR lo confirmó
         // (flag blocked:true en la respuesta) o el mensaje es EXACTAMENTE el de
@@ -3000,9 +3037,11 @@
         }
         if(!state.user) throw new Error("Sesion invalida");
         normalizeViewForRole();
-        renderApp();
-        checkBalanceAlerts();
-      }finally{hideLoading()}
+        // La app se pinta DESPUÉS de que el loader se desvanece: así su animación
+        // de entrada (pageIn) ocurre a la vista y la transición es un crossfade
+        // suave en lugar de un corte seco con la pantalla ya estática.
+        hideLoading(()=>{ renderApp(); checkBalanceAlerts(); });
+      }catch(e){ hideLoading(); throw e; }
     }
     async function logout(){
       try{await api("logout",{method:"POST"})}catch(e){/* best effort: limpiar sesion local igualmente */}
