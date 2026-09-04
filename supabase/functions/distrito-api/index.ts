@@ -942,6 +942,64 @@ Deno.serve(async (req) => {
       if (delErr) return dbError(req, "delete", delErr);
       return json(req, { ok: true }, 200);
     }
+    // orders PATCH (solo admin: reentregar, cambiar estado, cancelar/reembolsar)
+    if (table === "orders" && method === "PATCH") {
+      if (!isAdmin) return error(req, "Solo administradores pueden gestionar ventas", 403);
+      const id = resourceId || body.id;
+      if (!id) return error(req, "id requerido");
+      const { data: row } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
+      if (!row) return error(req, "Venta no encontrada", 404);
+      const patch: any = { ...body };
+      delete patch.id;
+      const statusChanged = patch.status && patch.status !== row.status;
+      // Reembolso: al pasar a Cancelado/Reembolsado se devuelve el saldo al comprador
+      // (solo una vez: si la venta ya estaba en ese estado, no se duplica el reembolso)
+      const wasClosed = ["Cancelado", "Reembolsado"].includes(row.status);
+      const nowClosed = ["Cancelado", "Reembolsado"].includes(patch.status);
+      const amount = Number(row.amount ?? row.total ?? 0);
+      if (statusChanged && nowClosed && !wasClosed && amount > 0 && row.user_id) {
+        const { data: owner } = await supabase.from("profiles").select("balance").eq("id", row.user_id).maybeSingle();
+        const newBal = Number(owner?.balance ?? 0) + amount;
+        const { error: balErr } = await supabase.from("profiles").update({ balance: newBal }).eq("id", row.user_id);
+        if (balErr) return dbError(req, "refund-balance", balErr);
+        // Avisar al comprador: le devolvimos el dinero de la venta
+        firePush(pushToUsers(supabase, [row.user_id], {
+          title: "💸 Saldo devuelto",
+          body: `La venta ${row.code || ""} (${row.product_name || ""}) fue ${patch.status === "Reembolsado" ? "reembolsada" : "cancelada"} por el administrador. Te devolvimos $${amount.toLocaleString("es-CO")} a tu saldo.`,
+          tag: "order-refund",
+          view: "history",
+        }));
+      }
+      // Reentrega: si el admin cambia los datos entregados, la venta vuelve a Entregado
+      if (patch.delivered_data !== undefined && patch.status === undefined) patch.status = "Entregado";
+      const { data, error: updErr } = await supabase.from("orders").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+      if (updErr) return dbError(req, "update", updErr);
+      await audit(supabase, authUser.id, "order_update", "orders", id, {
+        ...(patch.status ? { status: patch.status } : {}),
+        ...(patch.delivered_data !== undefined ? { redelivered: true } : {}),
+        ...(statusChanged && nowClosed && !wasClosed ? { refund: amount } : {}),
+        user_id: row.user_id,
+        amount,
+      });
+      return json(req, data || [], 200);
+    }
+    // orders DELETE (solo admin)
+    if (table === "orders" && method === "DELETE") {
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar ventas", 403);
+      const id = resourceId || body.id;
+      if (!id) return error(req, "id requerido");
+      const { data: row } = await supabase.from("orders").select("*").eq("id", id).maybeSingle();
+      if (!row) return error(req, "Venta no encontrada", 404);
+      const { error: delErr } = await supabase.from("orders").delete().eq("id", id);
+      if (delErr) return dbError(req, "delete", delErr);
+      await audit(supabase, authUser.id, "order_delete", "orders", id, {
+        code: row.code || null,
+        product_name: row.product_name || null,
+        amount: Number(row.amount ?? row.total ?? 0),
+        user_id: row.user_id,
+      });
+      return json(req, { ok: true }, 200);
+    }
     // ads POST
     if (table === "ads" && method === "POST") {
       if (!isAdmin) return error(req, "Solo administradores pueden gestionar material", 403);

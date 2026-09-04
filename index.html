@@ -2712,7 +2712,12 @@
     function daysLeft(date){
       if(!date)return null;
       const today=new Date(); today.setHours(0,0,0,0);
-      const end=new Date(date+"T00:00:00"); return Math.ceil((end-today)/86400000);
+      // Soporta tanto "2026-10-25" (fecha sola) como ISO completo
+      // "2026-10-25T00:00:00.000Z" que devuelve PostgREST para timestamptz.
+      let end = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? new Date(date + "T00:00:00") : new Date(date);
+      if(isNaN(end.getTime())) return null;
+      end.setHours(0,0,0,0);
+      return Math.ceil((end-today)/86400000);
     }
     function operatorCount(productId){
       return state.orders.filter(o => {
@@ -3144,7 +3149,7 @@
     // ─── NAVEGACION ────────────────────────────────────
     function navItems(){
       if(isAdmin()) return [
-        ["admin","Panel",icons.admin],["users","Usuarios",icons.users],["payments","Recargas",icons.wallet],["reports","Reportes",icons.reports],
+        ["admin","Panel",icons.admin],["sales","Ventas",icons.orders],["users","Usuarios",icons.users],["payments","Recargas",icons.wallet],["reports","Reportes",icons.reports],
         ["store","Inventario",icons.store],["ads","Publicidad",icons.ads],["analytics","Estudios",icons.chart],["audit","Auditoria",icons.reports],["settings","Datos de pago",icons.admin]
       ];
       return [["home","Inicio",icons.home],["store","Tienda",icons.store],["orders","Compras",icons.orders],["history","Movimientos",icons.history],["reports","Soporte",icons.reports],["ads","Material",icons.ads]];
@@ -3174,7 +3179,7 @@
       setTimeout(()=>{initPullToRefresh();initEffects();if(typeof Tienda!=="undefined"&&document.querySelector(".t-tab"))Tienda.render();if(state.view==="home")startCarousel()},100);
     }
     function pageTitle(){
-      return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",audit:"Auditoria",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
+      return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",sales:"Ventas",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",audit:"Auditoria",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
     }
     function pageSubtitle(){
       if(isAdmin()) return "";
@@ -3310,7 +3315,7 @@
         audit().finally(()=>{ window.__auditLoading = false; });
         return `<section class="card" style="padding:60px;text-align:center;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">📋</div>Cargando auditoria...</section>`;
       }
-      const viewMap = {home,store,orders,history,reports,ads,users,payments,admin,analytics,audit:auditView,settings,inventory};
+      const viewMap = {home,store,orders,history,reports,ads,users,payments,admin,analytics,audit:auditView,settings,inventory,sales};
       const fn = viewMap[state.view] || home;
       return safeRender(fn);
     }
@@ -5018,6 +5023,217 @@
         const status=String(o.status||"").toLowerCase();
         return left===null || left>=0 || status.includes("pend") || status.includes("proces");
       });
+    }
+    // ─── VENTAS (SOLO ADMIN: control total de todas las órdenes) ────────
+    let salesFilter = { q: "", status: "all", page: 1 };
+    const SALES_PAGE = 20;
+    function sales(){
+      if(!isAdmin()) return setView('home');
+      const all = state.orders || [];
+      const active = all.filter(o => { const l = daysLeft(o.expires_at); return l !== null && l >= 0; });
+      const expired = all.filter(o => { const l = daysLeft(o.expires_at); return l !== null && l < 0; });
+      const closed = all.filter(o => ["Cancelado","Reembolsado"].includes(o.status));
+      const revenue = all.filter(o => !["Cancelado","Reembolsado"].includes(o.status)).reduce((s,o) => s + Number(o.amount ?? o.total ?? 0), 0);
+      const tabs = [
+        ["all", `📋 Todas (${all.length})`],
+        ["active", `✓ Activas (${active.length})`],
+        ["expired", `⚰️ Vencidas (${expired.length})`],
+        ["closed", `💸 Canceladas (${closed.length})`]
+      ];
+      return `<section class="card" style="padding:0;overflow:hidden">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-size:10px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">CONTROL DE VENTAS</div>
+            <h2 style="margin:0;font-size:20px;font-weight:900">Ventas</h2>
+            <p class="muted" style="margin:4px 0 0;font-size:12px">${all.length} órdenes · ${money(revenue)} en ventas válidas</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="exportSalesCsv()" style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:11px;font-weight:700;cursor:pointer">⬇️ Exportar CSV</button>
+          </div>
+        </div>
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line)">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="salesSearch" value="${esc(salesFilter.q||'')}" oninput="salesFilter.q=this.value;salesFilter.page=1;renderSalesList()" placeholder="Buscar código, producto o cliente..." style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px">
+            ${tabs.map(([k,label]) => `<button onclick="salesFilter.status='${k}';salesFilter.page=1;renderApp()" style="padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;${salesFilter.status===k?'background:var(--blue);color:#fff;border:0':'background:var(--panel);color:var(--muted);border:1px solid var(--line)'}">${label}</button>`).join("")}
+          </div>
+        </div>
+        <div id="salesList">${renderSalesList()}</div>
+      </section>`;
+    }
+    function filteredSales(){
+      const q = (salesFilter.q || "").toLowerCase();
+      let rows = (state.orders || []).slice();
+      if(salesFilter.status === 'active') rows = rows.filter(o => { const l = daysLeft(o.expires_at); return l !== null && l >= 0; });
+      else if(salesFilter.status === 'expired') rows = rows.filter(o => { const l = daysLeft(o.expires_at); return l !== null && l < 0; });
+      else if(salesFilter.status === 'closed') rows = rows.filter(o => ["Cancelado","Reembolsado"].includes(o.status));
+      if(q) rows = rows.filter(o => `${o.code||""} ${o.product_name||""} ${o.client_name||""} ${o.delivered_data||""}`.toLowerCase().includes(q));
+      rows.sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
+      return rows;
+    }
+    function renderSalesList(){
+      const rows = filteredSales();
+      const start = (salesFilter.page-1)*SALES_PAGE;
+      const pageRows = rows.slice(start, start+SALES_PAGE);
+      const totalPages = Math.max(1, Math.ceil(rows.length/SALES_PAGE));
+      if(!pageRows.length) return `<div style="padding:50px 20px;text-align:center">${stateEmpty("🛒", "Sin ventas aquí", "No hay órdenes que coincidan con el filtro actual.")}</div>`;
+      const rowsHtml = pageRows.map(o => {
+        const left = daysLeft(o.expires_at);
+        const user = state.users.find(u => u.id === o.user_id) || {};
+        const isClosed = ["Cancelado","Reembolsado"].includes(o.status);
+        const isExpired = left !== null && left < 0;
+        let statusBadge;
+        if(isClosed) statusBadge = `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(239,68,68,.1);color:#ef4444">💸 ${o.status}</span>`;
+        else if(isExpired) statusBadge = `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(107,33,168,.1);color:#6b21a8">⚰️ Vencida</span>`;
+        else if(left !== null && left <= 3) statusBadge = `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(239,68,68,.1);color:#ef4444">🔴 Vence ${left}d</span>`;
+        else if(left !== null && left <= 7) statusBadge = `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(217,119,6,.1);color:#d97706">🟡 Vence ${left}d</span>`;
+        else statusBadge = `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(16,185,129,.1);color:#10b981">✅ Activa</span>`;
+        const actions = `
+          <button onclick="openSalesOrder('${o.id}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:11px;font-weight:700">👁️ Ver</button>
+          ${!isClosed ? `<button onclick="openRedeliver('${o.id}')" style="padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:11px;font-weight:700">🔁 Reentregar</button>` : ""}
+          ${!isClosed ? `<button onclick="confirmCancelSale('${o.id}')" style="padding:6px 12px;border:0;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer;font-size:11px;font-weight:700">💸 Cancelar/Reembolsar</button>` : ""}
+          <button onclick="confirmDeleteSale('${o.id}')" style="padding:6px 12px;border:0;border-radius:8px;background:var(--soft);color:var(--bad);cursor:pointer;font-size:11px;font-weight:700">🗑️</button>`;
+        return `<div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);display:grid;place-items:center;color:#fff;font-weight:900;font-size:13px;flex-shrink:0">${serviceName(o.product_name||"P").slice(0,1).toUpperCase()}</div>
+          <div style="flex:1;min-width:180px">
+            <div style="font-weight:800;font-size:13px">${esc(o.product_name||"Producto")}</div>
+            <div style="font-size:11px;color:var(--muted)">${esc(o.code||"Sin código")} · ${esc(o.client_name || user.name || user.email || "Usuario")}</div>
+          </div>
+          <div style="text-align:right;min-width:110px">
+            <div style="font-weight:900;font-size:14px">${money(o.amount ?? o.total ?? 0)}</div>
+            <div style="font-size:10px;color:var(--muted)">${o.created_at ? formatDate(o.created_at) : "-"}</div>
+          </div>
+          <div style="min-width:120px">${statusBadge}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${actions}</div>
+        </div>`;
+      }).join("");
+      const pager = totalPages > 1 ? `<div style="display:flex;justify-content:center;gap:8px;padding:14px">
+        <button onclick="salesFilter.page=Math.max(1,salesFilter.page-1);renderSalesList()" ${salesFilter.page<=1?"disabled":""} style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:12px;font-weight:700">←</button>
+        <span style="align-self:center;font-size:12px;color:var(--muted)">Página ${salesFilter.page} de ${totalPages}</span>
+        <button onclick="salesFilter.page=Math.min(${totalPages},salesFilter.page+1);renderSalesList()" ${salesFilter.page>=totalPages?"disabled":""} style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;font-size:12px;font-weight:700">→</button>
+      </div>` : "";
+      const el = document.getElementById("salesList");
+      if(el){ el.innerHTML = rowsHtml + pager; return ""; }
+      return rowsHtml + pager;
+    }
+    function openSalesOrder(id){
+      const o = (state.orders||[]).find(x => x.id === id);
+      if(!o) return toast("Venta no encontrada", "bad");
+      const user = state.users.find(u => u.id === o.user_id) || {};
+      const account = parseAccount(o.delivered_data);
+      const html = `
+        <div class="dialog-head">
+          <div><small class="muted">Detalle de venta</small><h2>${esc(o.code||"Orden")}</h2></div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Producto</span><b style="font-size:13px">${esc(o.product_name||"-")}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Cliente</span><b style="font-size:13px">${esc(o.client_name || user.name || user.email || "-")}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Monto</span><b style="font-size:13px">${money(o.amount ?? o.total ?? 0)}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Estado</span><b style="font-size:13px">${esc(o.status||"-")}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Fecha</span><b style="font-size:13px">${o.created_at ? formatDate(o.created_at) : "-"}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Vence</span><b style="font-size:13px">${o.expires_at ? formatDate(o.expires_at) : "-"}</b></div>
+          ${account.email ? `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Correo</span><b style="font-size:13px">${esc(account.email)}</b></div>` : ""}
+          ${account.password ? `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted);font-size:12px">Contraseña</span><b style="font-size:13px">${esc(account.password)}</b></div>` : ""}
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">Cerrar</button>
+            <button onclick="copyText('${escapeJs(o.delivered_data||"")}');toast('Datos copiados','ok')" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:13px;font-weight:700;cursor:pointer">📋 Copiar datos</button>
+          </div>
+        </div>`;
+      openModal(html);
+    }
+    function openRedeliver(id){
+      const o = (state.orders||[]).find(x => x.id === id);
+      if(!o) return toast("Venta no encontrada", "bad");
+      openModal(`
+        <div class="dialog-head">
+          <div><small class="muted">Reentrega de cuenta</small><h2>${esc(o.code||"Orden")}</h2></div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <p style="font-size:12px;color:var(--muted)">Pega los NUEVOS datos de la cuenta (correo : contraseña : perfil). La venta volverá a estado Entregado.</p>
+          <textarea id="redeliverData" rows="4" placeholder="correo@ejemplo.com : password : P1" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;box-sizing:border-box">${esc(o.delivered_data||"")}</textarea>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>
+            <button onclick="saveRedeliver('${id}')" style="flex:1;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:700;cursor:pointer">✓ Guardar reentrega</button>
+          </div>
+        </div>`);
+    }
+    async function saveRedeliver(id){
+      const data = $("#redeliverData")?.value.trim();
+      if(!data) return toast("Pega los nuevos datos de la cuenta", "bad");
+      try{
+        showLoading("Reentregando cuenta...");
+        await api("orders/" + id, { method:"PATCH", body: JSON.stringify({ delivered_data: data, status: "Entregado" }) });
+        closeModal();
+        toast("Venta reentregada con la nueva cuenta", "ok");
+        await boot();
+      }catch(e){ toast(e.message, "bad"); }
+      finally{ hideLoading(); }
+    }
+    function confirmCancelSale(id){
+      const o = (state.orders||[]).find(x => x.id === id);
+      if(!o) return toast("Venta no encontrada", "bad");
+      const amount = Number(o.amount ?? o.total ?? 0);
+      openModal(`
+        <div class="dialog-head">
+          <div><small class="muted">Confirmar acción</small><h2>Cancelar / Reembolsar venta</h2></div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:14px;margin-bottom:14px">
+            <b style="font-size:13px">${esc(o.product_name||"Producto")}</b>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(o.code||"")} · ${esc(o.client_name||"Usuario")}</div>
+            <div style="font-size:20px;font-weight:900;color:#ef4444;margin-top:8px">${money(amount)}</div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px">Se devolverá <b>${money(amount)}</b> al saldo del comprador y la venta pasará a <b>Cancelado</b>. Esto no se puede deshacer.</p>
+          <div style="display:flex;gap:8px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">No cancelar</button>
+            <button onclick="cancelSale('${id}','Reembolsado');closeModal()" style="flex:1;padding:12px;border:0;border-radius:10px;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">💸 Cancelar y reembolsar</button>
+          </div>
+        </div>`);
+    }
+    async function cancelSale(id, status){
+      try{
+        showLoading("Cancelando venta...");
+        await api("orders/" + id, { method:"PATCH", body: JSON.stringify({ status }) });
+        closeModal();
+        toast("Venta cancelada y saldo devuelto", "ok");
+        await boot();
+      }catch(e){ toast(e.message, "bad"); }
+      finally{ hideLoading(); }
+    }
+    function confirmDeleteSale(id){
+      const o = (state.orders||[]).find(x => x.id === id);
+      if(!o) return toast("Venta no encontrada", "bad");
+      openModal(`
+        <div class="dialog-head">
+          <div><small class="muted">Confirmar acción</small><h2>Eliminar venta</h2></div>
+          <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0">
+          <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px">Se eliminará permanentemente la venta <b>${esc(o.code||"")}</b> de <b>${esc(o.product_name||"")}</b>. Esto no se puede deshacer.</p>
+          <div style="display:flex;gap:8px">
+            <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">No eliminar</button>
+            <button onclick="deleteSale('${id}');closeModal()" style="flex:1;padding:12px;border:0;border-radius:10px;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">🗑️ Sí, eliminar</button>
+          </div>
+        </div>`);
+    }
+    async function deleteSale(id){
+      try{
+        showLoading("Eliminando venta...");
+        await api("orders/" + id, { method:"DELETE" });
+        closeModal();
+        toast("Venta eliminada", "ok");
+        await boot();
+      }catch(e){ toast(e.message, "bad"); }
+      finally{ hideLoading(); }
+    }
+    function exportSalesCsv(){
+      const rows = filteredSales();
+      if(!rows.length) return toast("No hay ventas para exportar", "bad");
+      const head = "Codigo;Producto;Cliente;Monto;Estado;Vencimiento;Fecha;Datos";
+      const body = rows.map(o => [o.code||"", o.product_name||"", o.client_name||"", o.amount??o.total??0, o.status||"", o.expires_at||"", o.created_at||"", o.delivered_data||""].map(csvCell).join(";")).join("\n");
+      downloadFile("distrito-ventas.csv", "\ufeff" + head + "\n" + body);
     }
     function orders(){
       // Usar el panel mejorado si está disponible
