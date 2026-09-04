@@ -2117,7 +2117,11 @@
   <script>
     // ─── CONFIG ────────────────────────────────────────
     function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];return p;}
-    const API = "https://qbdhcnhplamatydsqkae.supabase.co/functions/v1/distrito-api";
+    // API por el MISMO origen: /api/* lo proxea una serverless function de Vercel
+    // hacia la edge function de Supabase. Así no hay CORS, la sesión viaja en una
+    // cookie de primera parte y el navegador no depende de alcanzar supabase.co
+    // (VPN/extensión/red ya no pueden bloquear el login).
+    const API = "/api";
     const ASSETS = "assets/";
     const DEFAULT_PAYMENT = {number:"3102765347",link:"https://checkout.nequi.wompi.co/l/VPOS_U68ZNz",name:"Distrito Streaming",qr:"nequi-negocios-qr.jpeg"};
     let paymentSettings={...DEFAULT_PAYMENT};

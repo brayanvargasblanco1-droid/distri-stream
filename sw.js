@@ -1,4 +1,4 @@
-const CACHE_NAME = "distrito-v9";
+const CACHE_NAME = "distrito-v10";
 const ASSETS_TO_CACHE = ["/", "/manifest.json", "/assets/distrito-angel-blue-v1.png", "/distrito-2026.css?v=5"];
 
 self.addEventListener("install", e => {
@@ -16,9 +16,11 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  if (e.request.url.includes("supabase.co")) return;
   const url = new URL(e.request.url);
   const path = url.pathname;
+  // Nunca interceptar la API (ahora es /api/* del mismo origen, y antes
+  // supabase.co): siempre debe ir a la red y jamás guardarse en caché.
+  if (path === "/api" || path.startsWith("/api/") || e.request.url.includes("supabase.co")) return;
   // Navegacion, HTML, JS y CSS: network-first (los deploys nuevos se ven de
   // inmediato) con fallback a cache solo si no hay red (offline).
   const isDoc = e.request.mode === "navigate" || path === "/" || path.endsWith("index.html");

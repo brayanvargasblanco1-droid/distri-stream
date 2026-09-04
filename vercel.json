@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "outputDirectory": ".",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://qbdhcnhplamatydsqkae.supabase.co/functions/v1/distrito-api/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
