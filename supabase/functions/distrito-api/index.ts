@@ -364,6 +364,17 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
+  // Cliente SOLO para autenticacion (signInWithPassword). Al hacer sign-in,
+  // supabase-js cambia el JWT del cliente a la sesion del usuario y las
+  // consultas siguientes corren como role `authenticated`, que con RLS
+  // endurecido (sin policies en profiles) devuelve 0 filas y rompia el login.
+  // Mantener el sign-in en un cliente aparte deja `supabase` siempre con la
+  // service_role key (bypass RLS) para las lecturas/escrituras de datos.
+  const authSupabase = createClient(
+    Deno.env.get("SUPABASE_URL"),
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   // Sesion: cabecera x-distrito-session (compatibilidad) o cookie httpOnly ds_token
   const token = req.headers.get("x-distrito-session") || getCookie(req, "ds_token") || "";
@@ -479,10 +490,11 @@ Deno.serve(async (req) => {
     const { data: me } = await supabase.from("profiles").select("email, status").eq("id", authUser.id).maybeSingle();
     if (!me) return error(req, "Sesion invalida");
     if (me.status === "Bloqueado" || me.status === "Inactivo") return error(req, "Tu cuenta ha sido bloqueada", 403);
-    // Verificar la contraseña actual antes de permitir el cambio
-    const { error: verErr } = await supabase.auth.signInWithPassword({ email: me.email, password: String(currentPassword) });
+    // Verificar la contraseña actual antes de permitir el cambio (en authSupabase
+    // para no contaminar la sesion del cliente de datos con el JWT del usuario)
+    const { error: verErr } = await authSupabase.auth.signInWithPassword({ email: me.email, password: String(currentPassword) });
     if (verErr) return error(req, "La contraseña actual es incorrecta", 400);
-    const { error: updErr } = await supabase.auth.admin.updateUserById(authUser.id, { password: String(newPassword) });
+    const { error: updErr } = await authSupabase.auth.admin.updateUserById(authUser.id, { password: String(newPassword) });
     if (updErr) return dbError(req, "change-password", updErr);
     await audit(supabase, authUser.id, "password_changed_self", "profiles", authUser.id, {});
     return json(req, { ok: true }, 200);
@@ -527,7 +539,10 @@ Deno.serve(async (req) => {
       return json(req, { error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: existingUser.status }, 403);
     }
 
-    const { data: sessionData, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+    // signIn en authSupabase (cliente aparte): asi el cliente `supabase` que
+    // consulta profiles/orders/etc. conserva la service_role key y el login no
+    // se rompe por RLS (las policies de profiles se endurecieron a 0 accesos).
+    const { data: sessionData, error: loginErr } = await authSupabase.auth.signInWithPassword({ email, password });
     if (loginErr) {
       const msg = (loginErr.message || "").toLowerCase();
       if (msg.includes("blocked") || msg.includes("disabled") || msg.includes("banned")) {
