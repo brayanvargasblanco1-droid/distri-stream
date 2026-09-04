@@ -129,6 +129,91 @@ function dbError(req: Request, context: string, err: unknown) {
   return error(req, "No se pudo completar la operacion. Intenta de nuevo.", 400);
 }
 
+// Estadisticas reales de referidos del usuario logueado (para su panel QR).
+// count = personas que se registraron con su link; sales = compras de esas
+// personas; earned = total de comisiones cobradas por sus ventas.
+async function referralStatsQuery(supabase: any, userId: string) {
+  const base = { count: 0, sales: 0, earned: 0 };
+  try {
+    const { data: refs } = await supabase.from("profiles").select("id").eq("referrer_id", userId);
+    const ids = (refs || []).map((r: any) => r.id);
+    base.count = ids.length;
+    if (ids.length) {
+      const { count } = await supabase.from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("user_id", ids);
+      base.sales = count ?? 0;
+    }
+    const { data: comm } = await supabase.from("balance_adjustments")
+      .select("amount")
+      .eq("user_id", userId)
+      .ilike("reason", "Comisión por referido%");
+    base.earned = (comm || []).reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
+  } catch (e) {
+    console.error("[referral] stats fallaron:", e);
+  }
+  return base;
+}
+
+// ── REFERIDOS ────────────────────────────────────────────────────────────
+// Nivel del referidor segun sus referidos directos (misma escala que anuncia
+// la UI: Bronce 5%, Plata 10%, Oro 15%, Diamante 20%).
+function referralTier(directCount: number) {
+  if (directCount >= 20) return { name: "Diamante", rate: 0.2 };
+  if (directCount >= 10) return { name: "Oro", rate: 0.15 };
+  if (directCount >= 5) return { name: "Plata", rate: 0.1 };
+  return { name: "Bronce", rate: 0.05 };
+}
+
+// Abona al referidor su comision por la venta de un referido directo.
+// Nunca lanza: una falla aqui no debe cancelar la venta del comprador.
+async function creditReferralCommission(
+  supabase: any,
+  referrerId: string,
+  orderTotal: number,
+  orderId: string | null,
+  buyerName: string
+) {
+  try {
+    if (!referrerId || referrerId === "") return;
+    const { data: ref } = await supabase.from("profiles")
+      .select("id, name, balance, status")
+      .eq("id", referrerId)
+      .maybeSingle();
+    if (!ref || ref.status === "Bloqueado" || ref.status === "Inactivo") return;
+    const { count } = await supabase.from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("referrer_id", referrerId);
+    const tier = referralTier(count ?? 0);
+    const commission = Math.round(Number(orderTotal || 0) * tier.rate);
+    if (commission <= 0) return;
+    const newBal = Number(ref.balance || 0) + commission;
+    await supabase.from("profiles").update({ balance: newBal }).eq("id", referrerId);
+    // Ledger: aparece en el historial de movimientos del referidor
+    await supabase.from("balance_adjustments").insert({
+      user_id: referrerId,
+      amount: commission,
+      reason: `Comisión por referido · venta de ${String(buyerName || "").slice(0, 40)}`,
+      created_by: null,
+    });
+    await audit(supabase, referrerId, "referral_commission", "orders", orderId, {
+      order_id: orderId,
+      amount: commission,
+      rate: tier.rate,
+      tier: tier.name,
+      buyer_name: buyerName,
+    });
+    firePush(pushToUsers(supabase, [referrerId], {
+      title: "🎁 ¡Ganaste una comisión!",
+      body: `Te ganaste $${commission.toLocaleString("es-CO")} (${tier.name} ${Math.round(tier.rate * 100)}%) por la venta a ${String(buyerName || "tu referido").slice(0, 30)}.`,
+      tag: "referral-commission",
+      view: "history",
+    }));
+  } catch (e) {
+    console.error("[referral] comision fallo:", e);
+  }
+}
+
 async function audit(supabase: any, userId: string, action: string, tableName: string, recordId: string | null, details: any = null) {
   try {
     await supabase.from("audit_log").insert({
@@ -274,7 +359,7 @@ Deno.serve(async (req) => {
   if (path === "register" && method === "POST") {
     if (isRateLimited("register:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited(req);
     let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
-    const { name, email, phone, password, referrer_id } = body;
+    const { name, email, phone, password } = body;
     if (!name || !email || !password) return error(req, "name, email y password son requeridos");
     if (String(password).length < 8) return error(req, "La contrasena debe tener al menos 8 caracteres");
     const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
@@ -284,6 +369,13 @@ Deno.serve(async (req) => {
     // role:"Administrador" y obtener una cuenta admin via ?ref=admin_XXX).
     // Los roles solo los asigna un administrador desde el panel (/users).
     const roleNorm = "Cliente";
+    // Validar el referidor: si llega un id invalido o de alguien bloqueado se
+    // ignora (asi el registro nunca falla por una referencia corrupta).
+    let referrer_id = body.referrer_id ? String(body.referrer_id) : null;
+    if (referrer_id) {
+      const { data: refOk } = await supabase.from("profiles").select("id, status").eq("id", referrer_id).maybeSingle();
+      if (!refOk || refOk.status === "Bloqueado" || refOk.status === "Inactivo") referrer_id = null;
+    }
     // admin.createUser (con email_confirm) no envia email y no dispara el rate limit de SMTP
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
       email,
@@ -301,7 +393,7 @@ Deno.serve(async (req) => {
       phone: phone || null,
       role: roleNorm,
       balance: 0,
-      margin: 100,
+      margin: 0,
       status: "Activo",
       referrer_id: referrer_id || null,
     }, { onConflict: "id" });
@@ -453,7 +545,7 @@ Deno.serve(async (req) => {
     const scopedAdjustments = isAdmin
       ? supabase.from("balance_adjustments").select("*").order("created_at", { ascending: false }).limit(500)
       : supabase.from("balance_adjustments").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(500);
-    const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes, adjRes] = await Promise.all([
+    const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes, adjRes, refStats] = await Promise.all([
       supabase.from("products").select("*").order("created_at", { ascending: true }).limit(1000),
       scopedOrders,
       scopedReports,
@@ -463,6 +555,7 @@ Deno.serve(async (req) => {
       isAdmin ? supabase.from("profiles").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
       isAdmin ? supabase.from("inventory").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
       scopedAdjustments,
+      referralStatsQuery(supabase, authUser.id),
     ]);
     const settingsMap = {};
     for (const row of (sRes.data || [])) settingsMap[row.key] = row.value;
@@ -476,6 +569,7 @@ Deno.serve(async (req) => {
       users: uRes.data || [],
       inventory: iRes.data || [],
       adjustments: adjRes.data || [],
+      referralStats: refStats || { count: 0, sales: 0, earned: 0 },
       settings: settingsMap,
       notifications: [],
     }, 200);
@@ -646,6 +740,19 @@ Deno.serve(async (req) => {
           .select("balance");
         if (balErr) throw balErr;
         if (!balUpd || balUpd.length === 0) throw new Error("balance-conflict");
+      }
+
+      // 5) Comision por referido: si el comprador se registro con el link de
+      //    alguien, ese referidor gana un % de la venta (tier Bronce..Diamante).
+      if (!isAdmin && profile.referrer_id && profile.referrer_id !== authUser.id) {
+        const firstOrder = (orderInserts || [])[0] || null;
+        await creditReferralCommission(
+          supabase,
+          profile.referrer_id,
+          total,
+          firstOrder?.id || null,
+          profile.name || profile.email || ""
+        );
       }
 
       const finalOrders = (orderInserts || []).map((row, i) => {

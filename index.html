@@ -9000,8 +9000,33 @@
       const dd=$("#userDropdown");
       if(dd) dd.classList.toggle("show");
     }
+    // Estadisticas REALES de referidos de un usuario. Para el propio usuario
+    // vienen del backend (state.referralStats); para otros (admin) se calculan
+    // en vivo sobre el listado completo que solo el admin recibe.
+    function referralStatsOf(u){
+      const uid = u && u.id;
+      const empty = { count: 0, sales: 0, earned: 0, tier: referralTierOf(0) };
+      if(!uid) return empty;
+      if(state.user && uid === state.user.id && state.referralStats){
+        const s = state.referralStats;
+        return { count: s.count||0, sales: s.sales||0, earned: s.earned||0, tier: referralTierOf(s.count||0) };
+      }
+      const people = (state.users||[]).filter(x => x.referrer_id === uid);
+      const sales = (state.orders||[]).filter(o => people.some(p => p.id === o.user_id)).length;
+      const earned = (state.adjustments||[])
+        .filter(a => a.user_id === uid && String(a.reason||"").indexOf("Comisión por referido") === 0)
+        .reduce((s,a) => s + Number(a.amount||0), 0);
+      return { count: people.length, sales, earned, tier: referralTierOf(people.length) };
+    }
+    function referralTierOf(count){
+      if(count >= 20) return { name:"Diamante", rate:20, color:"#0ea5e9" };
+      if(count >= 10) return { name:"Oro", rate:15, color:"#d97706" };
+      if(count >= 5)  return { name:"Plata", rate:10, color:"#64748b" };
+      return { name:"Bronce", rate:5, color:"#b45309" };
+    }
     function openQrCode(uid){
       const u=uid?((state.users||[]).find(x=>x.id===uid)||state.user):state.user;
+      const rs = referralStatsOf(u);
       const baseUrl = window.location.origin;
       
       // QR 1: Identificación (para admin encontrar usuario)
@@ -9090,15 +9115,23 @@
             </button>
           </div>
           
-          <!-- Estadisticas de referidos -->
+          <!-- Estadisticas de referidos (reales) -->
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px">
             <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:24px;font-weight:900;color:#f59e0b">${state.users.filter(x=>x.referred_by===u.id).length}</div>
+              <div style="font-size:24px;font-weight:900;color:#f59e0b">${rs.count}</div>
               <div style="font-size:10px;color:var(--muted)">Personas referidas</div>
             </div>
             <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:24px;font-weight:900;color:#10b981">${state.orders.filter(o=>{const ref=state.users.find(x=>x.id===o.user_id);return ref&&ref.referred_by===u.id}).length}</div>
-              <div style="font-size:10px;color:var(--muted)">Ventas de referidos</div>
+              <div style="font-size:24px;font-weight:900;color:#10b981">${rs.sales}</div>
+              <div style="font-size:10px;color:var(--muted)">Ventas de sus referidos</div>
+            </div>
+            <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:22px;font-weight:900;color:#16a34a">${money(rs.earned)}</div>
+              <div style="font-size:10px;color:var(--muted)">Comisiones ganadas</div>
+            </div>
+            <div style="background:var(--soft);border:1px solid ${rs.tier.color};border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:16px;font-weight:900;color:${rs.tier.color}">🏆 ${rs.tier.name} ${rs.tier.rate}%</div>
+              <div style="font-size:10px;color:var(--muted)">Comisión por venta referida</div>
             </div>
           </div>
         </div>
