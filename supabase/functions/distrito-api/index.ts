@@ -646,10 +646,19 @@ Deno.serve(async (req) => {
     if (!product) return error(req, "Producto no encontrado");
     if (product.status !== "Activo") return error(req, "Producto no disponible");
     if (Number(product.stock || 0) < quantity) return error(req, "Stock insuficiente");
-    const base = Number(product.provider_price ?? product.base_price ?? 0);
-    const margin = Number(profile.margin ?? 0);
+    // Reglas reales de precio (espejo exacto del frontend salePrice()):
+    //  - Cliente final: paga el PRECIO DE VENTA publicado del producto
+    //  - Revendedor: paga costo × (1 + margen%/100) al comprar inventario
+    //  - Administrador: paga el costo proveedor (compras internas/prueba)
+    const cost = Number(product.provider_price ?? product.base_price ?? 0);
+    const retail = Number(product.price ?? 0);
+    const marginPct = Math.min(100, Math.max(0, Number(profile.margin ?? 0)));
     const isAdmin = profile.role === "Administrador";
-    const price = isAdmin ? Number(product.base_price ?? base) : base + Math.max(0, margin);
+    const price = isAdmin
+      ? cost
+      : profile.role === "Revendedor"
+      ? Math.round(cost * (1 + marginPct / 100))
+      : retail > 0 ? retail : cost;
     const total = price * quantity;
     const balanceBefore = Number(profile.balance || 0);
     if (!isAdmin && balanceBefore < total) return error(req, "Saldo insuficiente");
@@ -710,7 +719,7 @@ Deno.serve(async (req) => {
           quantity: 1,
           amount: total,
           total: total,
-          provider_price: base,
+          provider_price: cost,
           delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | "),
           credentials: [acc.email, acc.password].filter(Boolean).join(" | "),
           status: "Entregado",
@@ -816,7 +825,7 @@ Deno.serve(async (req) => {
         email,
         role: roleNorm,
         balance: Number(balance || 0),
-        margin: Number(margin || 100),
+        margin: Math.min(100, Math.max(0, Number(margin || 0))),
         status: "Activo",
       }, { onConflict: "id" });
       if (profileErr) return dbError(req, "create-profile", profileErr);
