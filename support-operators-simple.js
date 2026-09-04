@@ -191,6 +191,25 @@ const Soporte = {
     `;
   },
 
+  async enviarRespuesta(id) {
+    const ta = document.getElementById('s_respuesta');
+    const txt = ta ? ta.value.trim() : '';
+    if (txt.length < 3) { toast('Escribe tu información antes de enviar', 'bad'); return; }
+    const btn = document.querySelector('.s-reply-box .s-btn-primary');
+    if (btn) { btn.innerHTML = '<div class="s-spinner"></div>'; btn.disabled = true; }
+    try {
+      await api('reports', { method: 'PATCH', body: JSON.stringify({ id, client_reply: txt }) });
+      closeModal();
+      toast('✓ Información enviada al soporte', 'ok');
+      await boot();
+      setView('reports');
+      Soporte.verDetalle(id);
+    } catch(e) {
+      toast('Error: ' + ((e && e.message) || 'No se pudo enviar. Intenta de nuevo.'), 'bad');
+      if (btn) { btn.innerHTML = 'Enviar información'; btn.disabled = false; }
+    }
+  },
+
   verDetalle(id) {
     const r = state.reports.find(x => x.id === id);
     if (!r) { toast('No encontrado', 'bad'); return; }
@@ -245,6 +264,21 @@ const Soporte = {
             `}
           </div>
           
+          ${r.client_reply ? `
+          <div class="s-reply-note">
+            <div class="s-reply-title">💬 Tu información adicional</div>
+            <div class="s-reply-text">${escHtml(r.client_reply)}</div>
+          </div>
+          ` : ''}
+
+          ${r.status !== 'Resuelto' && r.status !== 'Rechazado' ? `
+          <div class="s-reply-box">
+            <div class="s-form-label" style="margin-bottom:8px">➕ ¿Necesitas agregar más información?</div>
+            <textarea id="s_respuesta" class="s-form-textarea" rows="3" placeholder="Ej: la cuenta cambió de correo, o escribe el dato que haga falta para resolver tu caso..."></textarea>
+            <button class="s-btn-primary" style="margin-top:10px;width:100%" onclick="Soporte.enviarRespuesta('${r.id}')">Enviar información</button>
+          </div>
+          ` : ''}
+
           <!-- Info -->
           <div class="s-modal-info">
             <div><span>📅 Creado</span><strong>${fecha}</strong></div>
@@ -529,6 +563,12 @@ const SoporteCSS = `
 .s-modal-admin.s-modal-admin-rejected .s-modal-admin-texto { font-size: 15px; color: #fff; line-height: 1.7; }
 .s-modal-label.s-modal-label-red { color: #dc2626; }
 .s-modal-tu-account { margin-top: 10px; padding: 8px 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; color: #334155; font-weight: 600; word-break: break-word; }
+
+/* RESPUESTA / INFO ADICIONAL DEL CLIENTE */
+.s-reply-note { background: #fffbeb; border: 1px solid #f59e0b; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.s-reply-title { font-size: 10px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.s-reply-text { font-size: 13px; color: #78350f; line-height: 1.6; white-space: pre-wrap; }
+.s-reply-box { background: #f8fafc; border: 2px dashed #7c3aed; border-radius: 14px; padding: 14px; margin-bottom: 16px; }
 
 /* TIMELINE DE ESTADO */
 .s-timeline { display: flex; gap: 0; margin-bottom: 20px; padding: 16px 10px 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; }

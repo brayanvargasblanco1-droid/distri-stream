@@ -450,6 +450,26 @@ Deno.serve(async (req) => {
     return json(req, { ok: true }, 200);
   }
 
+  // CHANGE-PASSWORD (el propio usuario cambia su clave con la actual)
+  if (path === "change-password" && method === "POST") {
+    if (isRateLimited("change-pw:" + getClientIp(req), 10, 60 * 1000)) return rateLimited(req);
+    if (!authUser) return error(req, "No autorizado", 401);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
+    const { currentPassword, newPassword } = body;
+    if (!currentPassword || !newPassword) return error(req, "La contraseña actual y la nueva son requeridas");
+    if (String(newPassword).length < 8) return error(req, "La nueva contrasena debe tener al menos 8 caracteres");
+    const { data: me } = await supabase.from("profiles").select("email, status").eq("id", authUser.id).maybeSingle();
+    if (!me) return error(req, "Sesion invalida");
+    if (me.status === "Bloqueado" || me.status === "Inactivo") return error(req, "Tu cuenta ha sido bloqueada", 403);
+    // Verificar la contraseña actual antes de permitir el cambio
+    const { error: verErr } = await supabase.auth.signInWithPassword({ email: me.email, password: String(currentPassword) });
+    if (verErr) return error(req, "La contraseña actual es incorrecta", 400);
+    const { error: updErr } = await supabase.auth.admin.updateUserById(authUser.id, { password: String(newPassword) });
+    if (updErr) return dbError(req, "change-password", updErr);
+    await audit(supabase, authUser.id, "password_changed_self", "profiles", authUser.id, {});
+    return json(req, { ok: true }, 200);
+  }
+
   // LOGOUT (limpia la cookie httpOnly de sesion)
   if (path === "logout" && method === "POST") {
     return new Response(JSON.stringify({ ok: true }), {
@@ -1064,9 +1084,38 @@ Deno.serve(async (req) => {
     }
     // reports PATCH
     if (table === "reports" && method === "PATCH") {
-      if (!isAdmin) return error(req, "Solo administradores pueden actualizar reportes", 403);
       const id = resourceId || body.id;
       if (!id) return error(req, "id requerido");
+      const { data: repoTarget } = await supabase.from("reports").select("id, user_id, status").eq("id", id).maybeSingle();
+      if (!repoTarget) return error(req, "Reporte no encontrado");
+      // El DUEÑO del reporte puede agregar información (client_reply) mientras esté abierto
+      const ownerReplying = !isAdmin && repoTarget.user_id === authUser.id;
+      if (ownerReplying) {
+        const keys = Object.keys(body).filter(k => k !== "id");
+        if (keys.length !== 1 || keys[0] !== "client_reply") {
+          return error(req, "Solo puedes agregar información a tu reporte", 403);
+        }
+        const texto = String(body.client_reply || "").trim();
+        if (texto.length < 3) return error(req, "Escribe tu información antes de enviar");
+        if (repoTarget.status === "Resuelto" || repoTarget.status === "Rechazado") {
+          return error(req, "Este reporte ya está cerrado y no acepta más información", 403);
+        }
+        const { data: prevRep } = await supabase.from("reports").select("client_reply").eq("id", id).maybeSingle();
+        const merged = prevRep && prevRep.client_reply ? String(prevRep.client_reply) + "\n\n💬 " + texto : texto;
+        const { data: updRep, error: updRepErr } = await supabase.from("reports")
+          .update({ client_reply: merged, client_replied_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("id", id);
+        if (updRepErr) return dbError(req, "update", updRepErr);
+        // Avisar a los administradores que hay info nueva del cliente
+        firePush(pushToAdmins(supabase, {
+          title: "💬 El cliente respondió",
+          body: `${profile.name || "Un cliente"} agregó información a un reporte. Revisa el detalle.`,
+          tag: "report-client-reply",
+          view: "reports",
+        }));
+        return json(req, updRep || [], 200);
+      }
+      if (!isAdmin) return error(req, "Solo administradores pueden actualizar reportes", 403);
       const patch = { ...body };
       delete patch.id;
       await audit(supabase, authUser.id, "report_update", "reports", id, patch);

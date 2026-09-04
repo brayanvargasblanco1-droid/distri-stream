@@ -3381,6 +3381,10 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       Mi Cuenta
                     </button>
+                    <button class="user-dropdown-item" onclick="openChangePassword()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      Cambiar contraseña
+                    </button>
                     <button class="user-dropdown-item" onclick="openQrCode();document.getElementById('userDropdown')?.classList.remove('show')">
                       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="14" y1="21" x2="14" y2="21.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="21" y1="17.5" x2="21" y2="17.5"/><line x1="17.5" y1="21" x2="17.5" y2="21"/></svg>
                       Mi QR y link de invitación
@@ -5942,7 +5946,7 @@
          const logo=smallLogo(r.product_name);
         return `<tr style="border-bottom:1px solid var(--line);transition:background .15s" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background=''">
           <td style="padding:12px 16px"><span style="font-size:12px;color:var(--muted)">${r.created_at||r.date||"-"}</span></td>
-          <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px">${logo}<span style="font-weight:700;font-size:13px">${esc(r.product_name||"-")}</span></div></td>
+          <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px">${logo}<span style="font-weight:700;font-size:13px">${esc(r.product_name||"-")}</span>${r.client_reply && isOpen ? `<span title="El cliente agregó información" style="cursor:help">💬</span>` : ''}</div></td>
           <td style="padding:12px 16px"><span style="font-size:12px">${esc(r.reason||"-")}</span></td>
           <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg}"><span style="font-size:8px">${statusIcon}</span>${r.status||"Pendiente"}</span></td>
           <td style="padding:12px 16px">${typeof renderTableTracker === 'function' ? renderTableTracker(r) : (r.provider_response ? esc(r.provider_response) : '-')}</td>
@@ -6023,6 +6027,14 @@
         html += '<div style="background:#f3f4f6;border-radius:10px;padding:14px;margin-bottom:12px">';
         html += '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Cuenta afectada</div>';
         html += '<div style="font-family:monospace;font-size:14px;background:white;padding:8px;border-radius:6px;border:1px solid #e5e7eb">' + esc(r.account_data) + '</div>';
+        html += '</div>';
+      }
+      
+      // Informacion adicional del cliente
+      if (r.client_reply) {
+        html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:14px;margin-bottom:12px">';
+        html += '<div style="font-size:11px;color:#d97706;font-weight:700;text-transform:uppercase;margin-bottom:8px">💬 Información adicional del cliente</div>';
+        html += '<div style="font-size:13px;line-height:1.5;white-space:pre-wrap">' + esc(r.client_reply) + '</div>';
         html += '</div>';
       }
       
@@ -6244,13 +6256,14 @@
     function reportRowsUser(rows){
       if(!rows || !rows.length) return `<tr><td colspan="6">${stateEmpty("📋", "Sin reportes enviados", "Tus solicitudes de soporte aparecerán aquí.", `<button class="primary" onclick="openReportModal()">Crear reporte</button>`)}</td></tr>`;
       return rows.map((r, i)=>{
+        const isOpen=r.status!=="Resuelto"&&r.status!=="Rechazado";
         const statusEmoji = { 'Resuelto':'✅', 'Rechazado':'❌', 'En proceso':'⚙️', 'En revisión':'👁️', 'Abierto':'🔵' }[r.status] || '●';
         const statusColor = r.status==="Resuelto"?"var(--ok)":r.status==="Rechazado"?"var(--bad)":r.status==="En proceso"?"#8b5cf6":"var(--warn)";
         const statusBg = r.status==="Resuelto"?"rgba(16,185,129,.1)":r.status==="Rechazado"?"rgba(239,68,68,.1)":"rgba(245,158,11,.1)";
         const logo = smallLogo(r.product_name);
         return `<tr style="border-bottom:1px solid var(--line);transition:background .15s;${i%2===0?'background:rgba(124,58,237,.02)':''}" onmouseover="this.style.background='var(--soft)'" onmouseout="this.style.background='${i%2===0?'rgba(124,58,237,.02)':''}'">
           <td style="padding:12px 16px"><span style="font-family:monospace;font-size:12px;font-weight:800;color:var(--purple)">${esc(r.code||'#RP-0000')}</span></td>
-          <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px">${logo}<span style="font-weight:700;font-size:13px">${esc(r.product_name||"-")}</span></div></td>
+          <td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px">${logo}<span style="font-weight:700;font-size:13px">${esc(r.product_name||"-")}</span>${r.client_reply && isOpen ? `<span title="El cliente agregó información" style="cursor:help">💬</span>` : ''}</div></td>
           <td style="padding:12px 16px"><span style="font-size:12px;font-weight:600">${esc(r.reason||"-")}</span></td>
           <td style="padding:12px 16px"><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:${statusColor};background:${statusBg}">${statusEmoji} ${r.status||"Abierto"}</span></td>
           <td style="padding:12px 16px">
@@ -8696,6 +8709,46 @@
       return null;
     }
     
+    function openChangePassword(){
+      openModal(`
+        <div class="dialog-head"><div><small class="muted">SEGURIDAD</small><h2>Cambiar contraseña</h2><p class="muted" style="margin:2px 0 0;font-size:12px">Usa tu contraseña actual para confirmar el cambio.</p></div><button class="close" onclick="closeModal()">&times;</button></div>
+        <div class="form" style="margin-top:14px">
+          <label>Contraseña actual
+            <input id="cpCurrent" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px">
+          </label>
+          <label>Nueva contraseña (mín. 8 caracteres)
+            <input id="cpNew" type="password" placeholder="Nueva contraseña" autocomplete="new-password" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px">
+          </label>
+          <label>Repite la nueva contraseña
+            <input id="cpConfirm" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px">
+          </label>
+          <div id="cpError" style="display:none;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,.08);color:#ef4444;font-size:12px;font-weight:600;margin-top:4px"></div>
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="ghost" style="flex:1" onclick="closeModal()">Cancelar</button>
+            <button class="primary" style="flex:1" onclick="submitChangePassword()">Guardar contraseña</button>
+          </div>
+        </div>
+      `);
+    }
+    async function submitChangePassword(){
+      const cur=$("#cpCurrent")?.value||"";
+      const nuevo=$("#cpNew")?.value||"";
+      const conf=$("#cpConfirm")?.value||"";
+      const errEl=$("#cpError");
+      const showErr=m=>{if(errEl){errEl.style.display="block";errEl.textContent=m;}}
+      if(!cur) return showErr("Ingresa tu contraseña actual");
+      if(nuevo.length<8) return showErr("La nueva contraseña debe tener al menos 8 caracteres");
+      if(nuevo!==conf) return showErr("Las contraseñas nuevas no coinciden");
+      if(cur===nuevo) return showErr("La nueva contraseña debe ser diferente a la actual");
+      if(errEl) errEl.style.display="none";
+      try{
+        showLoading("Actualizando contraseña...");
+        await api("change-password",{method:"POST",body:JSON.stringify({currentPassword:cur,newPassword:nuevo})});
+        closeModal();
+        toast("✓ Contraseña actualizada","ok");
+      }catch(e){ showErr((e&&e.message)||"No se pudo cambiar la contraseña"); }
+      finally{ hideLoading(); }
+    }
     function openProfile(){
       const u=state.user;
       const myOrders = state.orders.filter(o => o.user_id === u.id || o.email === u.email);
@@ -9047,6 +9100,9 @@
         
         const openR=state.reports.filter(r=>r.status!=="Resuelto");
         if(openR.length>0) notifs.push({type:"danger",icon:"🚨",title:"Reportes Abiertos",body:`${openR.length} reporte(s) esperando solucion`,action:"setView('reports')",urgent:true});
+        
+        const conInfoNueva=state.reports.filter(r=>r.client_reply&&r.status!=="Resuelto"&&r.status!=="Rechazado");
+        if(conInfoNueva.length>0) notifs.push({type:"warning",icon:"💬",title:"Nueva info del cliente",body:`${conInfoNueva.length} reporte(s) tienen respuesta del cliente por revisar`,action:"setView('reports')",urgent:true});
         
         const newOrders=state.orders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
         if(newOrders>0) notifs.push({type:"info",icon:"🛒",title:"Ventas del Dia",body:`${newOrders} compra(s) en las ultimas 24h`,action:"setView('admin')",urgent:false});
