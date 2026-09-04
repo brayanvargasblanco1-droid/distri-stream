@@ -804,7 +804,12 @@ Deno.serve(async (req) => {
       .in("id", taken.map((a: any) => a.id));
 
     try {
-      // 2) Crear pedidos (1 fila por cuenta)
+      // 2) Crear pedidos (1 fila por cuenta entregada). Cada fila representa UNA
+      //    cuenta al PRECIO UNITARIO (price) que paga este comprador: así la suma
+      //    de filas == total de la transacción y los totales de la app (historial,
+      //    CSV, ingresos del admin, red de referidos) no se multiplican por
+      //    quantity. Antes se grababa `total` (precio x cantidad) en CADA fila:
+      //    comprar 3 cuentas generaba 3 filas de $39.000 = $117.000 en vez de $39.000.
       const { data: orderInserts, error: orderErr } = await supabase.from("orders").insert(
         taken.map((acc: any) => ({
           user_id: authUser.id,
@@ -812,8 +817,8 @@ Deno.serve(async (req) => {
           product_name: product.name,
           client_name: profile.name || profile.email,
           quantity: 1,
-          amount: total,
-          total: total,
+          amount: price,
+          total: price,
           provider_price: cost,
           delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | "),
           credentials: [acc.email, acc.password].filter(Boolean).join(" | "),
