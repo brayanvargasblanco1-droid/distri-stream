@@ -139,10 +139,20 @@ Deno.serve(async (req) => {
   if (method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
   // CSRF: con cookies, solo aceptamos mutaciones desde origenes conocidos.
   // Los navegadores siempre envian Origin en POST cross-site; curl/APIs no lo
-  // envian y se permiten (no llevan cookies de navegador).
+  // envian y se permiten (no llevan cookies de navegador). La cookie de sesion
+  // ahora es de primera parte (SameSite=Lax, dominio del sitio via proxy /api),
+  // asi que el bloqueo por Origin es defensa adicional, no la unica barrera.
+  // Se tolera Origin "null" (alguna extension/privacidad/navegador lo envia) y
+  // localhost en cualquier puerto (desarrollo); los origenes web extranos
+  // (ej. un sitio malicioso) siguen rechazados.
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-    const origin = req.headers.get("origin");
-    if (origin && !isAllowedOrigin(origin)) return error(req, "Origen no permitido", 403);
+    const origin = req.headers.get("origin") || "";
+    const esNull = origin === "null";
+    const esLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    if (origin && !esNull && !esLocal && !isAllowedOrigin(origin)) {
+      console.warn("[csrf] origen no permitido:", origin);
+      return error(req, "Origen no permitido", 403);
+    }
   }
   if (path === "health" && method === "GET") return json(req, { ok: true }, 200);
 
@@ -246,7 +256,7 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeadersFor(req),
         "Content-Type": "application/json",
-        "Set-Cookie": "ds_token=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0",
+        "Set-Cookie": "ds_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
       },
     });
   }
@@ -303,7 +313,10 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeadersFor(req),
         "Content-Type": "application/json",
-        "Set-Cookie": "ds_token=" + accessToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=2592000",
+        // Cookie de sesion de PRIMERA PARTE: el navegador solo habla con /api/*
+        // del propio dominio (proxy en Vercel), asi que SameSite=Lax es seguro
+        // y ademas blinda contra CSRF desde otros sitios.
+        "Set-Cookie": "ds_token=" + accessToken + "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
       },
     });
   }
