@@ -41,7 +41,13 @@ alter table public.orders add column if not exists delivered_data text;
 alter table public.orders add column if not exists credentials text;
 alter table public.orders add column if not exists expires_at timestamptz;
 -- el backend y frontend usan code en vez de order_code(que era NOT NULL sin default)
-alter table public.orders alter column order_code drop not null;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='orders' and column_name='order_code') then
+    alter table public.orders alter column order_code drop not null;
+  end if;
+end
+$$;
 
 -- ===========================
 -- REPORTS: estado, motivo, datos de cuenta
@@ -54,8 +60,16 @@ alter table public.reports add column if not exists account_data text;
 alter table public.reports add column if not exists reason text;
 alter table public.reports add column if not exists status text not null default 'Abierto' check (status in ('Abierto', 'En revision', 'Resuelto', 'Rechazado'));
 -- el backend no inserta report_type ni title (usa reason, description, status)
-alter table public.reports alter column report_type drop not null;
-alter table public.reports alter column title drop not null;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='reports' and column_name='report_type') then
+    alter table public.reports alter column report_type drop not null;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='reports' and column_name='title') then
+    alter table public.reports alter column title drop not null;
+  end if;
+end
+$$;
 
 -- ===========================
 -- REPORTS: indice por estado y usuario
@@ -113,9 +127,9 @@ using (auth.uid() = id);
 drop policy if exists "products_select_all" on public.products;
 create policy "products_select_all" on public.products for select using (true);
 drop policy if exists "products_write_admin" on public.products;
-create policy "products_write_admin" on public.products for insert with check (true);
-create policy "products_write_admin" on public.products for update using (true);
-create policy "products_write_admin" on public.products for delete using (true);
+-- Una sola politica (for all) en vez de 3 con el mismo nombre: Postgres no
+-- permite dos politicas con el mismo nombre en la misma tabla.
+create policy "products_write_admin" on public.products for all using (true) with check (true);
 
 -- inventory: solo admin (el frontend de cliente jamas lee esta tabla directamente)
 drop policy if exists "inventory_admin_all" on public.inventory;

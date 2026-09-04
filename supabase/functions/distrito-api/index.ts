@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Libreria Web Push (RFC 8030/8291) para Deno/Supabase Edge Functions.
+// IMPORTANTE para el deploy: el CLI de Supabase resuelve los imports de JSR
+// automaticamente al desplegar (funciona igual que esm.sh).
+import * as webpush from "jsr:@negrel/webpush@0.5.0";
 
 // Origenes que pueden usar credenciales (cookies httpOnly).
 // El sitio vive en Vercel y se sirve desde CUALQUIER alias del proyecto
@@ -137,6 +141,92 @@ async function audit(supabase, userId, action, tableName, recordId, details = nu
   } catch (_) {
     // La auditoria no debe romper la operacion principal
   }
+}
+
+// ─── Notificaciones push (Web Push, RFC 8030/8291) ───
+// Claves VAPID en secrets de la funcion: VAPID_PUBLIC_JWK / VAPID_PRIVATE_JWK
+// (JWK JSON generadas con la herramienta de la carpeta supabase/) y
+// VAPID_SUBJECT (mailto de contacto). Si faltan, la API sigue funcionando y
+// solo se desactiva el envío (sin romper nada).
+let _pushApp: Awaited<ReturnType<typeof webpush.ApplicationServer.new>> | null = null;
+let _pushAppKey: string | null = null;
+let _pushInitError: string | null = null;
+
+async function pushInit() {
+  if (_pushApp) return _pushApp;
+  const pub = Deno.env.get("VAPID_PUBLIC_JWK");
+  const priv = Deno.env.get("VAPID_PRIVATE_JWK");
+  if (!pub || !priv) {
+    _pushInitError = "VAPID keys no configuradas (VAPID_PUBLIC_JWK/VAPID_PRIVATE_JWK)";
+    console.warn("[push]", _pushInitError);
+    return null;
+  }
+  try {
+    const vapidKeys = await webpush.importVapidKeys(
+      { publicKey: JSON.parse(pub), privateKey: JSON.parse(priv) },
+      { extractable: false }
+    );
+    _pushApp = await webpush.ApplicationServer.new({
+      vapidKeys,
+      contactInformation: Deno.env.get("VAPID_SUBJECT") || "mailto:admin@distrito.com",
+    });
+    _pushAppKey = await webpush.exportApplicationServerKey(vapidKeys);
+    console.log("[push] Web Push listo (VAPID ok)");
+    return _pushApp;
+  } catch (e) {
+    _pushInitError = e && (e as any).message ? String((e as any).message) : String(e);
+    console.error("[push] init fallo:", e);
+    return null;
+  }
+}
+
+// Lanza un push en segundo plano. En Supabase Edge Runtime hay que usar
+// EdgeRuntime.waitUntil para que el envío no se cancele al responder la petición.
+function firePush(promise: Promise<void>) {
+  try {
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt && typeof rt.waitUntil === "function") rt.waitUntil(promise);
+    else promise.catch(() => {});
+  } catch { promise.catch(() => {}); }
+}
+
+// Envia una notificacion push a TODAS las suscripciones de una lista de usuarios.
+// Fire-and-forget: nunca debe romper ni ralentizar la operacion principal.
+async function pushToUsers(supabase: any, userIds: string[], payload: { title: string; body: string; icon?: string; tag?: string; view?: string }) {
+  try {
+    const app = await pushInit();
+    if (!app || !userIds.length) return;
+    const { data: subs } = await supabase
+      .from("push_subscriptions")
+      .select("id, endpoint, p256dh, auth")
+      .in("user_id", userIds);
+    if (!subs || !subs.length) return;
+    const body = JSON.stringify(payload);
+    for (const s of subs) {
+      try {
+        const sub = app.subscribe({
+          endpoint: s.endpoint,
+          keys: { p256dh: s.p256dh, auth: s.auth },
+        } as any);
+        await sub.pushTextMessage(body, { ttl: 60 * 60 * 24, urgency: webpush.Urgency.High });
+      } catch (e: any) {
+        // 404/410 = suscripcion muerta: limpiarla para no reintentar siempre
+        if (e && typeof e.isGone === "function") {
+          try { await supabase.from("push_subscriptions").delete().eq("id", s.id); } catch (_) {}
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[push] pushToUsers fallo:", e);
+  }
+}
+
+async function pushToAdmins(supabase: any, payload: { title: string; body: string; icon?: string; tag?: string; view?: string }) {
+  try {
+    const { data: admins } = await supabase.from("profiles").select("id").eq("role", "Administrador");
+    if (!admins || !admins.length) return;
+    await pushToUsers(supabase, admins.map((a: any) => a.id), payload);
+  } catch (_) {}
 }
 
 Deno.serve(async (req) => {
@@ -395,6 +485,55 @@ Deno.serve(async (req) => {
     return json(req, rows || [], 200);
   }
 
+  // PUSH: clave publica VAPID (para que el frontend pueda suscribirse)
+  if (path === "push/vapid-key" && method === "GET") {
+    const app = await pushInit();
+    if (!app || !_pushAppKey) return json(req, { ok: false, error: "push no configurado" }, 503);
+    return json(req, { publicKey: _pushAppKey }, 200);
+  }
+  // PUSH: registrar suscripcion del usuario logueado
+  if (path === "push/subscribe" && method === "POST") {
+    if (!authUser) return error(req, "No autorizado", 401);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
+    const endpoint = String(body.endpoint || "");
+    const p256dh = String(body.p256dh || (body.keys && body.keys.p256dh) || "");
+    const auth = String(body.auth || (body.keys && body.keys.auth) || "");
+    if (!endpoint || !p256dh || !auth) return error(req, "Suscripcion incompleta");
+    // Un solo endpoint por usuario: si ya existe otra fila con este endpoint
+    // (por ejemplo de un usuario previo en el mismo navegador), se reasigna.
+    const { error: delErr } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+    if (delErr) return dbError(req, "push-del", delErr);
+    const { error: insErr } = await supabase.from("push_subscriptions").insert({
+      user_id: authUser.id,
+      endpoint,
+      p256dh,
+      auth,
+      user_agent: (req.headers.get("user-agent") || "").slice(0, 300),
+    });
+    if (insErr) return dbError(req, "push-sub", insErr);
+    return json(req, { ok: true }, 201);
+  }
+  // PUSH: eliminar suscripcion
+  if (path === "push/unsubscribe" && method === "POST") {
+    if (!authUser) return error(req, "No autorizado", 401);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
+    const endpoint = String(body.endpoint || "");
+    if (!endpoint) return error(req, "endpoint requerido");
+    const { error: delErr } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", authUser.id);
+    if (delErr) return dbError(req, "push-unsub", delErr);
+    return json(req, { ok: true }, 200);
+  }
+  // PUSH: notificacion de prueba al propio usuario
+  if (path === "push/test" && method === "POST") {
+    if (!authUser) return error(req, "No autorizado", 401);
+    firePush(pushToUsers(supabase, [authUser.id], {
+      title: "🔔 Distrito Streaming",
+      body: "¡Notificaciones activadas! Recibirás avisos de recargas, reportes y ventas aquí.",
+      tag: "push-test",
+    }));
+    return json(req, { ok: true }, 200);
+  }
+
   // BUY (atomico: un solo UPDATE reclama el inventario con guarda de estado)
   if (path === "buy" && method === "POST") {
     if (!authUser) return error(req, "No autorizado", 401);
@@ -523,7 +662,7 @@ Deno.serve(async (req) => {
   // CRUD GENERICO
   if (ALLOWED_TABLES.has(path.split("/")[0]) && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(method)) {
     if (!authUser) return error(req, "No autorizado", 401);
-    const { data: profile, error: profErr } = await supabase.from("profiles").select("role, status, id").eq("id", authUser.id).maybeSingle();
+    const { data: profile, error: profErr } = await supabase.from("profiles").select("role, status, id, name, email").eq("id", authUser.id).maybeSingle();
     if (profErr || !profile) return error(req, "Sesion invalida");
     if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error(req, "Tu cuenta ha sido bloqueada por un administrador.", 403);
     const table = path.split("/")[0];
@@ -642,6 +781,13 @@ Deno.serve(async (req) => {
         status: "Abierto",
       }).select("*");
       if (insErr) return dbError(req, "insert", insErr);
+      // Avisar a los administradores: hay un nuevo reporte por atender
+      firePush(pushToAdmins(supabase, {
+        title: "🚨 Nuevo reporte",
+        body: `${profile.name || "Un usuario"} abrió un reporte${product_name ? " sobre " + product_name : ""}${reason ? " (" + reason + ")" : ""}.`,
+        tag: "report-open",
+        view: "reports",
+      }));
       return json(req, data || [], 201);
     }
     // topups POST
@@ -655,6 +801,13 @@ Deno.serve(async (req) => {
         status: "Pendiente",
       }).select("*");
       if (insErr) return dbError(req, "insert", insErr);
+      // Avisar a los administradores: hay una recarga pendiente por aprobar
+      firePush(pushToAdmins(supabase, {
+        title: "💰 Recarga pendiente",
+        body: `${profile.name || "Un usuario"} solicitó recargar $${Number(amount || 0).toLocaleString("es-CO")}. Revisa el panel de recargas.`,
+        tag: "topup-pending",
+        view: "payments",
+      }));
       return json(req, data || [], 201);
     }
     // inventory POST
@@ -719,8 +872,19 @@ Deno.serve(async (req) => {
       const patch = { ...body };
       delete patch.id;
       await audit(supabase, authUser.id, "report_update", "reports", id, patch);
+      const { data: report } = await supabase.from("reports").select("*").eq("id", id).maybeSingle();
+      const statusChanged = report && patch.status && patch.status !== report.status;
       const { data, error: updErr } = await supabase.from("reports").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
       if (updErr) return dbError(req, "update", updErr);
+      // Si un reporte fue resuelto/rechazado, avisar al usuario que lo creó
+      if (report && report.user_id && statusChanged && (patch.status === "Resuelto" || patch.status === "Rechazado")) {
+        firePush(pushToUsers(supabase, [report.user_id], {
+          title: patch.status === "Resuelto" ? "✅ Reporte resuelto" : "ℹ️ Reporte cerrado",
+          body: `Tu reporte${report.product_name ? " de " + report.product_name : ""} fue ${patch.status === "Resuelto" ? "resuelto" : "cerrado"}${patch.solution ? ". " + String(patch.solution).slice(0, 140) : ""}.`,
+          tag: "report-" + patch.status.toLowerCase(),
+          view: "",
+        }));
+      }
       return json(req, data || [], 200);
     }
     // reports DELETE
@@ -742,11 +906,28 @@ Deno.serve(async (req) => {
       const { data: row } = await supabase.from("topups").select("*").eq("id", id).maybeSingle();
       if (!row) return error(req, "Recarga no encontrada", 404);
       await audit(supabase, authUser.id, "topup_update", "topups", id, { status: patch.status, amount: row.amount, user_id: row.user_id });
+      const statusChanged = patch.status && patch.status !== row.status;
       if (patch.status === "Aprobada") {
-        const { data: owner } = await supabase.from("profiles").select("balance").eq("id", row.user_id).maybeSingle();
+        const { data: owner } = await supabase.from("profiles").select("balance, role").eq("id", row.user_id).maybeSingle();
         const newBal = Number(owner?.balance ?? 0) + Number(row.amount || 0);
         const { error: balErr } = await supabase.from("profiles").update({ balance: newBal }).eq("id", row.user_id);
         if (balErr) return dbError(req, "balance", balErr);
+        // Avisar al dueño: su recarga fue aprobada y el saldo ya está disponible
+        if (statusChanged) {
+          firePush(pushToUsers(supabase, [row.user_id], {
+            title: "✅ Recarga aprobada",
+            body: `¡Tu recarga de $${Number(row.amount || 0).toLocaleString("es-CO")} fue aprobada! Ya está disponible en tu saldo.`,
+            tag: "topup-approved",
+            view: owner?.role === "Administrador" ? "payments" : "",
+          }));
+        }
+      } else if (patch.status === "Rechazada" && statusChanged) {
+        firePush(pushToUsers(supabase, [row.user_id], {
+          title: "❌ Recarga rechazada",
+          body: `Tu recarga de $${Number(row.amount || 0).toLocaleString("es-CO")} fue rechazada. Si crees que es un error, contacta al administrador.`,
+          tag: "topup-rejected",
+          view: "",
+        }));
       }
       const { data, error: updErr } = await supabase.from("topups").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
       if (updErr) return dbError(req, "update", updErr);

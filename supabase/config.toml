@@ -36,7 +36,6 @@ enabled = true
 site_url = "https://distrito-streaming-vercel-ashen.vercel.app"
 additional_redirect_urls = ["https://distrito-streaming.vercel.app"]
 jwt_expiry = 3600
-enable_refresh_token = true
 refresh_token_reuse_interval = 10
 enable_signup = true
 
@@ -47,7 +46,6 @@ enable_confirmations = false
 
 [auth.sms]
 enable_signup = true
-twilio_verify_enabled = true
 
 [edge_runtime]
 enabled = true
