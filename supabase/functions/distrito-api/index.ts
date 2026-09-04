@@ -23,6 +23,42 @@ function randomCode(prefix) {
   return prefix + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+// ─── Rate limiting (en memoria) ───
+// Nota: el estado vive por instancia de la edge function, asi que no es un
+// limite global estricto entre instancias. Para proteccion total usa Redis
+// (Upstash) con la IP como clave; esto ya frena el abuso masivo en la practica.
+const rateLimitHits = new Map<string, number[]>();
+
+function getClientIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "unknown";
+}
+
+function isRateLimited(key: string, maxAttempts: number, windowMs: number): boolean {
+  const now = Date.now();
+  const recent = (rateLimitHits.get(key) || []).filter((t) => now - t < windowMs);
+  if (recent.length >= maxAttempts) {
+    rateLimitHits.set(key, recent);
+    return true;
+  }
+  recent.push(now);
+  rateLimitHits.set(key, recent);
+  // Limpieza basica para que el Map no crezca sin limite
+  if (rateLimitHits.size > 5000) {
+    for (const [k, times] of rateLimitHits) {
+      if (now - times[times.length - 1] > 60 * 60 * 1000) rateLimitHits.delete(k);
+    }
+  }
+  return false;
+}
+
+function rateLimited() {
+  return json({ error: "Demasiados intentos. Espera unos minutos y vuelve a intentar." }, 429);
+}
+
 async function audit(supabase, userId, action, tableName, recordId, details = null) {
   try {
     await supabase.from("audit_log").insert({
@@ -64,13 +100,18 @@ Deno.serve(async (req) => {
 
   // REGISTER
   if (path === "register" && method === "POST") {
+    if (isRateLimited("register:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited();
     let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
-    const { name, email, phone, password, role, referrer_id } = body;
+    const { name, email, phone, password, referrer_id } = body;
     if (!name || !email || !password) return error("name, email y password son requeridos");
     if (String(password).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
     const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
     if (existing) return error("Ya existe una cuenta con este correo");
-    const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
+    // SEGURIDAD: el registro publico SIEMPRE crea un Cliente. El campo `role`
+    // del body se ignora a proposito (antes cualquier persona podia enviar
+    // role:"Administrador" y obtener una cuenta admin via ?ref=admin_XXX).
+    // Los roles solo los asigna un administrador desde el panel (/users).
+    const roleNorm = "Cliente";
     // admin.createUser (con email_confirm) no envia email y no dispara el rate limit de SMTP
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
       email,
@@ -137,6 +178,7 @@ Deno.serve(async (req) => {
 
   // LOGIN
   if (path === "login" && method === "POST") {
+    if (isRateLimited("login:" + getClientIp(req), 15, 5 * 60 * 1000)) return rateLimited();
     let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
     const { email, password } = body;
 
@@ -189,11 +231,24 @@ Deno.serve(async (req) => {
     if (!profile) return error("Sesion invalida");
     if (profile.status === "Bloqueado" || profile.status === "Inactivo") return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
     const isAdmin = profile.role === "Administrador";
+    // SEGURIDAD: los no-admins solo ven sus propios pedidos/reportes/recargas.
+    // Antes /bootstrap devolvia TODAS las filas (incluidas las credenciales
+    // delivered_data de otros clientes) a cualquier usuario logueado, porque
+    // la service_role key salta las politicas RLS.
+    const scopedOrders = isAdmin
+      ? supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(1000)
+      : supabase.from("orders").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1000);
+    const scopedReports = isAdmin
+      ? supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(500)
+      : supabase.from("reports").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(500);
+    const scopedTopups = isAdmin
+      ? supabase.from("topups").select("*").order("created_at", { ascending: false }).limit(500)
+      : supabase.from("topups").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(500);
     const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes] = await Promise.all([
       supabase.from("products").select("*").order("created_at", { ascending: true }).limit(1000),
-      supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(1000),
-      supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(500),
-      supabase.from("topups").select("*").order("created_at", { ascending: false }).limit(500),
+      scopedOrders,
+      scopedReports,
+      scopedTopups,
       supabase.from("ads").select("*").order("created_at", { ascending: true }).limit(500),
       supabase.from("settings").select("*").limit(100),
       isAdmin ? supabase.from("profiles").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
