@@ -2524,11 +2524,24 @@
     // ─── API ───────────────────────────────────────────
     async function api(path,opt={}){
       if(!navigator.onLine) throw new Error("Sin conexion a internet");
-      const res = await fetch(API + "/" + path, {
-        ...opt,
-        credentials:"include", // envia la cookie httpOnly ds_token de sesion
-        headers: {"Content-Type":"application/json", ...(token ? {"x-distrito-session":token} : {}), ...(opt.headers || {})}
-      });
+      // Reintenta fallos de red transitorios (no HTTP): 2 reintentos con backoff.
+      // Sin esto, un blip de red/movil muestra el critico "Failed to fetch".
+      let res=null;
+      for(let intento=0;intento<3&&!res;intento++){
+        try{
+          res = await fetch(API + "/" + path, {
+            ...opt,
+            credentials:"include", // envia la cookie httpOnly ds_token de sesion
+            headers: {"Content-Type":"application/json", ...(token ? {"x-distrito-session":token} : {}), ...(opt.headers || {})}
+          });
+        }catch(e){
+          if(intento<2) await new Promise(r=>setTimeout(r,400*(intento+1)));
+          else{
+            console.error("API sin conexión (", path, "):", e);
+            throw new Error("Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.");
+          }
+        }
+      }
       const json = await res.json().catch(()=>({}));
       if(!res.ok){
         const err = new Error(json.error || "No se pudo conectar con el servidor");

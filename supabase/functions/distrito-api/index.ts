@@ -1,18 +1,28 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Origenes que pueden usar credenciales (cookies httpOnly). Si el frontend se
-// sirve desde otro dominio (ej. dominio propio en Vercel), agregalo aqui.
+// Origenes que pueden usar credenciales (cookies httpOnly).
+// El sitio vive en Vercel y se sirve desde CUALQUIER alias del proyecto
+// (dominio canonico, deployments y previews: distrito-streaming-vercel-<x>.vercel.app).
+// No aceptamos orígenes arbitrarios: solo el listado exacto, los *.vercel.app
+// de ESTE proyecto (regex estricta) y localhost para desarrollo.
 const ALLOWED_ORIGINS = new Set([
-  "https://distrito-streaming-vercel-ashen.vercel.app",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:5173",
 ]);
 
+// Ej: https://distrito-streaming-vercel-ashen.vercel.app (canonico),
+//     https://distrito-streaming-vercel-u1vnf87fe.vercel.app (deployment).
+const VERCEL_ORIGIN_RE = /^https:\/\/distrito-streaming-vercel-[a-z0-9]+\.vercel\.app$/;
+
+function isAllowedOrigin(origin: string): boolean {
+  return ALLOWED_ORIGINS.has(origin) || VERCEL_ORIGIN_RE.test(origin);
+}
+
 function corsHeadersFor(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
-  if (ALLOWED_ORIGINS.has(origin)) {
+  if (isAllowedOrigin(origin)) {
     return {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
@@ -132,7 +142,7 @@ Deno.serve(async (req) => {
   // envian y se permiten (no llevan cookies de navegador).
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     const origin = req.headers.get("origin");
-    if (origin && !ALLOWED_ORIGINS.has(origin)) return error(req, "Origen no permitido", 403);
+    if (origin && !isAllowedOrigin(origin)) return error(req, "Origen no permitido", 403);
   }
   if (path === "health" && method === "GET") return json(req, { ok: true }, 200);
 
