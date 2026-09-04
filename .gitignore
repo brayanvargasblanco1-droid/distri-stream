@@ -6,3 +6,5 @@ package-lock.json
 .agents_tmp/
 .env*
 .vercel
+.supabase/.temp/
+supabase/.temp/
