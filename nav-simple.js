@@ -75,7 +75,10 @@ const NavPremium = {
       100% { transform: rotate(360deg); }
     }
     
-    /* Navegación Móvil Premium */
+    /* Navegación Móvil Premium
+       Con roles que tienen 9 secciones (admin), la barra debe ser DESLIZABLE
+       horizontalmente: si no, los últimos botones quedan fuera de la pantalla.
+       Los botones conservan su ancho (68px) y el contenedor hace scroll. */
     .nav-premium-mobile {
       position: fixed !important;
       bottom: 0 !important;
@@ -83,7 +86,7 @@ const NavPremium = {
       right: 0 !important;
       z-index: 9999 !important;
       display: flex !important;
-      justify-content: space-around !important;
+      justify-content: flex-start !important;
       align-items: flex-end !important;
       padding: 10px 6px !important;
       padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
@@ -91,8 +94,14 @@ const NavPremium = {
       backdrop-filter: blur(25px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
       border-top: 1px solid rgba(99, 102, 241, 0.1) !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
       animation: navSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
     }
+    .nav-premium-mobile::-webkit-scrollbar{ display: none !important; width: 0 !important; height: 0 !important; }
+    .nav-premium-mobile .nav-premium-btn{ flex: 0 0 auto !important; }
     
     /* Premium Nav Icon Container */
     .nav-premium-btn .nav-icon-wrap {
