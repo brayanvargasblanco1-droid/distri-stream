@@ -4,12 +4,74 @@
 
 const Tienda = {
   filtroActual: 'disponibles',
+  busqueda: '',
+  plataforma: 'todas',
   
   filtros: ['disponibles', 'agotados'],
   
   cambiarFiltro(filtro) {
     this.filtroActual = filtro;
+    this.plataforma = 'todas';
+    this.busqueda = '';
+    const inp = document.getElementById('tBusqueda');
+    if (inp) inp.value = '';
+    this.actualizarChips();
     this.render();
+  },
+  
+  setBusqueda(v) {
+    this.busqueda = String(v || '').trim().toLowerCase();
+    this.actualizarLista();
+  },
+  
+  limpiarBusqueda() {
+    this.busqueda = '';
+    const inp = document.getElementById('tBusqueda');
+    if (inp) inp.value = '';
+    this.actualizarLista();
+  },
+  
+  cambiarPlataforma(v) {
+    this.plataforma = v || 'todas';
+    this.actualizarChips();
+    this.actualizarLista();
+  },
+  
+  actualizarChips() {
+    const el = document.getElementById('t-plataformas');
+    if (el) el.innerHTML = this.renderChips();
+  },
+  
+  actualizarLista() {
+    const el = document.getElementById('t-lista');
+    if (el) el.innerHTML = this.renderProductos();
+  },
+  
+  productosBase() {
+    const sorted = [...state.products].sort((a,b) => 
+      ((b.status==="Activo"||!b.status)?1:0)-((a.status==="Activo"||!a.status)?1:0) || 
+      Number(b.stock||0)-Number(a.stock||0)
+    );
+    
+    const disponibles = sorted.filter(p => (p.status==="Activo"||!p.status) && Number(p.stock) > 0);
+    const agotados = sorted.filter(p => !((p.status==="Activo"||!p.status) && Number(p.stock) > 0));
+    
+    return this.filtroActual === 'disponibles' ? disponibles : agotados;
+  },
+  
+  renderChips() {
+    const map = {};
+    this.productosBase().forEach(p => { const c = serviceClass(p.name); map[c] = (map[c]||0) + 1; });
+    const labels = { netflix:'Netflix', spotify:'Spotify', max:'Max', prime:'Prime', disney:'Disney+', youtube:'YouTube', other:'Otras' };
+    const chips = Object.keys(map)
+      .map(c => ({ id:c, label:labels[c]||c, count:map[c] }))
+      .sort((a,b) => a.id==='other' ? 1 : b.id==='other' ? -1 : 0);
+    const total = chips.reduce((s,c) => s + c.count, 0);
+    const todos = [{ id:'todas', label:'Todas', count:total }];
+    return todos.concat(chips).map(c => `
+      <button class="t-chip${c.id===this.plataforma ? ' t-chip-on' : ''}" data-p="${c.id}" onclick="Tienda.cambiarPlataforma('${c.id}')">
+        ${c.label} <span class="t-chip-count">${c.count}</span>
+      </button>`).join('');
   },
   
   render() {
@@ -31,15 +93,16 @@ const Tienda = {
   },
   
   getProductos() {
-    const sorted = [...state.products].sort((a,b) => 
-      ((b.status==="Activo"||!b.status)?1:0)-((a.status==="Activo"||!a.status)?1:0) || 
-      Number(b.stock||0)-Number(a.stock||0)
-    );
-    
-    const disponibles = sorted.filter(p => (p.status==="Activo"||!p.status) && Number(p.stock) > 0);
-    const agotados = sorted.filter(p => !((p.status==="Activo"||!p.status) && Number(p.stock) > 0));
-    
-    return this.filtroActual === 'disponibles' ? disponibles : agotados;
+    const base = this.productosBase();
+    const q = this.busqueda;
+    return base.filter(p => {
+      if (this.plataforma !== 'todas' && serviceClass(p.name) !== this.plataforma) return false;
+      if (q) {
+        const hay = (String(p.name||'') + ' ' + String(p.description||'')).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
   },
   
   renderProductos() {
@@ -82,7 +145,8 @@ const Tienda = {
           ${logos}
         </div>
         <div class="t-card-info">
-          <div class="t-card-name">${serviceName(p.name)}</div>
+          <div class="t-card-name">${esc(serviceName(p.name))}</div>
+          ${p.description ? `<div class="t-card-desc">${esc(p.description)}</div>` : ''}
           <div class="t-card-stock ${bajoStock ? 't-stock-low' : disponible ? 't-stock-ok' : 't-stock-out'}">
             ${bajoStock ? '🔥 ' : disponible ? '📦 ' : '❌ '}${stockText}
           </div>
@@ -259,6 +323,21 @@ const TiendaCSS = `
 .t-logo-other { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; }
 
 .t-card-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.t-card-desc { font-size: 12px; color: #64748b; line-height: 1.5; margin: -2px 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 18px; }
+
+/* TOOLBAR (BUSCADOR + PLATAFORMAS) */
+.t-tools { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.t-search-wrap { display: flex; align-items: center; gap: 8px; background: #fff; border: 2px solid rgba(148,163,184,0.3); border-radius: 14px; padding: 12px 16px; transition: all .3s; }
+.t-search-wrap:focus-within { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,0.12); }
+.t-search { flex: 1; border: 0; outline: none; font-size: 14px; background: transparent; color: #0f172a; }
+.t-clear { width: 26px; height: 26px; border: 0; border-radius: 50%; background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 800; cursor: pointer; line-height: 1; }
+.t-clear:hover { background: #fee2e2; color: #dc2626; }
+.t-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.t-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; background: #fff; color: #64748b; border: 1.5px solid rgba(148,163,184,0.3); transition: all .2s; }
+.t-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.t-chip-on { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; border-color: #7c3aed; box-shadow: 0 6px 18px rgba(124,58,237,0.3); }
+.t-chip-count { background: rgba(148,163,184,0.15); border-radius: 10px; padding: 0 7px; font-size: 10px; font-weight: 800; }
+.t-chip-on .t-chip-count { background: rgba(255,255,255,0.25); }
 .t-card-stock { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
 .t-stock-ok { color: #10b981; }
 .t-stock-low { color: #ef4444; }
@@ -363,6 +442,16 @@ function improvedStoreView() {
         <button class="t-tab" data-filtro="agotados" onclick="Tienda.cambiarFiltro('agotados')" style="background:rgba(255,255,255,0.9);color:#64748b;border-color:rgba(148,163,184,0.3)">
           ❌ Agotados (${agotados.length})
         </button>
+      </div>
+      
+      <!-- BUSCADOR + PLATAFORMAS -->
+      <div class="t-tools">
+        <div class="t-search-wrap">
+          <span style="opacity:.5">🔍</span>
+          <input id="tBusqueda" class="t-search" type="search" placeholder="Buscar plataforma o plan..." value="${esc(Tienda.busqueda)}" oninput="Tienda.setBusqueda(this.value)">
+          ${Tienda.busqueda ? `<button class="t-clear" onclick="Tienda.limpiarBusqueda()">✕</button>` : ''}
+        </div>
+        <div class="t-chips" id="t-plataformas">${Tienda.renderChips()}</div>
       </div>
       
       <!-- LISTA -->

@@ -8,6 +8,7 @@ const Soporte = {
   estados: {
     'Abierto': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', icon: '📋' },
     'En revisión': { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🔍' },
+    'En revision': { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🔍' },
     'En proceso': { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', icon: '⚙️' },
     'Resuelto': { color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: '✅' },
     'Rechazado': { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '❌' }
@@ -85,6 +86,7 @@ const Soporte = {
     const solucion = r.provider_response || r.admin_response;
     const tiempo = this.getTiempo(r.created_at);
     const tieneRespuesta = !!solucion;
+    const rechazado = r.status === 'Rechazado';
     
     return `
       <div class="s-card" style="animation-delay: ${idx * 0.08}s" onclick="Soporte.verDetalle('${r.id}')">
@@ -115,23 +117,27 @@ const Soporte = {
           </div>
         </div>
         
-        <!-- RESPUESTA DEL ADMIN -->
-        <div class="s-admin-section ${tieneRespuesta ? 's-admin-has' : 's-admin-pending'}">
+        <!-- RESPUESTA / RESULTADO -->
+        <div class="s-admin-section ${rechazado ? 's-admin-rejected' : tieneRespuesta ? 's-admin-has' : 's-admin-pending'}">
           <div class="s-admin-header">
             <div class="s-admin-avatar">
-              ${tieneRespuesta ? 
-                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 12l4 4 6-6"/></svg>' :
-                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+              ${rechazado
+                ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+                : tieneRespuesta
+                ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 12l4 4 6-6"/></svg>'
+                : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
               }
             </div>
             <div class="s-admin-info">
-              <span class="s-admin-title">RESPUESTA DEL ADMINISTRADOR</span>
-              <span class="s-admin-sub">${tieneRespuesta ? '✓ Respondido' : '⏳ Esperando respuesta'}</span>
+              <span class="s-admin-title">${rechazado ? 'REPORTE RECHAZADO' : 'RESPUESTA DEL ADMINISTRADOR'}</span>
+              <span class="s-admin-sub">${rechazado ? '✕ No se continuará con este reporte' : tieneRespuesta ? '✓ Respondido' : '⏳ Esperando respuesta'}</span>
             </div>
-            ${tieneRespuesta ? '<div class="s-admin-badge-ok">✓</div>' : '<div class="s-admin-badge-pending">...</div>'}
+            ${rechazado ? '<div class="s-admin-badge-no">✕</div>' : tieneRespuesta ? '<div class="s-admin-badge-ok">✓</div>' : '<div class="s-admin-badge-pending">...</div>'}
           </div>
           
-          ${tieneRespuesta ? `
+          ${rechazado ? `
+            <div class="s-admin-content">${escHtml(solucion || 'El administrador no indicó un motivo.')}</div>
+          ` : tieneRespuesta ? `
             <div class="s-admin-content">${escHtml(solucion)}</div>
           ` : `
             <div class="s-admin-pending-content">
@@ -160,7 +166,31 @@ const Soporte = {
     if (horas < 24) return `Hace ${horas}h`;
     return `Hace ${Math.floor(horas/24)}d`;
   },
-  
+
+  renderTimeline(r) {
+    const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const s = norm(r.status);
+    const rechazado = s === 'rechazado';
+    const idx = s === 'abierto' ? 0 : (s === 'en revision' || s === 'en proceso') ? 1 : 2;
+    const pasos = [
+      { icon: '📝', label: 'Enviado' },
+      { icon: '🔍', label: 'En revisión' },
+      { icon: rechazado ? '❌' : '✅', label: rechazado ? 'Rechazado' : 'Resuelto' }
+    ];
+    return `
+      <div class="s-timeline">
+        ${pasos.map((p, i) => {
+          const done = i <= idx;
+          return `
+          <div class="s-tl-step ${done ? 's-tl-done' : ''} ${rechazado && i === 2 && done ? 's-tl-reject' : ''}">
+            <div class="s-tl-dot">${p.icon}</div>
+            <div class="s-tl-label">${p.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  },
+
   verDetalle(id) {
     const r = state.reports.find(x => x.id === id);
     if (!r) { toast('No encontrado', 'bad'); return; }
@@ -170,6 +200,8 @@ const Soporte = {
     const solucion = r.provider_response || r.admin_response;
     const fecha = new Date(r.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
     const tieneRespuesta = !!solucion;
+    const rechazado = r.status === 'Rechazado';
+    const timeline = this.renderTimeline(r);
     
     openModal(`
       <div class="s-modal">
@@ -180,27 +212,30 @@ const Soporte = {
         </div>
         
         <div class="s-modal-body">
+          ${timeline}
+          
           <!-- TU REPORTE -->
           <div class="s-modal-tu">
             <div class="s-modal-label">📝 TU REPORTE</div>
             <div class="s-modal-tu-box">
               <div class="s-modal-tu-problema">${escHtml(r.reason || 'Sin motivo')}</div>
               ${r.description ? `<div class="s-modal-tu-desc">${escHtml(r.description)}</div>` : ''}
+              ${r.account_data ? `<div class="s-modal-tu-account">📧 Cuenta afectada: ${escHtml(String(r.account_data).slice(0,140))}${String(r.account_data).length > 140 ? '…' : ''}</div>` : ''}
             </div>
           </div>
           
-          <!-- RESPUESTA DEL ADMIN -->
-          <div class="s-modal-admin ${tieneRespuesta ? 's-modal-admin-ok' : ''}">
-            <div class="s-modal-label ${tieneRespuesta ? 's-modal-label-green' : 's-modal-label-pending'}">
-              💬 RESPUESTA DEL ADMINISTRADOR
+          <!-- RESPUESTA / RESULTADO -->
+          <div class="s-modal-admin ${rechazado ? 's-modal-admin-rejected' : tieneRespuesta ? 's-modal-admin-ok' : ''}">
+            <div class="s-modal-label ${rechazado ? 's-modal-label-red' : tieneRespuesta ? 's-modal-label-green' : 's-modal-label-pending'}">
+              ${rechazado ? '🚫 REPORTE RECHAZADO — MOTIVO DEL RECHAZO' : '💬 RESPUESTA DEL ADMINISTRADOR'}
             </div>
-            ${tieneRespuesta ? `
+            ${rechazado || tieneRespuesta ? `
               <div class="s-modal-admin-box">
                 <div class="s-modal-admin-header">
-                  <div class="s-modal-avatar">👨‍💼</div>
-                  <span>Administrador</span>
+                  <div class="s-modal-avatar">${rechazado ? '🚫' : '👨‍💼'}</div>
+                  <span>${rechazado ? 'Administrador (rechazo)' : 'Administrador'}</span>
                 </div>
-                <div class="s-modal-admin-texto">${escHtml(solucion)}</div>
+                <div class="s-modal-admin-texto">${escHtml(solucion || 'El administrador no indicó un motivo.')}</div>
               </div>
             ` : `
               <div class="s-modal-pending-box">
@@ -347,6 +382,11 @@ const Soporte = {
             </select>
           </div>
           <div class="s-form-group">
+            <label class="s-form-label">📧 Cuenta afectada <span style="text-transform:none;font-weight:500;color:#94a3b8">(opcional, recomendado)</span></label>
+            <input id="crear_cuenta" class="s-form-select" type="text" placeholder="Ej: el correo o perfil con el que entras a la cuenta">
+            <div style="font-size:11px;color:#94a3b8;margin-top:6px">Así el administrador sabrá exactamente qué cuenta falló.</div>
+          </div>
+          <div class="s-form-group">
             <label class="s-form-label">📋 Problema</label>
             <select id="crear_categoria" class="s-form-select">
               <option value="">Selecciona...</option>
@@ -384,7 +424,8 @@ const Soporte = {
     
     showLoading('Creando...');
     try {
-      await api('reports', {method: 'POST', body: JSON.stringify({ product_name: name, reason: cat.value, description: desc.value.trim(), order_id: id, client_id: state.user?.id })});
+      const cuenta = String((document.getElementById('crear_cuenta')||{}).value||'').trim();
+      await api('reports', {method: 'POST', body: JSON.stringify({ product_name: name, reason: cat.value, description: desc.value.trim(), order_id: id, client_id: state.user?.id, ...(cuenta ? { account_data: cuenta } : {}) })});
       closeModal();
       toast('✓ Reporte creado', 'ok');
       await boot();
@@ -475,6 +516,31 @@ const SoporteCSS = `
 .s-pending-dots span { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; animation: dotBounce 1.4s ease-in-out infinite; }
 .s-pending-dots span:nth-child(2) { animation-delay: 0.2s; }
 .s-pending-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* RECHAZADO (ROJO) */
+.s-admin-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 12px 35px rgba(239, 68, 68, 0.35); }
+.s-admin-rejected .s-admin-avatar { background: rgba(255,255,255,0.25); color: #fff; }
+.s-admin-rejected .s-admin-title { color: #fff; }
+.s-admin-rejected .s-admin-sub { color: rgba(255,255,255,0.85); }
+.s-admin-badge-no { width: 32px; height: 32px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 800; }
+.s-modal-admin.s-modal-admin-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); border: none; }
+.s-modal-admin.s-modal-admin-rejected .s-modal-admin-box { background: rgba(255,255,255,0.2); border-radius: 14px; padding: 16px; }
+.s-modal-admin.s-modal-admin-rejected .s-modal-admin-header span { color: #fff; font-weight: 700; }
+.s-modal-admin.s-modal-admin-rejected .s-modal-admin-texto { font-size: 15px; color: #fff; line-height: 1.7; }
+.s-modal-label.s-modal-label-red { color: #dc2626; }
+.s-modal-tu-account { margin-top: 10px; padding: 8px 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; color: #334155; font-weight: 600; word-break: break-word; }
+
+/* TIMELINE DE ESTADO */
+.s-timeline { display: flex; gap: 0; margin-bottom: 20px; padding: 16px 10px 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; }
+.s-tl-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+.s-tl-step:not(:last-child)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 24px); width: calc(100% - 48px); height: 3px; background: #e2e8f0; border-radius: 2px; }
+.s-tl-step.s-tl-done:not(:last-child)::after { background: linear-gradient(90deg, #10b981, #059669); }
+.s-tl-dot { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.s-tl-step.s-tl-done .s-tl-dot { background: #10b981; border-color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.35); }
+.s-tl-step.s-tl-reject .s-tl-dot { background: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68,0.35); }
+.s-tl-label { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-align: center; }
+.s-tl-step.s-tl-done .s-tl-label { color: #0f172a; }
+.s-tl-step.s-tl-reject .s-tl-label { color: #dc2626; }
 
 /* FOOTER */
 .s-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #f1f5f9; }
