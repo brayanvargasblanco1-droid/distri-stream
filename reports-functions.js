@@ -419,58 +419,6 @@ function submitReportWithValidation(orderId) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  ACCIONES DE ADMIN CON PERMISOS Y CONFIRMACIONES
-// ══════════════════════════════════════════════════════════════════════════════
-function resolveReport(reportId) {
-  if (!ReportPermissions.canUpdateStatus()) { toast('Solo admins pueden resolver reportes', 'bad'); return; }
-  if (!confirm('¿Resolver este reporte?')) return;
-  const response = prompt('Mensaje de resolución (opcional):');
-  console.log('Resolviendo:', reportId, response);
-  toast('Reporte resuelto', 'ok');
-}
-
-function rejectReport(reportId) {
-  if (!ReportPermissions.canUpdateStatus()) { toast('Solo admins pueden rechazar reportes', 'bad'); return; }
-  if (!confirm('¿Rechazar este reporte? Esta acción no se puede deshacer.')) return;
-  const reason = prompt('Razón del rechazo:');
-  if (!reason || reason.trim().length < 5) { toast('Debes ingresar una razón válida', 'bad'); return; }
-  console.log('Rechazando:', reportId, reason);
-  toast('Reporte rechazado', 'ok');
-}
-
-function deleteReport(reportId) {
-  const report = state.reports.find(r => r.id === reportId);
-  const isOwner = report && (report.user_id === state.user?.id || report.client_id === state.user?.id);
-  
-  // Admin o dueño del reporte puede eliminar
-  if (!ReportPermissions.canDelete() && !isOwner) { 
-    toast('Solo admins o el creador pueden eliminar reportes', 'bad'); 
-    return; 
-  }
-  
-  if (!confirm('⚠️ ¿ELIMINAR este reporte? Esta acción es IRREVERSIBLE.')) return;
-  if (!confirm('¿Estás SEGURO?')) return;
-  console.log('Eliminando:', reportId);
-  toast('Reporte eliminado', 'ok');
-}
-
-function updateReportResponse(reportId) {
-  if (!ReportPermissions.canRespond()) { toast('Solo admins pueden responder', 'bad'); return; }
-  const response = document.getElementById('adminResponseInput')?.value || '';
-  const validation = ReportValidator.validateResponse({ response: response });
-  if (!validation.valid) { toast(validation.errors.join(', '), 'bad'); return; }
-  console.log('Actualizando respuesta:', reportId, response);
-  toast('Respuesta actualizada', 'ok');
-}
-
-function exportReportsCsv() {
-  if (!ReportPermissions.canExport()) { toast('Solo admins pueden exportar', 'bad'); return; }
-  if (!confirm('¿Exportar todos los reportes a CSV?')) return;
-  console.log('Exportando...');
-  toast('Exportando...', 'ok');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
 //  BÚSQUEDA AVANZADA CON DEBOUNCE
 // ══════════════════════════════════════════════════════════════════════════════
 let reportSearchTimeout = null;

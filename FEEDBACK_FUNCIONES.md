@@ -3,6 +3,9 @@
 > Generado tras la sesión de mejoras de seguridad y robustez (commit `b5128ac`).
 > Estado: los arreglos están **desplegados en producción** y verificados con pruebas
 > reales sobre la API (registro, login+cookie, bootstrap, buy, concurrencia).
+>
+> **Ronda 2 (auditoría de "qué no funciona")**: commit `b5128ac+` corrigió la
+> regresión de reportes y los botones rotos del panel admin (ver sección 🔧 RONDA 2).
 
 ---
 
@@ -93,7 +96,7 @@ admins fantasma creados por el exploit de `?ref=admin_`.
 |---------|----------|
 | `generateReportCard()` / `generateReportCardSafe()` | ✅ Escapan HTML (`ReportValidator.escapeHtml`) — bien. |
 | `submitReportWithValidation()` + `validateReportFormData()` + `showFormErrors()` | ✅ Validación centralizada con feedback visual. |
-| `resolveReport()` / `rejectReport()` / `deleteReport()` | ✅ Exigen confirmación y chequean permisos. |
+| `resolveReport()` / `deleteReport()` / `updateReportResponse()` / `exportReportsCsv()` | ✅ **Ronda 2**: se eliminaron los stubs de `reports-functions.js` que pisaban a las versiones reales de `index.html` (la carga del script externo las anulaba: solo mostraban toast y **no guardaban nada**). Ahora Resolver/Rechazar hacen PATCH real y `resolveReport(id,status,respuesta)` **persiste el mensaje de solución** como `provider_response`. |
 | `searchReports()` / `initReportSearch()` / `onReportSearchInput()` | ✅ Búsqueda con debounce (300 ms). |
 | `generateReportTimeline()` / `generateProgressSteps()` | ✅ Timeline por estado (mejorable: dinámico desde eventos reales). |
 | `exportReportsCsv()` / `downloadReportPDF()` | ✅ Solo admin; CSV funcional; PDF es generación local simple. |
@@ -125,6 +128,16 @@ admins fantasma creados por el exploit de `?ref=admin_`.
 | `genPass()` | ✅ Generador de contraseñas. |
 
 ---
+
+## 🔧 RONDA 2 — “Qué no estaba funcionando” (corregido)
+
+Auditoría posterior a las mejoras de seguridad. Se encontraron y corrigieron:
+
+| # | Problema encontrado | Corrección | Verificación |
+|---|--------------------|------------|--------------|
+| 1 | **Regresión de reportes**: `reports-functions.js` (v2 a medio terminar) declaraba stubs de `resolveReport`, `deleteReport`, `updateReportResponse` y `exportReportsCsv` que **pisaban** las versiones reales de `index.html` (el script externo carga después y gana). Resultado: Resolver/Rechazar solo mostraban un toast y **no guardaban nada en la DB**; el CSV no descargaba. | Eliminados los stubs (y las acciones falsas `rejectReport`) de `reports-functions.js`. Las versiones reales vuelven a ser las activas. | Orden de carga simulado + boot real en Chrome: `resolveReport`/`deleteReport`/`exportReportsCsv`/`updateReportResponse` quedan definidas por las versiones con API real; cero errores de consola. |
+| 2 | **Botón “Resolver” perdía la solución escrita**: el modal admin “Dar solución” pasaba el texto como 3er argumento pero `resolveReport(id,status)` lo ignoraba. | `resolveReport(id,status,response)` ahora envía `provider_response` cuando hay texto. | Revisado el PATCH `/reports` del backend (acepta `provider_response`, solo admin) — listo. |
+| 3 | **Botones rotos del panel admin** (existían en producción, sin función definida → `ReferenceError` al hacer clic): `generateUserQR` (QR en tarjetas de usuario), `showAddAccountModal` y `showImportSection` (vista Inventario). | `generateUserQR` → ahora llama a `openQrCode(uid)` (modal QR de identificación + referido, que ya existía para el usuario propio pero no aceptaba otro `id`). Se crearon `showAddAccountModal()` (modal de alta de cuenta que usa `addInventory()`, que estaba huérfana) y `showImportSection()` (modal de importación STGLIAK que reutiliza `importFromSTGLIAK()`/`previewImport()`). | Boot real en Chrome (server local + API real): las 3 funciones quedan definidas; sin errores. |
 
 ## 🔧 MÓDULOS SEPARADOS
 
