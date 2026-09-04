@@ -129,7 +129,7 @@ function dbError(req: Request, context: string, err: unknown) {
   return error(req, "No se pudo completar la operacion. Intenta de nuevo.", 400);
 }
 
-async function audit(supabase, userId, action, tableName, recordId, details = null) {
+async function audit(supabase: any, userId: string, action: string, tableName: string, recordId: string | null, details: any = null) {
   try {
     await supabase.from("audit_log").insert({
       user_id: userId,
@@ -450,7 +450,10 @@ Deno.serve(async (req) => {
     const scopedTopups = isAdmin
       ? supabase.from("topups").select("*").order("created_at", { ascending: false }).limit(500)
       : supabase.from("topups").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(500);
-    const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes] = await Promise.all([
+    const scopedAdjustments = isAdmin
+      ? supabase.from("balance_adjustments").select("*").order("created_at", { ascending: false }).limit(500)
+      : supabase.from("balance_adjustments").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(500);
+    const [pRes, oRes, rRes, tRes, aRes, sRes, uRes, iRes, adjRes] = await Promise.all([
       supabase.from("products").select("*").order("created_at", { ascending: true }).limit(1000),
       scopedOrders,
       scopedReports,
@@ -459,6 +462,7 @@ Deno.serve(async (req) => {
       supabase.from("settings").select("*").limit(100),
       isAdmin ? supabase.from("profiles").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
       isAdmin ? supabase.from("inventory").select("*").limit(1000) : Promise.resolve({ data: [], error: null }),
+      scopedAdjustments,
     ]);
     const settingsMap = {};
     for (const row of (sRes.data || [])) settingsMap[row.key] = row.value;
@@ -471,6 +475,7 @@ Deno.serve(async (req) => {
       ads: aRes.data || [],
       users: uRes.data || [],
       inventory: iRes.data || [],
+      adjustments: adjRes.data || [],
       settings: settingsMap,
       notifications: [],
     }, 200);
@@ -723,6 +728,9 @@ Deno.serve(async (req) => {
       const patch = { ...body };
       delete patch.id;
       delete patch.increment_copies;
+      // Motivo del ajuste de saldo (si lo hay): se registra aparte, no es columna de profiles
+      const balanceReason = String(body.balance_reason || "").trim();
+      delete patch.balance_reason;
       const hasPassword = patch.password !== undefined && patch.password !== null && patch.password !== "";
       const newPassword = patch.password;
       delete patch.password;
@@ -731,6 +739,38 @@ Deno.serve(async (req) => {
         const { error: pwdErr } = await supabase.auth.admin.updateUserById(id, { password: newPassword });
         if (pwdErr) return dbError(req, "update-password", pwdErr);
         await audit(supabase, authUser.id, "user_password_reset", "profiles", id, {});
+      }
+      // Ajuste de saldo: registrar movimiento + avisar al usuario (solo si realmente cambió)
+      if (patch.balance !== undefined && patch.balance !== null) {
+        const { data: cur } = await supabase.from("profiles").select("balance, name, email").eq("id", id).maybeSingle();
+        const oldBal = Number(cur?.balance ?? 0);
+        const newBal = Number(patch.balance);
+        const delta = newBal - oldBal;
+        if (delta !== 0) {
+          if (!balanceReason) return error(req, "Debes escribir un motivo para el ajuste de saldo", 400);
+          await supabase.from("balance_adjustments").insert({
+            user_id: id,
+            amount: delta,
+            reason: balanceReason,
+            created_by: authUser.id,
+          });
+          await audit(supabase, authUser.id, "balance_adjust", "profiles", id, {
+            user_id: id,
+            delta,
+            old_balance: oldBal,
+            new_balance: newBal,
+            reason: balanceReason,
+          });
+          // Avisar al usuario del ajuste (abono o descuento)
+          const deltaLabel = delta > 0 ? "agregó" : "descontó";
+          const abs = Math.abs(delta).toLocaleString("es-CO");
+          firePush(pushToUsers(supabase, [id], {
+            title: delta > 0 ? "💰 Saldo agregado" : "💸 Saldo descontado",
+            body: `El administrador te ${deltaLabel} $${abs} de saldo. Motivo: ${balanceReason}.`,
+            tag: "balance-adjust",
+            view: "history",
+          }));
+        }
       }
       const { data, error: updErr } = await supabase.from("profiles").update(patch).eq("id", id);
       if (updErr) return dbError(req, "update", updErr);
