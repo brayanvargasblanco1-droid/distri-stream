@@ -134,6 +134,15 @@ const Tienda = {
       : 'Agotado';
     const puedeComprar = disponible && canBuyProduct(p);
     
+    // Para el Revendedor: cuanto paga el (tu precio) vs. cuanto paga el cliente
+    // final (retail publicado) y cuánto gana por unidad revendida.
+    const profitInfo = (() => {
+      if (typeof isReseller !== 'function' || !isReseller()) return null;
+      const retail = Number(p.price || 0);
+      const gain = retail - precio;
+      return (retail > 0 && gain > 0) ? { retail, gain } : null;
+    })();
+    
     const logos = this.getLogo(p.name);
     
     return `
@@ -152,6 +161,12 @@ const Tienda = {
           </div>
         </div>
         <div class="t-card-price">$${precio.toLocaleString('es-CO')}</div>
+        ${profitInfo ? `
+        <div class="t-card-profit">
+          <div class="t-profit-line"><span>Clientes pagan</span><b>$${profitInfo.retail.toLocaleString('es-CO')}</b></div>
+          <div class="t-profit-line t-profit-win"><span>Ganas por unidad</span><b>+$${profitInfo.gain.toLocaleString('es-CO')}</b></div>
+        </div>
+        ` : ''}
         <div class="t-card-action">
           ${disponible && puedeComprar 
             ? `<button class="t-btn-buy" onclick="openBuy('${p.id}')">🛒 Comprar</button>`
@@ -343,7 +358,11 @@ const TiendaCSS = `
 .t-stock-low { color: #ef4444; }
 .t-stock-out { color: #6b7280; }
 
-.t-card-price { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 16px; }
+.t-card-price { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+.t-card-profit { background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(16,185,129,.03)); border: 1.5px solid rgba(16,185,129,.25); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; text-align: left; }
+.t-profit-line { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; font-weight: 600; padding: 2px 0; }
+.t-profit-line b { color: #0f172a; font-size: 12px; }
+.t-profit-win span, .t-profit-win b { color: #059669; font-weight: 800; }
 
 .t-btn-buy {
   width: 100%;

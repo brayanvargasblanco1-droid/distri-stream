@@ -778,6 +778,20 @@
     
     /* Section Title */
     .section-title{display:flex;align-items:center;justify-content:space-between;padding:0 16px;margin:0 0 12px;font-size:15px;font-weight:800;color:var(--text)}
+    
+    /* Red de clientes (Revendedor) */
+    .network-list{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:0 16px 20px;overflow:hidden}
+    .network-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);transition:background .2s}
+    .network-item:last-child{border-bottom:none}
+    .network-item:hover{background:rgba(8,119,255,.03)}
+    .network-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(102,126,234,.25)}
+    .network-info{flex:1;min-width:0}
+    .network-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .network-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .network-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:6px;font-weight:600}
+    .network-chip{background:rgba(239,68,68,.12);color:#ef4444;padding:2px 8px;border-radius:20px;font-weight:700;font-size:10px}
+    .network-copy{flex-shrink:0;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:15px;cursor:pointer;transition:all .2s}
+    .network-copy:hover{border-color:var(--blue);color:var(--blue);transform:scale(1.06)}
     .section-badge{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
     .section-badge.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
     
@@ -2223,7 +2237,7 @@
     const PAYMENT_NUMBER = window.PAYMENT_NUMBER;
 
     function emptyState(){
-      return { user:null, products:[], orders:[], reports:[], topups:[], ads:[], users:[], inventory:[], adjustments:[], notifications:[], view:"home" };
+      return { user:null, products:[], orders:[], reports:[], topups:[], ads:[], users:[], inventory:[], adjustments:[], notifications:[], network:[], view:"home" };
     }
     const $ = (s,root=document) => root.querySelector(s);
     const money = n => "$ " + Number(n || 0).toLocaleString("es-CO");
@@ -3464,6 +3478,8 @@
       const totalSpent = state.orders.reduce((s,o) => s + Number(o.amount || 0), 0);
       const pendingReports = (state.reports || []).filter(r => r.status === "En proceso").length;
       const totalReports = (state.reports || []).length;
+      // Red de referidos (clientes registrados con el link del Revendedor)
+      const netClients = isReseller() ? (state.network || []) : [];
       
       const serviceLogos = {
         netflix:`<div style="width:32px;height:32px;background:#E50914;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0">N</div>`,
@@ -3629,6 +3645,35 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="15" height="15"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
+
+        ${reseller ? `
+        <!-- TU RED DE CLIENTES (solo Revendedor) -->
+        <div class="section-title"><span>👥 Tu red de clientes</span>${netClients.length ? `<span class="section-badge" style="background:linear-gradient(135deg,#10b981,#059669)">${netClients.length}</span>` : ''}</div>
+        ${netClients.length === 0 ? `
+        <div class="home-empty-card">
+          <div class="home-empty-icon">👥</div>
+          <b>Aún no tienes clientes registrados</b>
+          <span>Comparte tu link de invitación: cuando alguien se registre con él y compre, ganarás una comisión del 5% al 20% por cada venta.</span>
+          <button class="primary" onclick="openQrCode()">Compartir mi link</button>
+        </div>
+        ` : `
+        <div class="network-list">
+          ${netClients.map(c => {
+            const bloqueado = c.status === "Bloqueado" || c.status === "Inactivo";
+            return `
+          <div class="network-item">
+            <div class="network-avatar">${initials(c.name)}</div>
+            <div class="network-info">
+              <div class="network-name">${esc(c.name || 'Cliente')} ${bloqueado ? `<span class="tag warn">${esc(c.status)}</span>` : ''}</div>
+              <div class="network-sub">${esc(c.email || '')} · registrado ${formatDate(c.created_at)}</div>
+              <div class="network-meta">${Number(c.purchases30 || 0) > 0 ? `<span class="network-chip">🔥 ${c.purchases30} compra${c.purchases30 > 1 ? 's' : ''} este mes</span>` : ''}<span>${c.purchases} compra${c.purchases === 1 ? '' : 's'} · ${money(c.spent || 0)}</span></div>
+            </div>
+            <button class="network-copy" onclick="copyText('${window.location.origin}?ref=${c.id}');toast('Link de invitación copiado','ok')" title="Copiar link para este cliente">🔗</button>
+          </div>`;
+          }).join('')}
+        </div>
+        `}
+        ` : ''}
 
         ${recentPurchases.length===0 && expiring.length===0 && (state.products||[]).length>0 ? `
         <!-- PRIMERA VEZ: orientación contextual (solo si no hay actividad) -->
@@ -5082,6 +5127,7 @@
             </div>
             <span style="font-size:16px;font-weight:1000;color:var(--blue)" id="buyTotal">${money(price)}</span>
           </div>
+          ${isReseller() ? (()=>{const retail=Number(p.price||0);const gain=retail-price;return retail>0&&gain>0?`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.22);border-radius:12px;margin-bottom:12px;font-size:12px;color:#166534;font-weight:700"><span>🛒 Tus clientes pagan</span><span>${money(retail)} · ganas <b>+${money(gain)}</b>/unidad</span></div>`:''})():''}
           ${maxQty > 1 ? `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--soft);border:1px solid var(--line);border-radius:12px;margin-bottom:12px">
             <span style="font-size:13px;font-weight:800;color:var(--text)">🖥️ Cantidad de pantallas</span>
@@ -9020,8 +9066,8 @@
         const todayOrders=myOrders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
         if(todayOrders>0) notifs.push({type:"info",icon:"🛒",title:"Ventas de Hoy",body:`${todayOrders} venta(s) hoy`,action:"setView('orders')",urgent:false});
         
-        const myClients=state.users.filter(x=>x.reseller_id===u.id).length;
-        if(myClients>0) notifs.push({type:"success",icon:"👥",title:"Tu Red",body:`${myClients} cliente(s) registrado(s)`,action:"setView('users')",urgent:false});
+        const myClients=(state.network||[]).length;
+        if(myClients>0) notifs.push({type:"success",icon:"👥",title:"Tu Red",body:`${myClients} cliente(s) registrado(s) en tu red`,action:"setView('home')",urgent:false});
         
         const myRevenue=myOrders.reduce((s,o)=>s+Number(o.amount||0),0);
         const pending=state.topups.filter(t=>t.user_id===u.id||t.email===u.email).filter(t=>t.status==="Pendiente");

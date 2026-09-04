@@ -559,6 +559,47 @@ Deno.serve(async (req) => {
     ]);
     const settingsMap = {};
     for (const row of (sRes.data || [])) settingsMap[row.key] = row.value;
+
+    // RED DE REFERIDOS: los no-admins (sobre todo el Revendedor) necesitan ver
+    // a las personas que se registraron con su link y cuanto compran, para
+    // gestionar su negocio. El admin ya recibe state.users completo.
+    let network: any[] = [];
+    if (!isAdmin) {
+      const { data: refs } = await supabase
+        .from("profiles")
+        .select("id, name, email, created_at, status")
+        .eq("referrer_id", authUser.id)
+        .order("created_at", { ascending: false })
+        .limit(300);
+      const ids = (refs || []).map((r: any) => r.id);
+      if (ids.length) {
+        const cut = Date.now() - 30 * 86400000;
+        const byUser: any = {};
+        const { data: ords } = await supabase
+          .from("orders")
+          .select("user_id, amount, status, created_at")
+          .in("user_id", ids)
+          .limit(5000);
+        for (const o of (ords || [])) {
+          if (o.status === "Cancelado" || o.status === "Reembolsado") continue;
+          const b = (byUser[o.user_id] = byUser[o.user_id] || { purchases: 0, spent: 0, purchases30: 0, spent30: 0 });
+          b.purchases += 1;
+          b.spent += Number(o.amount || 0);
+          if (new Date(o.created_at).getTime() >= cut) {
+            b.purchases30 += 1;
+            b.spent30 += Number(o.amount || 0);
+          }
+        }
+        network = (refs || []).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          email: r.email,
+          created_at: r.created_at,
+          status: r.status,
+          ...(byUser[r.id] || { purchases: 0, spent: 0, purchases30: 0, spent30: 0 }),
+        }));
+      }
+    }
     return json(req, {
       user: profile,
       products: pRes.data || [],
@@ -570,6 +611,7 @@ Deno.serve(async (req) => {
       inventory: iRes.data || [],
       adjustments: adjRes.data || [],
       referralStats: refStats || { count: 0, sales: 0, earned: 0 },
+      network,
       settings: settingsMap,
       notifications: [],
     }, 200);
