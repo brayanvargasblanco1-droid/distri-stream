@@ -242,7 +242,8 @@
     .brand-logo{width:52px;height:52px;border-radius:14px;object-fit:cover;box-shadow:0 8px 24px rgba(8,119,255,.2),0 0 0 2px rgba(8,119,255,.08);transition:transform .3s ease,box-shadow .3s ease}
     .brand-logo:hover{transform:scale(1.06) rotate(-2deg);box-shadow:0 12px 32px rgba(8,119,255,.28),0 0 0 2px rgba(8,119,255,.12)}
     .brand-title{font-weight:1000;font-size:24px;line-height:.85;letter-spacing:-.03em}
-    .brand-title em{display:block;color:var(--blue);font-style:italic;font-weight:900;font-size:26px;letter-spacing:-.02em}
+    .brand-title em{display:block;color:var(--blue);font-style:italic;font-weight:900;font-size:26px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--blue),var(--cyan),var(--purple),var(--blue));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:brandFlow 8s linear infinite}
+    @keyframes brandFlow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
     .login-panel h1{text-align:center;font-size:32px;line-height:1.08;margin-bottom:8px;font-weight:900;letter-spacing:-.025em}
     .login-panel h1 span{color:var(--blue);position:relative}
     .login-panel h1 span::after{content:"";position:absolute;bottom:-3px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:2px;opacity:.7}
@@ -314,6 +315,8 @@
     .login-options a:hover{color:var(--blue2);transform:translateX(2px)}
     .primary,.ghost,.danger-btn,.ok-btn{border:0;border-radius:var(--radius);font-weight:1000;padding:12px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;font-size:14px;transition:transform .2s ease,box-shadow .2s ease}
     .primary{background:linear-gradient(135deg,#0877ff,#0877ff);color:#fff;box-shadow:0 12px 28px rgba(8,119,255,.25);position:relative;overflow:hidden}
+    .login-panel .primary{animation:btnPulse 3s ease-in-out infinite}
+    @keyframes btnPulse{0%,100%{box-shadow:0 12px 28px rgba(8,119,255,.25)}50%{box-shadow:0 12px 44px rgba(8,119,255,.5),0 0 0 6px rgba(8,119,255,.08)}}
     .primary::after{content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s ease}
     .primary:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(8,119,255,.32)}
     .primary:hover::after{left:120%}
@@ -456,7 +459,7 @@
     .profile-card .logout-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--soft);color:var(--muted);display:grid;place-items:center;flex-shrink:0;transition:all .18s}
     .profile-card .logout-btn:hover{background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)}
 
-    .main{padding:22px;min-width:0;overflow-y:auto}
+    .main{padding:22px;min-width:0;overflow-y:auto;position:relative}
     .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;position:sticky;top:0;background:rgba(240,240,245,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);z-index:20;padding:10px 4px;margin:-6px -4px 18px;border-radius:14px;border:1px solid rgba(102,126,234,.06)}
     body.dark .top{background:rgba(10,15,26,.72);border-color:rgba(45,58,79,.4)}
     .top h1{margin-bottom:3px;font-size:26px}
@@ -657,7 +660,9 @@
     .close:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
     .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);opacity:0;background:#0a0f1a;color:#fff;border-radius:var(--radius);padding:12px 18px;box-shadow:0 14px 28px rgba(0,0,0,.25);transition:all .25s cubic-bezier(.2,.8,.2,1);z-index:150;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-    .toast.ok{background:#075c32}.toast.ok::before{content:"✓"}.toast.bad{background:#8b1c1c}.toast.bad::before{content:"✕"}
+    .toast.show.ok{animation:toastPop .4s cubic-bezier(.2,1.4,.3,1)}
+    @keyframes toastPop{0%{transform:translateX(-50%) translateY(20px) scale(.7);opacity:0}60%{transform:translateX(-50%) translateY(-3px) scale(1.04);opacity:1}100%{transform:translateX(-50%) translateY(0) scale(1)}}
+    .toast.ok{background:#075c32}.toast.bad{background:#8b1c1c}.toast.bad::before{content:"✕"}
     .alerts-panel{position:fixed;right:18px;top:68px;width:min(380px,calc(100vw - 20px));background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow2);padding:12px;z-index:55;display:none}
     .alerts-panel.show{display:grid;gap:8px;animation:pop .15s ease}
     .success-pulse{display:grid;place-items:center;margin:6px auto 14px;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#e8fff2,#c7f7db);color:var(--ok);font-size:34px;animation:pulse 1s ease-out 2}
@@ -997,8 +1002,12 @@
     @keyframes ambientFloat{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(2%,1%) rotate(1deg)}50%{transform:translate(-1%,2%) rotate(-1deg)}75%{transform:translate(1%,-1%) rotate(0.5deg)}}
 
     /* ─── PAGE TRANSITIONS ─── */
-    .main{animation:pageIn .4s cubic-bezier(.2,.8,.2,1)}
-    @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .main{animation:pageIn .45s cubic-bezier(.2,.8,.2,1)}
+    @keyframes pageIn{from{opacity:0;transform:translateY(14px) scale(.995)}to{opacity:1;transform:none}}
+    /* Destello sutil que cruza el contenido al entrar (solo desktop, se desactiva en móvil) */
+    .main::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 20%,rgba(8,119,255,.06) 50%,transparent 80%);transform:translateX(-100%);z-index:0}
+    .main.app-anim::after{animation:mainShine .8s .1s ease both}
+    @keyframes mainShine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
     .card,.list-row,.product,.quick-btn{animation:elementIn .5s cubic-bezier(.2,.8,.2,1) backwards}
     .card:nth-child(1){animation-delay:.05s}
     .card:nth-child(2){animation-delay:.1s}
@@ -1085,6 +1094,10 @@
     .loading-overlay{opacity:0!important;transition:opacity .38s ease}
     .loading-overlay.show{display:flex!important;opacity:1!important}
     .loading-overlay.oculto{opacity:0!important;pointer-events:none!important}
+    /* Efecto de salida: el loader se aleja con un pequeño zoom + blur mientras
+       se desvanece, dejando ver el panel que llega detrás (crossfade cinemático). */
+    .loading-overlay.oculto .loader-card{animation:loaderLift .4s cubic-bezier(.2,.8,.2,1) both}
+    @keyframes loaderLift{0%{transform:scale(1) translateY(0);filter:blur(0);opacity:1}60%{opacity:.75}100%{transform:scale(1.06) translateY(-14px);filter:blur(6px);opacity:0}}
 
     /* Fondo de particulas / orbes */
     .loader-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
@@ -1112,6 +1125,12 @@
 
     .loader-title{font-size:19px;font-weight:800;color:#fff;letter-spacing:.4px;line-height:1.3}
     .loader-sub{font-size:12.5px;color:#7f8db0;margin-top:4px;font-weight:500;line-height:1.4;min-height:17px}
+    .loading-overlay.done .loader-title{color:#34d399;animation:statusPulse .5s ease}
+    .loading-overlay.done .loader-logo{box-shadow:0 12px 60px rgba(52,211,153,.65);animation:logoSuccess .5s cubic-bezier(.2,1.4,.3,1)}
+    .loading-overlay.done .loader-progress .bar{background:linear-gradient(90deg,#10b981,#34d399)}
+    .loading-overlay.done .loader-pct{color:#34d399;font-weight:900}
+    @keyframes logoSuccess{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+    @keyframes statusPulse{0%{opacity:.3;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}
 
     /* Puntos */
     .loader-dots{display:flex;gap:7px;justify-content:center;height:16px}
@@ -2427,34 +2446,46 @@
         }
       }
     }
-    function hideLoading(onHidden){
+    function hideLoading(onHidden, showSuccess){
       const el=$("#loading");
       if(!el) return typeof onHidden==="function" && onHidden();
       // Idempotente: si ya se está ocultando, registrar el callback y no
       // reiniciar el contador (evita que dos llamadas encadenadas pisen el fade).
       if(window.__hidingLoader){
         if(typeof onHidden==="function") window.__hidingCallbacks.push(onHidden);
+        if(showSuccess) window.__hidingSuccess=true;
         return;
       }
       clearInterval(loaderInterval);
       const pct=el.querySelector("#loaderPct");
       if(pct) pct.textContent="100%";
+      // Estado de éxito (solo si la operación realmente terminó bien):
+      // "¡Listo!" + logo verde con pulso, justo antes del fade.
+      if(showSuccess){
+        const statusEl=el.querySelector("#loaderStatus");
+        if(statusEl) statusEl.textContent="¡Listo!";
+        const subEl=el.querySelector("#loaderSub");
+        if(subEl) subEl.textContent="Todo en orden";
+        el.classList.add("done");
+      }
       window.__hidingLoader=true;
       window.__hidingCallbacks=[];
       if(typeof onHidden==="function") window.__hidingCallbacks.push(onHidden);
-      // Pequeña pausa para que se vea el 100% y luego fade-out
+      // Pequeña pausa para que se vea el 100% y el pulso de éxito, luego fade-out
       setTimeout(()=>{
         el.classList.add("oculto");
         setTimeout(()=>{
           el.classList.remove("show");
           el.classList.remove("oculto");
+          el.classList.remove("done");
           if(pct) pct.textContent="";
           const cbs=window.__hidingCallbacks||[];
           window.__hidingLoader=false;
           window.__hidingCallbacks=[];
+          window.__hidingSuccess=false;
           cbs.forEach(cb=>{try{cb()}catch(e){console.error(e)}});
         },380);
-      },120);
+      },160);
     }
     function checkOnline(){
       const banner=$("#offline");
@@ -2708,7 +2739,7 @@
             <label class="field" style="animation:fadeIn .5s ease .3s both">${icons.mail}<input id="email" placeholder="Usuario o Email" autocomplete="username" value="${localStorage.dsRememberEmail || ""}"></label>
             <label class="field" style="animation:fadeIn .5s ease .4s both">${icons.lock}<input id="password" placeholder="Contraseña" type="password" autocomplete="current-password"></label>
             <div class="login-options" style="animation:fadeIn .5s ease .5s both"><label class="check"><input type="checkbox" id="rememberMe" ${localStorage.dsRememberEmail?"checked":""}> Recordarme</label><a href="#" onclick="forgotPassword();return false" style="color:var(--blue);font-weight:600">Olvidaste tu contraseña?</a></div>
-            <button class="primary" id="loginBtn" onclick="login()" style="animation:fadeIn .5s ease .6s both"><span class="btn-text">Ingresar al portal</span></button>
+            <button class="primary" id="loginBtn" onclick="login()" style="animation:fadeIn .5s ease .6s both,btnPulse 3s ease-in-out .6s infinite"><span class="btn-text">Ingresar al portal</span></button>
             <div class="register-link">¿No tienes cuenta? <a onclick="showRegister()">Regístrate aquí</a></div>
             <div class="download-section">
               <div class="download-divider"><span>o instala la app</span></div>
@@ -3003,7 +3034,7 @@
         await boot();
         // El render del panel ocurre tras el fade del loader; el saludo va
         // después para no aparecer mientras aún se está desvaneciendo.
-        hideLoading(()=>toast("Bienvenido, " + state.user.name,"ok"));
+        hideLoading(()=>toast("Bienvenido, " + state.user.name,"ok"), true);
       }catch(e){
         // IMPORTANTE: solo mostrar "cuenta bloqueada" si el SERVIDOR lo confirmó
         // (flag blocked:true en la respuesta) o el mensaje es EXACTAMENTE el de
@@ -3040,7 +3071,7 @@
         // La app se pinta DESPUÉS de que el loader se desvanece: así su animación
         // de entrada (pageIn) ocurre a la vista y la transición es un crossfade
         // suave en lugar de un corte seco con la pantalla ya estática.
-        hideLoading(()=>{ renderApp(); checkBalanceAlerts(); });
+        hideLoading(()=>{ renderApp(); checkBalanceAlerts(); }, true);
       }catch(e){ hideLoading(); throw e; }
     }
     async function logout(){
@@ -3108,7 +3139,7 @@
         <nav class="mobile-nav">
           ${navItems().map(([v,t,svg])=>`<button class="${state.view===v?"active":""}" onclick="setView('${v}')">${svg}<span>${t}</span></button>`).join("")}
         </nav>
-        <main class="main main-content">
+        <main class="main main-content app-anim">
           <header class="top">
             <div class="top-actions">
               <div class="user-header">
