@@ -2523,24 +2523,49 @@
 
     // ─── API ───────────────────────────────────────────
     async function api(path,opt={}){
-      if(!navigator.onLine) throw new Error("Sin conexion a internet");
-      // Reintenta fallos de red transitorios (no HTTP): 2 reintentos con backoff.
-      // Sin esto, un blip de red/movil muestra el critico "Failed to fetch".
-      let res=null;
+      if(!navigator.onLine) throw new Error("No hay conexión a internet. Verifica tu conexión e inténtalo de nuevo.");
+      // Reintenta fallos de red transitorios (no HTTP): 2 reintentos con backoff y
+      // timeout de 10s por intento (un fetch colgado no puede dejar la UI minutos
+      // sin respuesta). Si al final no hubo respuesta, una sonda sin credenciales
+      // a /health distingue "sin internet" de "el navegador/dispositivo bloquea
+      // la conexión" (VPN, antivirus, bloqueador de anuncios, cookies de 3ros).
+      let res=null, lastErr=null;
       for(let intento=0;intento<3&&!res;intento++){
+        const ctrl=new AbortController();
+        const timer=setTimeout(()=>ctrl.abort(),10000);
         try{
           res = await fetch(API + "/" + path, {
             ...opt,
             credentials:"include", // envia la cookie httpOnly ds_token de sesion
+            signal:ctrl.signal,
             headers: {"Content-Type":"application/json", ...(token ? {"x-distrito-session":token} : {}), ...(opt.headers || {})}
           });
         }catch(e){
-          if(intento<2) await new Promise(r=>setTimeout(r,400*(intento+1)));
-          else{
-            console.error("API sin conexión (", path, "):", e);
-            throw new Error("Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.");
-          }
+          lastErr=e;
+          if(intento<2) await new Promise(r=>setTimeout(r,500*(intento+1)));
+        }finally{
+          clearTimeout(timer);
         }
+      }
+      if(!res){
+        console.error("API sin conexión (", path, "):", lastErr);
+        window.__ultimaFallaApi={path,error:(lastErr&&lastErr.message)?lastErr.message:String(lastErr),hora:new Date().toISOString(),online:navigator.onLine};
+        let redOK=false;
+        try{
+          const pctrl=new AbortController();
+          const pt=setTimeout(()=>pctrl.abort(),8000);
+          let p;
+          try{ p=await fetch(API+"/health",{cache:"no-store",signal:pctrl.signal}); }
+          finally{ clearTimeout(pt); }
+          redOK=(p.status>=200&&p.status<500);
+        }catch(_){redOK=false;}
+        if(redOK){
+          throw new Error("Tu dispositivo o navegador está bloqueando la conexión segura con el servidor. Desactiva VPN o bloqueador de anuncios, o prueba con otra red.");
+        }
+        if(lastErr && lastErr.name==="AbortError"){
+          throw new Error("El servidor no responde (se agotó el tiempo de espera). Revisa tu internet e inténtalo de nuevo.");
+        }
+        throw new Error("Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.");
       }
       const json = await res.json().catch(()=>({}));
       if(!res.ok){
