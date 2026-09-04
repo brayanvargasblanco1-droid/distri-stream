@@ -5,3 +5,4 @@ package-lock.json
 .vercel/
 .agents_tmp/
 .env*
+.vercel

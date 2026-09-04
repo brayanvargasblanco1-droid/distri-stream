@@ -2560,7 +2560,10 @@
           redOK=(p.status>=200&&p.status<500);
         }catch(_){redOK=false;}
         if(redOK){
-          throw new Error("Tu dispositivo o navegador está bloqueando la conexión segura con el servidor. Desactiva VPN o bloqueador de anuncios, o prueba con otra red.");
+          // La red sí llega al servidor (/health respondió) pero la petición con
+          // credenciales falló: lo bloquea el navegador/dispositivo (VPN, extensión,
+          // antivirus, cookies de terceros). Avisar con precisión.
+          throw new Error("Tu dispositivo o navegador está bloqueando la conexión con el servidor. Prueba en modo incógnito, desactiva VPN o extensiones, o usa otra red.");
         }
         if(lastErr && lastErr.name==="AbortError"){
           throw new Error("El servidor no responde (se agotó el tiempo de espera). Revisa tu internet e inténtalo de nuevo.");
@@ -2937,8 +2940,14 @@
         setLoadingProgress("Cargando tu panel...", 70);
         await boot(); toast("Bienvenido, " + state.user.name,"ok");
       }catch(e){
-        const msg=(e.message||"").toLowerCase();
-        if(msg.includes("bloqueado")||msg.includes("blocked")||msg.includes("inactivo")||msg.includes("inactive")||msg.includes("suspendido")||msg.includes("suspended")){
+        // IMPORTANTE: solo mostrar "cuenta bloqueada" si el SERVIDOR lo confirmó
+        // (flag blocked:true en la respuesta) o el mensaje es EXACTAMENTE el de
+        // bloqueo. Antes se usaba msg.includes("bloqueado"), que también casaba
+        // con la palabra "bloqueador de anuncios" del aviso de conexión y mostraba
+        // el modal de CUENTA BLOQUEADA cuando en realidad fallaba la conexión.
+        const msg=(e.message||"");
+        const esBloqueoReal = !!e.blocked || /bloqueada por un administrador/i.test(msg) || /(account|user|cuenta).*(blocked|banned)/i.test(msg);
+        if(esBloqueoReal){
           showBlockedModal();
         }else{
           // Resaltar el campo que fallo (si el API devuelve 'field')
