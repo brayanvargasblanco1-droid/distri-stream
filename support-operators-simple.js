@@ -17,8 +17,8 @@ const Soporte = {
   
   puedeEliminar(r) {
     if (!r || !state.user) return false;
-    return r.user_id === state.user.id || r.client_id === state.user.id || 
-           state.user.role === 'admin' || state.user.role === 'operator';
+    return state.user.role === 'Administrador' || state.user.role === 'admin' || 
+           state.user.role === 'owner' || state.user.role === 'operator';
   },
   
   getReportes() {
@@ -260,7 +260,7 @@ const Soporte = {
     } catch(e) {
       // Si falla, remover del estado local
       try {
-        state.reports = (state.reports || []).filter(r => r.id !== id);
+        throw new Error(e && e.message ? e.message : 'No se pudo eliminar');
         closeModal();
         toast('✓ Reporte eliminado', 'ok');
         this.render();
@@ -307,7 +307,7 @@ const Soporte = {
     } catch(e) {
       // Si falla, remover del estado local
       try {
-        state.reports = [];
+        throw new Error(e && e.message ? e.message : 'No se pudo eliminar');
         closeModal();
         toast('✓ Reportes eliminados', 'ok');
         this.render();
@@ -379,6 +379,8 @@ const Soporte = {
     if (!desc.value.trim()) { toast('Describe qué pasó', 'bad'); return; }
     
     const [id, name] = sel.value.split('|');
+    const abierto = (state.reports || []).find(r => !['Resuelto', 'Rechazado'].includes(r.status) && (r.order_id === id || (r.product_name === name && r.user_id === state.user?.id)));
+    if (abierto) { toast('Ya tienes un reporte abierto para ' + name + '. Espera la respuesta del soporte.', 'bad'); return; }
     
     showLoading('Creando...');
     try {
@@ -570,9 +572,9 @@ function reportsUserSimple() {
     resueltos: (state.reports || []).filter(r => r.status === 'Resuelto').length,
     rechazados: (state.reports || []).filter(r => r.status === 'Rechazado').length
   };
-  const total = (state.reports || []).length;
+  const total = (state.reports || []).length; const esAdmin = state.user?.role === 'Administrador' || state.user?.role === 'admin';
   
-  const alerta = total > 10 ? `
+  const alerta = total > 10 && esAdmin ? `
     <div class="s-alert">
       <div class="s-alert-icon">⚠️</div>
       <div class="s-alert-content">
@@ -594,7 +596,7 @@ function reportsUserSimple() {
               <h1 class="s-header-title">Mis Reportes</h1>
             </div>
             <div style="display:flex;gap:10px">
-              ${total > 0 ? `<button class="s-header-btn" style="background:rgba(239,68,68,0.2)" onclick="Soporte.eliminarTodos()">🗑️ Todo</button>` : ''}
+              ${total > 0 && esAdmin ? `<button class="s-header-btn" style="background:rgba(239,68,68,0.2)" onclick="Soporte.eliminarTodos()">🗑️ Todo</button>` : ''}
               <button class="s-header-btn" onclick="Soporte.mostrarCrear()">➕ Nuevo</button>
             </div>
           </div>

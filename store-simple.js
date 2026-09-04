@@ -32,12 +32,12 @@ const Tienda = {
   
   getProductos() {
     const sorted = [...state.products].sort((a,b) => 
-      (b.status==="Disponible")-(a.status==="Disponible") || 
+      ((b.status==="Activo"||!b.status)?1:0)-((a.status==="Activo"||!a.status)?1:0) || 
       Number(b.stock||0)-Number(a.stock||0)
     );
     
-    const disponibles = sorted.filter(p => p.status==="Disponible" && Number(p.stock) > 0);
-    const agotados = sorted.filter(p => !(p.status==="Disponible" && Number(p.stock) > 0));
+    const disponibles = sorted.filter(p => (p.status==="Activo"||!p.status) && Number(p.stock) > 0);
+    const agotados = sorted.filter(p => !((p.status==="Activo"||!p.status) && Number(p.stock) > 0));
     
     return this.filtroActual === 'disponibles' ? disponibles : agotados;
   },
@@ -63,7 +63,7 @@ const Tienda = {
   },
   
   renderCard(p) {
-    const disponible = p.status==="Disponible" && Number(p.stock) > 0;
+    const disponible = (p.status==="Activo"||!p.status) && Number(p.stock) > 0;
     const precio = salePrice(p);
     const bajoStock = Number(p.stock) <= 2 && disponible;
     const stockText = disponible 
@@ -318,11 +318,11 @@ const TiendaCSS = `
 
 function improvedStoreView() {
   const sorted = [...state.products].sort((a,b) => 
-    (b.status==="Disponible")-(a.status==="Disponible") || 
+    ((b.status==="Activo"||!b.status)?1:0)-((a.status==="Activo"||!a.status)?1:0) || 
     Number(b.stock||0)-Number(a.stock||0)
   );
-  const disponibles = sorted.filter(p => p.status==="Disponible" && Number(p.stock) > 0);
-  const agotados = sorted.filter(p => !(p.status==="Disponible" && Number(p.stock) > 0));
+  const disponibles = sorted.filter(p => (p.status==="Activo"||!p.status) && Number(p.stock) > 0);
+  const agotados = sorted.filter(p => !((p.status==="Activo"||!p.status) && Number(p.stock) > 0));
   
   return TiendaCSS + `
     <div class="t-container">

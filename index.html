@@ -3310,7 +3310,7 @@
       if(isAdmin()){
         notifCount+=state.topups.filter(t=>t.status==="Pendiente").length;
         notifCount+=state.reports.filter(r=>r.status!=="Resuelto").length;
-        notifCount+=state.products.filter(p=>Number(p.stock||0)<=2&&p.status==="Disponible").length;
+        notifCount+=state.products.filter(p=>Number(p.stock||0)<=2&&(p.status==="Activo"||!p.status)).length;
       } else {
         notifCount+=state.reports.filter(r=>r.status!=="Resuelto").length;
         notifCount+=state.orders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=3}).length;
@@ -4985,9 +4985,9 @@
         return improvedStoreView();
       }
       
-      const sorted=[...state.products].sort((a,b)=>(b.status==="Disponible")-(a.status==="Disponible") || Number(b.stock||0)-Number(a.stock||0));
-      const available=sorted.filter(p=>p.status==="Disponible" && Number(p.stock)>0);
-      const unavailable=sorted.filter(p=>!(p.status==="Disponible" && Number(p.stock)>0));
+      const sorted=[...state.products].sort((a,b)=>((b.status==="Activo"||!b.status)?1:0)-((a.status==="Activo"||!a.status)?1:0) || Number(b.stock||0)-Number(a.stock||0));
+      const available=sorted.filter(p=>(p.status==="Activo"||!p.status) && Number(p.stock)>0);
+      const unavailable=sorted.filter(p=>!((p.status==="Activo"||!p.status) && Number(p.stock)>0));
       const visible=isAdmin()?sorted:available;
       const inv=state.inventory||[];
       const products=state.products||[];
@@ -5015,7 +5015,7 @@
       return tabs+content;
     }
     function productCard(p){
-      const available=p.status==="Disponible" && Number(p.stock)>0;
+      const available=(p.status==="Activo"||!p.status) && Number(p.stock)>0;
       const canBuy = canBuyProduct(p);
       const cls=serviceClass(p.name), price=salePrice(p);
       const isPersonal = p.shared === false || String(p.share_type||"").toLowerCase() === "personal";
@@ -8991,7 +8991,7 @@
         const newOrders=state.orders.filter(o=>{const t=new Date(o.created_at||o.expires_at).getTime();return now-t<h24}).length;
         if(newOrders>0) notifs.push({type:"info",icon:"🛒",title:"Ventas del Dia",body:`${newOrders} compra(s) en las ultimas 24h`,action:"setView('admin')",urgent:false});
         
-        const lowStock=state.products.filter(p=>Number(p.stock||0)<=2&&p.status==="Disponible");
+        const lowStock=state.products.filter(p=>Number(p.stock||0)<=2&&(p.status==="Activo"||!p.status));
         if(lowStock.length>0) notifs.push({type:"warning",icon:"📦",title:"Stock Bajo",body:`${lowStock.length} producto(s) por terminarse`,action:"setView('store')",urgent:true});
         
         // Estadisticas adicionales
