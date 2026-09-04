@@ -2132,7 +2132,7 @@
     function updatePaymentConstants(){window.PAYMENT_NUMBER=paymentSettings.number;window.PAYMENT_LINK=paymentSettings.link;window.PAYMENT_NAME=paymentSettings.name;window.PAYMENT_QR=paymentSettings.qr}
     const PROFIT_RATE = 0.20;
     const MAX_OPERATORS_PER_PRODUCT = 2;
-    let token = localStorage.dsToken || "";
+    let token = ""; // sesion en cookie httpOnly ds_token (el JWT ya no vive en localStorage)
     let state = emptyState();
     let currentRole = localStorage.dsLoginRole || "Usuario";
     let deferredPrompt = null;
@@ -2526,6 +2526,7 @@
       if(!navigator.onLine) throw new Error("Sin conexion a internet");
       const res = await fetch(API + "/" + path, {
         ...opt,
+        credentials:"include", // envia la cookie httpOnly ds_token de sesion
         headers: {"Content-Type":"application/json", ...(token ? {"x-distrito-session":token} : {}), ...(opt.headers || {})}
       });
       const json = await res.json().catch(()=>({}));
@@ -2698,7 +2699,7 @@
         if(!name) return toast("Ingresa tu nombre completo","bad");
         if(!email) return toast("Ingresa tu correo electrónico","bad");
         if(!pass) return toast("Ingresa una contraseña","bad");
-        if(pass.length < 6) return toast("La contraseña debe tener al menos 6 caracteres","bad");
+        if(pass.length < 8) return toast("La contraseña debe tener al menos 8 caracteres","bad");
         if(pass !== pass2) return toast("Las contraseñas no coinciden","bad");
 
         btn?.classList.add("loading");
@@ -2888,9 +2889,9 @@
         // Si el Edge Function devolvió blocked:true
         if(res.blocked){showBlockedModal();return}
 
-        token=res.token || res.session; localStorage.dsToken=token; state.user=res.user;
+        token=res.token || res.session; localStorage.dsAuthed="1"; state.user=res.user;
         if(state.user.status==="Bloqueado"||state.user.status==="Inactivo"){
-          token=""; localStorage.removeItem("dsToken"); state.user=null;
+          token=""; localStorage.removeItem("dsAuthed"); state.user=null;
           showBlockedModal();
           return;
         }
@@ -2928,7 +2929,11 @@
         checkBalanceAlerts();
       }finally{hideLoading()}
     }
-    function logout(){localStorage.removeItem("dsToken");token="";state=emptyState();renderLogin()}
+    async function logout(){
+      try{await api("logout",{method:"POST"})}catch(e){/* best effort: limpiar sesion local igualmente */}
+      localStorage.removeItem("dsAuthed");
+      token="";state=emptyState();renderLogin();
+    }
     function normalizeViewForRole(){
       const allowed = navItems().map(([view])=>view);
       if(!allowed.includes(state.view)) state.view = isAdmin() ? "admin" : "home";
@@ -6812,7 +6817,7 @@
         if(!name) return toast("Ingresa el nombre completo","bad");
         if(!email) return toast("Ingresa el correo electrónico","bad");
         if(!pass) return toast("Ingresa una contraseña temporal","bad");
-        if(pass.length < 6) return toast("La contraseña debe tener al menos 6 caracteres","bad");
+        if(pass.length < 8) return toast("La contraseña debe tener al menos 8 caracteres","bad");
         showLoading("Creando usuario...");
         const res=await api("users",{method:"POST",body:JSON.stringify({name,email,password:pass,role:$("#nuRole").value,balance:Number($("#nuBalance").value||0),margin:Math.min(999.99, Number($("#nuMargin").value||500))})});
         // Añadir el usuario a state.users localmente para que aparezca al instante (sin recargar todo)
@@ -8802,7 +8807,7 @@
           <div style="display:grid;gap:12px;padding:0 4px">
             <div>
               <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Nueva contrasena</label>
-              <input id="rpPass" type="password" placeholder="Minimo 6 caracteres" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px">
+              <input id="rpPass" type="password" placeholder="Minimo 8 caracteres" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-size:14px">
             </div>
             <div>
               <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Confirmar contrasena</label>
@@ -8815,7 +8820,7 @@
     }
     async function sendResetPassword(){
       const pass=$("#rpPass")?.value, pass2=$("#rpPass2")?.value;
-      if(!pass || pass.length < 6) return toast("La contrasena debe tener al menos 6 caracteres","bad");
+      if(!pass || pass.length < 8) return toast("La contrasena debe tener al menos 8 caracteres","bad");
       if(pass !== pass2) return toast("Las contrasenas no coinciden","bad");
       showLoading("Restableciendo...");
       try {
@@ -8830,7 +8835,7 @@
     // ─── INIT ──────────────────────────────────────────
     const icon=document.getElementById('appleTouchIcon');if(icon)icon.href="assets/distrito-login-brand.png";
     handlePasswordReset();
-    token ? boot().catch(()=>{localStorage.removeItem("dsToken");token="";renderLogin()}) : renderLogin();
+    (localStorage.dsAuthed==="1" ? boot().catch(()=>{localStorage.removeItem("dsAuthed");token="";renderLogin()}) : renderLogin());
 </script>
 <!-- MEJORAS DE REPORTES Y SOPORTE -->
 <link rel="stylesheet" href="reports-styles.css?v=6">

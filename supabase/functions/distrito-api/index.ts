@@ -1,22 +1,58 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-distrito-session",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
-};
+// Origenes que pueden usar credenciales (cookies httpOnly). Si el frontend se
+// sirve desde otro dominio (ej. dominio propio en Vercel), agregalo aqui.
+const ALLOWED_ORIGINS = new Set([
+  "https://distrito-streaming-vercel-ashen.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5173",
+]);
+
+function corsHeadersFor(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || "";
+  if (ALLOWED_ORIGINS.has(origin)) {
+    return {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-distrito-session",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+      "Vary": "Origin",
+    };
+  }
+  // Sin credenciales: permitir cualquier origen (curl, integraciones, etc.)
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-distrito-session",
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+  };
+}
+
+// Lee una cookie del request (la sesion viaja en `ds_token` httpOnly).
+function getCookie(req: Request, name: string): string | null {
+  const header = req.headers.get("cookie") || "";
+  for (const part of header.split(";")) {
+    const kv = part.trim();
+    const idx = kv.indexOf("=");
+    if (idx > 0 && kv.slice(0, idx).trim() === name) {
+      try { return decodeURIComponent(kv.slice(idx + 1)); } catch { return kv.slice(idx + 1); }
+    }
+  }
+  return null;
+}
 
 const ALLOWED_TABLES = new Set(["products", "inventory", "orders", "reports", "topups", "ads", "settings", "profiles", "users"]);
 
-function json(body, status = 200) {
+function json(req: Request, body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
   });
 }
 
-function error(msg, status = 400) {
-  return json({ error: msg }, status);
+function error(req: Request, msg: string, status = 400) {
+  return json(req, { error: msg }, status);
 }
 
 function randomCode(prefix) {
@@ -55,8 +91,16 @@ function isRateLimited(key: string, maxAttempts: number, windowMs: number): bool
   return false;
 }
 
-function rateLimited() {
-  return json({ error: "Demasiados intentos. Espera unos minutos y vuelve a intentar." }, 429);
+function rateLimited(req: Request) {
+  return json(req, { error: "Demasiados intentos. Espera unos minutos y vuelve a intentar." }, 429);
+}
+
+// Error generico de base de datos: registra el detalle en los logs de la
+// funcion y devuelve un mensaje generico al cliente (sin filtrar detalles
+// internos ni errores crudos de Postgres/Supabase).
+function dbError(req: Request, context: string, err: unknown) {
+  console.error("[db:" + context + "]", err && typeof err === "object" && "message" in err ? (err as any).message : String(err));
+  return error(req, "No se pudo completar la operacion. Intenta de nuevo.", 400);
 }
 
 async function audit(supabase, userId, action, tableName, recordId, details = null) {
@@ -82,8 +126,15 @@ Deno.serve(async (req) => {
   let path = segs.join("/");
   const method = req.method;
 
-  if (method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
-  if (path === "health" && method === "GET") return json({ ok: true }, 200);
+  if (method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
+  // CSRF: con cookies, solo aceptamos mutaciones desde origenes conocidos.
+  // Los navegadores siempre envian Origin en POST cross-site; curl/APIs no lo
+  // envian y se permiten (no llevan cookies de navegador).
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    const origin = req.headers.get("origin");
+    if (origin && !ALLOWED_ORIGINS.has(origin)) return error(req, "Origen no permitido", 403);
+  }
+  if (path === "health" && method === "GET") return json(req, { ok: true }, 200);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL"),
@@ -91,7 +142,8 @@ Deno.serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const token = req.headers.get("x-distrito-session") || "";
+  // Sesion: cabecera x-distrito-session (compatibilidad) o cookie httpOnly ds_token
+  const token = req.headers.get("x-distrito-session") || getCookie(req, "ds_token") || "";
   let authUser = null;
   if (token) {
     const { data: au, error: auErr } = await supabase.auth.getUser(token);
@@ -100,13 +152,13 @@ Deno.serve(async (req) => {
 
   // REGISTER
   if (path === "register" && method === "POST") {
-    if (isRateLimited("register:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited();
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    if (isRateLimited("register:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited(req);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { name, email, phone, password, referrer_id } = body;
-    if (!name || !email || !password) return error("name, email y password son requeridos");
-    if (String(password).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+    if (!name || !email || !password) return error(req, "name, email y password son requeridos");
+    if (String(password).length < 8) return error(req, "La contrasena debe tener al menos 8 caracteres");
     const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-    if (existing) return error("Ya existe una cuenta con este correo");
+    if (existing) return error(req, "Ya existe una cuenta con este correo");
     // SEGURIDAD: el registro publico SIEMPRE crea un Cliente. El campo `role`
     // del body se ignora a proposito (antes cualquier persona podia enviar
     // role:"Administrador" y obtener una cuenta admin via ?ref=admin_XXX).
@@ -118,9 +170,9 @@ Deno.serve(async (req) => {
       password,
       email_confirm: true,
     });
-    if (createErr) return error(createErr.message || "No se pudo crear la cuenta");
+    if (createErr) return dbError(req, "create-user", createErr);
     const authId = created?.user?.id;
-    if (!authId) return error("No se pudo crear el usuario en Supabase Auth");
+    if (!authId) return error(req, "No se pudo crear el usuario en Supabase Auth");
     // upsert para tolerar el trigger handle_new_user que ya inserta el perfil
     const { error: profileErr } = await supabase.from("profiles").upsert({
       id: authId,
@@ -133,20 +185,20 @@ Deno.serve(async (req) => {
       status: "Activo",
       referrer_id: referrer_id || null,
     }, { onConflict: "id" });
-    if (profileErr) return error("No se pudo crear el perfil: " + profileErr.message);
+    if (profileErr) return dbError(req, "create-profile", profileErr);
     await audit(supabase, authId, "register", "profiles", authId, { email, role: roleNorm, referrer_id: referrer_id || null });
-    return json({ ok: true, id: authId }, 201);
+    return json(req, { ok: true, id: authId }, 201);
   }
 
-  // CHECK-USER-STATUS
+  // CHECK-USER-STATUS (no lo usa el frontend; ya no revela si el correo existe)
   if (path === "check-user-status" && method === "POST") {
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    if (isRateLimited("status:" + getClientIp(req), 30, 15 * 60 * 1000)) return rateLimited(req);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { email } = body;
-    if (!email) return error("email requerido");
-    const { data: profile } = await supabase.from("profiles").select("status, email").eq("email", email).maybeSingle();
-    if (!profile) return json({ exists: false }, 200);
-    return json({
-      exists: true,
+    if (!email) return error(req, "email requerido");
+    const { data: profile } = await supabase.from("profiles").select("status").eq("email", email).maybeSingle();
+    if (!profile) return json(req, { blocked: false }, 200);
+    return json(req, {
       blocked: profile.status === "Bloqueado" || profile.status === "Inactivo",
       status: profile.status,
     }, 200);
@@ -154,82 +206,104 @@ Deno.serve(async (req) => {
 
   // FORGOT-PASSWORD
   if (path === "forgot-password" && method === "POST") {
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    if (isRateLimited("forgot:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited(req);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { email } = body;
-    if (!email) return error("email requerido");
+    if (!email) return error(req, "email requerido");
     const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
     // No revelar si el correo existe por seguridad; simpre responder ok
     if (existing) {
       await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://distrito-streaming-vercel-ashen.vercel.app/?reset=1" });
     }
-    return json({ ok: true }, 200);
+    return json(req, { ok: true }, 200);
   }
 
   // RESET-PASSWORD
   if (path === "reset-password" && method === "POST") {
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { token, password } = body;
-    if (!token || !password) return error("token y password son requeridos");
-    if (String(password).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+    if (!token || !password) return error(req, "token y password son requeridos");
+    if (String(password).length < 8) return error(req, "La contrasena debe tener al menos 8 caracteres");
     const { error: updErr } = await supabase.auth.updateUser(token, { password });
-    if (updErr) return error(updErr.message || "No se pudo restablecer la contrasena");
-    return json({ ok: true }, 200);
+    if (updErr) return dbError(req, "reset-password", updErr);
+    return json(req, { ok: true }, 200);
+  }
+
+  // LOGOUT (limpia la cookie httpOnly de sesion)
+  if (path === "logout" && method === "POST") {
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        ...corsHeadersFor(req),
+        "Content-Type": "application/json",
+        "Set-Cookie": "ds_token=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0",
+      },
+    });
   }
 
   // LOGIN
   if (path === "login" && method === "POST") {
-    if (isRateLimited("login:" + getClientIp(req), 15, 5 * 60 * 1000)) return rateLimited();
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    if (isRateLimited("login:" + getClientIp(req), 15, 5 * 60 * 1000)) return rateLimited(req);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { email, password } = body;
 
     // Validacion de campos vacios
-    if (!email && !password) return json({ error: "Ingresa tu correo y tu contrasena.", field: "all" }, 400);
-    if (!email) return json({ error: "Ingresa tu correo electronico.", field: "email" }, 400);
-    if (!password) return json({ error: "Ingresa tu contrasena.", field: "password" }, 400);
+    if (!email && !password) return json(req, { error: "Ingresa tu correo y tu contrasena.", field: "all" }, 400);
+    if (!email) return json(req, { error: "Ingresa tu correo electronico.", field: "email" }, 400);
+    if (!password) return json(req, { error: "Ingresa tu contrasena.", field: "password" }, 400);
 
     // Validacion de formato de correo
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return json({ error: "El formato del correo es invalido. Ejemplo: nombre@dominio.com", field: "email" }, 400);
+    if (!emailRegex.test(email)) return json(req, { error: "El formato del correo es invalido. Ejemplo: nombre@dominio.com", field: "email" }, 400);
 
     // Verificar si el correo existe en la base
     const { data: existingUser } = await supabase.from("profiles").select("id, email, status").eq("email", email).maybeSingle();
     if (!existingUser) {
-      return json({ error: "Este correo no esta registrado. Revisa que este bien escrito o crea una cuenta.", field: "email" }, 400);
+      // No revelar si el correo existe (anti-enumeracion): mismo mensaje generico
+      return json(req, { error: "Correo o contrasena incorrectos.", field: "all" }, 400);
     }
 
     // Verificar si la cuenta esta bloqueada/inactiva ANTES de validar la contrasena
     if (existingUser.status === "Bloqueado" || existingUser.status === "Inactivo") {
-      return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: existingUser.status }, 403);
+      return json(req, { error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: existingUser.status }, 403);
     }
 
     const { data: sessionData, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
     if (loginErr) {
       const msg = (loginErr.message || "").toLowerCase();
       if (msg.includes("blocked") || msg.includes("disabled") || msg.includes("banned")) {
-        return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true }, 403);
+        return json(req, { error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true }, 403);
       }
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials") || msg.includes("password") || msg.includes("wrong")) {
-        return json({ error: "La contrasena es incorrecta. Verifica que la hayas escrito bien.", field: "password" }, 400);
+        return json(req, { error: "Correo o contrasena incorrectos.", field: "all" }, 400);
       }
-      return json({ error: "No se pudo iniciar sesion: " + (loginErr.message || "error desconocido"), field: "all" }, 400);
+      return json(req, { error: "Correo o contrasena incorrectos.", field: "all" }, 400);
     }
 
     const authId = sessionData?.user?.id;
     const accessToken = sessionData?.session?.access_token;
     const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authId).maybeSingle();
-    if (profileErr || !profile) return error("No se encontro el perfil del usuario");
+    if (profileErr || !profile) return error(req, "No se encontro el perfil del usuario");
     if (profile.status === "Bloqueado" || profile.status === "Inactivo") {
-      return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
+      return json(req, { error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
     }
-    return json({ token: accessToken, user: profile }, 200);
+    // Sesion en cookie httpOnly (ademas de devolver el token para compatibilidad)
+    return new Response(JSON.stringify({ token: accessToken, user: profile }), {
+      status: 200,
+      headers: {
+        ...corsHeadersFor(req),
+        "Content-Type": "application/json",
+        "Set-Cookie": "ds_token=" + accessToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=2592000",
+      },
+    });
   }
 
   // BOOTSTRAP
   if (path === "bootstrap" && (method === "GET" || method === "POST")) {
-    if (!authUser) return error("No autorizado", 401);
+    if (!authUser) return error(req, "No autorizado", 401);
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
-    if (!profile) return error("Sesion invalida");
-    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return json({ error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
+    if (!profile) return error(req, "Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return json(req, { error: "Tu cuenta ha sido bloqueada por un administrador.", blocked: true, status: profile.status }, 403);
     const isAdmin = profile.role === "Administrador";
     // SEGURIDAD: los no-admins solo ven sus propios pedidos/reportes/recargas.
     // Antes /bootstrap devolvia TODAS las filas (incluidas las credenciales
@@ -256,7 +330,7 @@ Deno.serve(async (req) => {
     ]);
     const settingsMap = {};
     for (const row of (sRes.data || [])) settingsMap[row.key] = row.value;
-    return json({
+    return json(req, {
       user: profile,
       products: pRes.data || [],
       orders: oRes.data || [],
@@ -272,81 +346,144 @@ Deno.serve(async (req) => {
 
   // AUDIT-LOG (solo admin: ver trazabilidad de acciones)
   if (path === "audit-log" && method === "GET") {
-    if (!authUser) return error("No autorizado", 401);
+    if (!authUser) return error(req, "No autorizado", 401);
     const { data: prof } = await supabase.from("profiles").select("role").eq("id", authUser.id).maybeSingle();
-    if (!prof || prof.role !== "Administrador") return error("Solo administradores", 403);
+    if (!prof || prof.role !== "Administrador") return error(req, "Solo administradores", 403);
     const { data: rows } = await supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(500);
-    return json(rows || [], 200);
+    return json(req, rows || [], 200);
   }
 
-  // BUY
+  // BUY (atomico: un solo UPDATE reclama el inventario con guarda de estado)
   if (path === "buy" && method === "POST") {
-    if (!authUser) return error("No autorizado", 401);
-    let body: any; try { body = await req.json(); } catch { return error("JSON invalido"); }
+    if (!authUser) return error(req, "No autorizado", 401);
+    let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
-    if (profileErr || !profile) return error("Sesion invalida");
-    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
+    if (profileErr || !profile) return error(req, "Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error(req, "Tu cuenta ha sido bloqueada por un administrador.", 403);
     const productId = body.product_id;
     const quantity = Math.max(1, Math.min(10, Number(body.quantity || 1)));
     const { data: product } = await supabase.from("products").select("*").eq("id", productId).maybeSingle();
-    if (!product) return error("Producto no encontrado");
-    if (product.status !== "Activo") return error("Producto no disponible");
-    if (Number(product.stock || 0) < quantity) return error("Stock insuficiente");
+    if (!product) return error(req, "Producto no encontrado");
+    if (product.status !== "Activo") return error(req, "Producto no disponible");
+    if (Number(product.stock || 0) < quantity) return error(req, "Stock insuficiente");
     const base = Number(product.provider_price ?? product.base_price ?? 0);
     const margin = Number(profile.margin ?? 0);
     const isAdmin = profile.role === "Administrador";
     const price = isAdmin ? Number(product.base_price ?? base) : base + Math.max(0, margin);
     const total = price * quantity;
-    if (!isAdmin && Number(profile.balance || 0) < total) return error("Saldo insuficiente");
-    const { data: invRows, error: invErr } = await supabase.from("inventory").select("*").eq("product_id", productId).eq("status", "Disponible").limit(quantity);
-    if (invErr) return error(invErr.message);
-    const available = invRows || [];
-    if (available.length < quantity) return error("No hay cuentas disponibles para este producto");
-    const taken = available.slice(0, quantity);
-    const { data: orderInserts, error: orderErr } = await supabase.from("orders").insert(
-      taken.map((acc, i) => ({
-        user_id: authUser.id,
-        product_id: productId,
-        product_name: product.name,
-        client_name: profile.name || profile.email,
-        quantity: 1,
-        amount: total,
-        total: total,
-        provider_price: base,
-        delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | "),
-        credentials: [acc.email, acc.password].filter(Boolean).join(" | "),
-        status: "Entregado",
-        code: randomCode("ORD"),
-        expires_at: acc.expiry_date ? new Date(acc.expiry_date + "T00:00:00").toISOString() : null,
-      }))).select("id");
-    if (orderErr) return error(orderErr.message);
-    const { error: invUpdErr } = await supabase.from("inventory").update({
-      status: "Entregada",
-      delivery_date: new Date().toISOString(),
-      assigned_user_id: authUser.id,
-    }).in("id", taken.map(a => a.id));
-    if (invUpdErr) return error(invUpdErr.message);
-    const { error: stockErr } = await supabase.from("products").update({
-      stock: Math.max(0, Number(product.stock || 0)) - taken.length,
-    }).eq("id", productId);
-    if (stockErr) return error(stockErr.message);
-    const newBalance = isAdmin ? profile.balance : Number(profile.balance || 0) - total;
-    if (!isAdmin) {
-      await supabase.from("profiles").update({ balance: newBalance }).eq("id", authUser.id);
+    const balanceBefore = Number(profile.balance || 0);
+    if (!isAdmin && balanceBefore < total) return error(req, "Saldo insuficiente");
+
+    // 1) CLAIM ATOMICO cuenta por cuenta (CAS): se selecciona 1 fila Disponible
+    //    y se actualiza solo si SIGUE Disponible (.eq status). Si dos compradores
+    //    eligen la misma cuenta, solo uno gana el UPDATE; el otro reintenta con
+    //    la siguiente. Asi nunca se entrega dos veces la misma cuenta (PostgREST
+    //    no respeta LIMIT en UPDATE, por eso el claim es por fila).
+    const taken: any[] = [];
+    const seen = new Set<string>();
+    const maxAttempts = quantity + 3;
+    for (let attempt = 0; attempt < maxAttempts && taken.length < quantity; attempt++) {
+      const { data: cand } = await supabase
+        .from("inventory")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("status", "Disponible")
+        .order("created_at", { ascending: true })
+        .limit(1);
+      const row = cand && cand[0];
+      if (!row || seen.has(row.id)) break;
+      seen.add(row.id);
+      const { data: upd, error: updErr } = await supabase
+        .from("inventory")
+        .update({
+          status: "Entregada",
+          delivery_date: new Date().toISOString(),
+          assigned_user_id: authUser.id,
+        })
+        .eq("id", row.id)
+        .eq("status", "Disponible")
+        .select("id, email, password, profile, pin, expiry_date")
+        .maybeSingle();
+      if (updErr) return dbError(req, "claim-inventory", updErr);
+      if (upd) taken.push(upd);
     }
-    const finalOrders = orderInserts.map((row, i) => {
-      const acc = taken[i] || {};
-      return { ...row, delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | ") };
-    });
-    return json({ orders: finalOrders, balance: newBalance }, 200);
+    if (taken.length < quantity) {
+      // No alcanzaron las cuentas: devolver las tomadas a Disponible
+      if (taken.length > 0) {
+        await supabase.from("inventory").update({ status: "Disponible", delivery_date: null, assigned_user_id: null })
+          .in("id", taken.map((a: any) => a.id));
+      }
+      return error(req, "No hay cuentas disponibles para este producto");
+    }
+
+    const release = () => supabase.from("inventory").update({ status: "Disponible", delivery_date: null, assigned_user_id: null })
+      .in("id", taken.map((a: any) => a.id));
+
+    try {
+      // 2) Crear pedidos (1 fila por cuenta)
+      const { data: orderInserts, error: orderErr } = await supabase.from("orders").insert(
+        taken.map((acc: any) => ({
+          user_id: authUser.id,
+          product_id: productId,
+          product_name: product.name,
+          client_name: profile.name || profile.email,
+          quantity: 1,
+          amount: total,
+          total: total,
+          provider_price: base,
+          delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | "),
+          credentials: [acc.email, acc.password].filter(Boolean).join(" | "),
+          status: "Entregado",
+          code: randomCode("ORD"),
+          expires_at: acc.expiry_date ? new Date(acc.expiry_date + "T00:00:00").toISOString() : null,
+        }))
+      ).select("id");
+      if (orderErr) throw orderErr;
+
+      // 3) Stock con guarda optimista (evita perdidas de actualizacion)
+      const { data: stockRow } = await supabase.from("products").select("stock").eq("id", productId).maybeSingle();
+      const stockFresh = Number(stockRow?.stock || 0);
+      const { data: stockUpd, error: stockErr } = await supabase.from("products")
+        .update({ stock: Math.max(0, stockFresh - taken.length) })
+        .eq("id", productId)
+        .eq("stock", stockFresh)
+        .select("stock");
+      if (stockErr) throw stockErr;
+      if (!stockUpd || stockUpd.length === 0) throw new Error("stock-conflict");
+
+      // 4) Saldo con guarda optimista (solo clientes/revendedores)
+      if (!isAdmin) {
+        const { data: balUpd, error: balErr } = await supabase.from("profiles")
+          .update({ balance: balanceBefore - total })
+          .eq("id", authUser.id)
+          .eq("balance", balanceBefore)
+          .select("balance");
+        if (balErr) throw balErr;
+        if (!balUpd || balUpd.length === 0) throw new Error("balance-conflict");
+      }
+
+      const finalOrders = (orderInserts || []).map((row, i) => {
+        const acc = taken[i] || {};
+        return { ...row, delivered_data: [acc.email, acc.password, acc.profile, acc.pin].filter(Boolean).join(" | ") };
+      });
+      const newBalance = isAdmin ? profile.balance : balanceBefore - total;
+      return json(req, { orders: finalOrders, balance: newBalance }, 200);
+    } catch (err) {
+      // Cualquier fallo posterior al claim: liberar el inventario tomado
+      await release();
+      const msg = err && (err as any).message;
+      if (msg === "balance-conflict") return error(req, "Tu saldo cambió. Intenta de nuevo.", 400);
+      if (msg === "stock-conflict") return error(req, "El stock cambió. Intenta de nuevo.", 400);
+      return error(req, "No se pudo completar la compra. Intenta de nuevo.", 400);
+    }
   }
 
   // CRUD GENERICO
   if (ALLOWED_TABLES.has(path.split("/")[0]) && ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(method)) {
-    if (!authUser) return error("No autorizado", 401);
+    if (!authUser) return error(req, "No autorizado", 401);
     const { data: profile, error: profErr } = await supabase.from("profiles").select("role, status, id").eq("id", authUser.id).maybeSingle();
-    if (profErr || !profile) return error("Sesion invalida");
-    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error("Tu cuenta ha sido bloqueada por un administrador.", 403);
+    if (profErr || !profile) return error(req, "Sesion invalida");
+    if (profile.status === "Bloqueado" || profile.status === "Inactivo") return error(req, "Tu cuenta ha sido bloqueada por un administrador.", 403);
     const table = path.split("/")[0];
     const resourceId = path.split("/")[1] || null;
     const isAdmin = profile.role === "Administrador";
@@ -354,30 +491,30 @@ Deno.serve(async (req) => {
       if (!isAdmin) {
         if (["orders", "reports", "topups"].includes(table)) {
           const { data: rows } = await supabase.from(table).select("*").eq("user_id", authUser.id).limit(1000);
-          return json(rows || [], 200);
+          return json(req, rows || [], 200);
         }
-        return json([], 200);
+        return json(req, [], 200);
       }
       const { data: rows } = await supabase.from(table).select("*").limit(1000);
-      return json(rows || [], 200);
+      return json(req, rows || [], 200);
     }
     let body: any = {};
     try { body = await req.json() || {}; } catch {}
     // users POST
     if (table === "users" && method === "POST") {
-      if (!isAdmin) return error("Solo administradores pueden crear usuarios", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden crear usuarios", 403);
       const { name, email, password, role, balance, margin } = body;
-      if (!name || !email || !password) return error("name, email y password son requeridos");
+      if (!name || !email || !password) return error(req, "name, email y password son requeridos");
       const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-      if (existing) return error("Ya existe una cuenta con este correo");
+      if (existing) return error(req, "Ya existe una cuenta con este correo");
       const { data: created, error: createErr } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
       });
-      if (createErr) return error(createErr.message || "No se pudo crear el usuario");
+      if (createErr) return dbError(req, "create-user", createErr);
       const authId = created?.user?.id;
-      if (!authId) return error("No se pudo crear el usuario");
+      if (!authId) return error(req, "No se pudo crear el usuario");
       const roleNorm = role === "Administrador" ? "Administrador" : role === "Revendedor" ? "Revendedor" : "Cliente";
       // upsert para tolerar el trigger handle_new_user que ya inserta el perfil
       const { error: profileErr } = await supabase.from("profiles").upsert({
@@ -389,18 +526,18 @@ Deno.serve(async (req) => {
         margin: Number(margin || 100),
         status: "Activo",
       }, { onConflict: "id" });
-      if (profileErr) return error(profileErr.message);
+      if (profileErr) return dbError(req, "create-profile", profileErr);
       await audit(supabase, authUser.id, "user_create", "profiles", authId, { email, role: roleNorm, balance: Number(balance || 0) });
-      return json({ ok: true, id: authId }, 201);
+      return json(req, { ok: true, id: authId }, 201);
     }
     // users PATCH
     if (table === "users" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden editar usuarios", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar usuarios", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       // Un admin no puede cambiar su propio rol ni bloquearse a si mismo
       if (id === authUser.id && (body.role || body.status)) {
-        return error("No puedes cambiar tu propio rol o estado", 403);
+        return error(req, "No puedes cambiar tu propio rol o estado", 403);
       }
       const patch = { ...body };
       delete patch.id;
@@ -409,49 +546,49 @@ Deno.serve(async (req) => {
       const newPassword = patch.password;
       delete patch.password;
       if (hasPassword) {
-        if (String(newPassword).length < 6) return error("La contrasena debe tener al menos 6 caracteres");
+        if (String(newPassword).length < 8) return error(req, "La contrasena debe tener al menos 8 caracteres");
         const { error: pwdErr } = await supabase.auth.admin.updateUserById(id, { password: newPassword });
-        if (pwdErr) return error(pwdErr.message || "No se pudo restablecer la contrasena");
+        if (pwdErr) return dbError(req, "update-password", pwdErr);
         await audit(supabase, authUser.id, "user_password_reset", "profiles", id, {});
       }
       const { data, error: updErr } = await supabase.from("profiles").update(patch).eq("id", id);
-      if (updErr) return error(updErr.message);
+      if (updErr) return dbError(req, "update", updErr);
       await audit(supabase, authUser.id, "user_update", "profiles", id, patch);
-      return json(data || [], 200);
+      return json(req, data || [], 200);
     }
     // users DELETE
     if (table === "users" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar usuarios", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar usuarios", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
-      if (id === authUser.id) return error("No puedes eliminar tu propia cuenta", 403);
+      if (!id) return error(req, "id requerido");
+      if (id === authUser.id) return error(req, "No puedes eliminar tu propia cuenta", 403);
       await audit(supabase, authUser.id, "user_delete", "profiles", id);
       const { error: delErr } = await supabase.from("profiles").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // ads increment_copies
     if (table === "ads" && method === "PATCH" && body.increment_copies) {
       const { data: row } = await supabase.from("ads").select("copies").eq("id", body.id).maybeSingle();
       const copies = Number(row?.copies || 0) + 1;
       const { error: updErr } = await supabase.from("ads").update({ copies }).eq("id", body.id);
-      if (updErr) return error(updErr.message);
-      return json({ ok: true }, 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, { ok: true }, 200);
     }
     // settings PUT
     if (table === "settings" && method === "PUT") {
-      if (!isAdmin) return error("Solo administradores pueden editar configuracion", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar configuracion", 403);
       const { key, value } = body;
-      if (!key) return error("key requerido");
+      if (!key) return error(req, "key requerido");
       const { data, error: upsertErr } = await supabase.from("settings").upsert({ key, value, updated_at: new Date().toISOString() }).select("*");
-      if (upsertErr) return error(upsertErr.message);
-      return json(data || [], 200);
+      if (upsertErr) return dbError(req, "settings", upsertErr);
+      return json(req, data || [], 200);
     }
     // reports POST
     if (table === "reports" && method === "POST") {
       const { order_id, product_name, account_data, reason, description } = body;
       const { data: order } = await supabase.from("orders").select("*").eq("id", order_id || "").maybeSingle();
-      if (order && !isAdmin && order.user_id !== authUser.id) return error("No autorizado", 403);
+      if (order && !isAdmin && order.user_id !== authUser.id) return error(req, "No autorizado", 403);
       const { data, error: insErr } = await supabase.from("reports").insert({
         user_id: authUser.id,
         order_id: order_id || null,
@@ -462,8 +599,8 @@ Deno.serve(async (req) => {
         description: description || null,
         status: "Abierto",
       }).select("*");
-      if (insErr) return error(insErr.message);
-      return json(data || [], 201);
+      if (insErr) return dbError(req, "insert", insErr);
+      return json(req, data || [], 201);
     }
     // topups POST
     if (table === "topups" && method === "POST") {
@@ -475,154 +612,154 @@ Deno.serve(async (req) => {
         reference: reference || null,
         status: "Pendiente",
       }).select("*");
-      if (insErr) return error(insErr.message);
-      return json(data || [], 201);
+      if (insErr) return dbError(req, "insert", insErr);
+      return json(req, data || [], 201);
     }
     // inventory POST
     if (table === "inventory" && method === "POST") {
-      if (!isAdmin) return error("Solo administradores pueden gestionar inventario", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden gestionar inventario", 403);
       const { data, error: insErr } = await supabase.from("inventory").insert({ ...body, status: body.status || "Disponible" }).select("*");
-      if (insErr) return error(insErr.message);
-      return json(data || [], 201);
+      if (insErr) return dbError(req, "insert", insErr);
+      return json(req, data || [], 201);
     }
     // inventory PATCH
     if (table === "inventory" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden editar inventario", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar inventario", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
       const { data, error: updErr } = await supabase.from("inventory").update(patch).eq("id", id);
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
     // inventory DELETE
     if (table === "inventory" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar cuentas", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar cuentas", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const { error: delErr } = await supabase.from("inventory").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // products POST
     if (table === "products" && method === "POST") {
-      if (!isAdmin) return error("Solo administradores pueden gestionar productos", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden gestionar productos", 403);
       const { data, error: insErr } = await supabase.from("products").insert({ ...body, status: body.status || "Activo" }).select("*");
-      if (insErr) return error(insErr.message);
-      return json(data || [], 201);
+      if (insErr) return dbError(req, "insert", insErr);
+      return json(req, data || [], 201);
     }
     // products PATCH
     if (table === "products" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden editar productos", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar productos", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
       const { data, error: updErr } = await supabase.from("products").update(patch).eq("id", id);
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
     // products DELETE
     if (table === "products" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar productos", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar productos", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const { error: delErr } = await supabase.from("products").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // reports PATCH
     if (table === "reports" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden actualizar reportes", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden actualizar reportes", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
       await audit(supabase, authUser.id, "report_update", "reports", id, patch);
       const { data, error: updErr } = await supabase.from("reports").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
     // reports DELETE
     if (table === "reports" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar reportes", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar reportes", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const { error: delErr } = await supabase.from("reports").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // topups PATCH
     if (table === "topups" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden aprobar recargas", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden aprobar recargas", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
       const { data: row } = await supabase.from("topups").select("*").eq("id", id).maybeSingle();
-      if (!row) return error("Recarga no encontrada", 404);
+      if (!row) return error(req, "Recarga no encontrada", 404);
       await audit(supabase, authUser.id, "topup_update", "topups", id, { status: patch.status, amount: row.amount, user_id: row.user_id });
       if (patch.status === "Aprobada") {
         const { data: owner } = await supabase.from("profiles").select("balance").eq("id", row.user_id).maybeSingle();
         const newBal = Number(owner?.balance ?? 0) + Number(row.amount || 0);
         const { error: balErr } = await supabase.from("profiles").update({ balance: newBal }).eq("id", row.user_id);
-        if (balErr) return error(balErr.message);
+        if (balErr) return dbError(req, "balance", balErr);
       }
       const { data, error: updErr } = await supabase.from("topups").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
     // topups DELETE
     if (table === "topups" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar recargas", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar recargas", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const { error: delErr } = await supabase.from("topups").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // ads POST
     if (table === "ads" && method === "POST") {
-      if (!isAdmin) return error("Solo administradores pueden gestionar material", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden gestionar material", 403);
       const { data, error: insErr } = await supabase.from("ads").insert({ ...body, copies: 0 }).select("*");
-      if (insErr) return error(insErr.message);
-      return json(data || [], 201);
+      if (insErr) return dbError(req, "insert", insErr);
+      return json(req, data || [], 201);
     }
     // ads PATCH
     if (table === "ads" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden editar material", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar material", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const patch = { ...body };
       delete patch.id;
       delete patch.increment_copies;
       const { data, error: updErr } = await supabase.from("ads").update(patch).eq("id", id);
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
     // ads DELETE
     if (table === "ads" && method === "DELETE") {
-      if (!isAdmin) return error("Solo administradores pueden eliminar material", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden eliminar material", 403);
       const id = resourceId || body.id;
-      if (!id) return error("id requerido");
+      if (!id) return error(req, "id requerido");
       const { error: delErr } = await supabase.from("ads").delete().eq("id", id);
-      if (delErr) return error(delErr.message);
-      return json({ ok: true }, 200);
+      if (delErr) return dbError(req, "delete", delErr);
+      return json(req, { ok: true }, 200);
     }
     // settings PATCH
     if (table === "settings" && method === "PATCH") {
-      if (!isAdmin) return error("Solo administradores pueden editar configuracion", 403);
+      if (!isAdmin) return error(req, "Solo administradores pueden editar configuracion", 403);
       const { key, value } = body;
-      if (!key) return error("key requerido");
+      if (!key) return error(req, "key requerido");
       const { data, error: updErr } = await supabase.from("settings").upsert({ key, value, updated_at: new Date().toISOString() }).select("*");
-      if (updErr) return error(updErr.message);
-      return json(data || [], 200);
+      if (updErr) return dbError(req, "update", updErr);
+      return json(req, data || [], 200);
     }
-    return error("Ruta no encontrada: [" + path + "] method=" + method, 404);
+    return error(req, "Ruta no encontrada: [" + path + "] method=" + method, 404);
   }
-  return error("Ruta no encontrada FINAL path=[" + path + "] method=" + method, 404);
+  return error(req, "Ruta no encontrada FINAL path=[" + path + "] method=" + method, 404);
   } catch (e) {
-    return error("EXCEPCION: " + (e && e.message ? e.message : String(e)), 500);
+    return error(req, "EXCEPCION: " + (e && e.message ? e.message : String(e)), 500);
   }
 });

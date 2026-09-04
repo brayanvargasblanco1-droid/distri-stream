@@ -1,4 +1,4 @@
-const CACHE_NAME = "distrito-v8";
+const CACHE_NAME = "distrito-v9";
 const ASSETS_TO_CACHE = ["/", "/manifest.json", "/assets/distrito-angel-blue-v1.png", "/distrito-2026.css?v=5"];
 
 self.addEventListener("install", e => {
@@ -17,8 +17,13 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   if (e.request.url.includes("supabase.co")) return;
-  // Siempre fetch fresh para HTML (navegacion)
-  if (e.request.mode === "navigate" || e.request.url.endsWith("/") || e.request.url.includes("index.html")) {
+  const url = new URL(e.request.url);
+  const path = url.pathname;
+  // Navegacion, HTML, JS y CSS: network-first (los deploys nuevos se ven de
+  // inmediato) con fallback a cache solo si no hay red (offline).
+  const isDoc = e.request.mode === "navigate" || path === "/" || path.endsWith("index.html");
+  const isCode = path.endsWith(".js") || path.endsWith(".css") || path.includes(".js?") || path.includes(".css?");
+  if (isDoc || isCode) {
     e.respondWith(
       fetch(e.request).then(resp => {
         const clone = resp.clone();
@@ -28,6 +33,6 @@ self.addEventListener("fetch", e => {
     );
     return;
   }
-  // Cache-first para assets estaticos
+  // Assets estaticos (imagenes, fuentes): cache-first
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
