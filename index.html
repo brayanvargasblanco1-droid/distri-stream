@@ -2745,6 +2745,8 @@
       }).length;
     }
     function canBuyProduct(p){
+      // El Revendedor compra al mayor para su negocio: sin tope de unidades simultáneas
+      if(isReseller()) return true;
       if(p.shared === false || String(p.share_type||"").toLowerCase() === "personal") {
         return operatorCount(p.id) < 1;
       }
@@ -5104,7 +5106,8 @@
       const max=Math.max(1,Math.min(10,Number(p.stock||1))), price=salePrice(p);
       const isPersonal = p.shared === false || String(p.share_type||"").toLowerCase() === "personal";
       const ops = operatorCount(p.id);
-      const maxAllowed = isPersonal ? Math.max(0, 1 - ops) : Math.max(0, MAX_OPERATORS_PER_PRODUCT - ops);
+      // El Revendedor compra al mayor: hasta 10 por transacción sin contar simultáneas activas
+      const maxAllowed = isReseller() ? 10 : isPersonal ? Math.max(0, 1 - ops) : Math.max(0, MAX_OPERATORS_PER_PRODUCT - ops);
       const maxQty = Math.min(max, maxAllowed);
       if(maxQty <= 0) return toast("Ya alcanzaste el limite de operadores para este producto.","bad");
       openModal(`

@@ -294,8 +294,13 @@ function improvedOrdersView() {
       <!-- HEADER -->
       <div class="o-header">
         <div class="o-header-content">
-          <div class="o-header-label">Mi Cuenta</div>
-          <h1 class="o-header-title">Mis Compras</h1>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <div class="o-header-label">Mi Cuenta</div>
+              <h1 class="o-header-title">Mis Compras</h1>
+            </div>
+            <button onclick="exportMyOrdersCsv()" title="Descarga todas tus compras en CSV (código, producto, cuenta, vencimiento, monto)" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid rgba(255,255,255,.35);border-radius:12px;background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">⬇️ Exportar (CSV)</button>
+          </div>
         </div>
       </div>
       
@@ -338,6 +343,29 @@ function improvedOrdersView() {
       Compras.render();
     </script>
   `;
+}
+
+// Exportar mis compras a CSV (kit mayorista: el Revendedor entrega o archiva
+// sus cuentas compradas; útil también para el cliente). Solo datos propios.
+function exportMyOrdersCsv(){
+  const rows=(state.orders||[]);
+  if(!rows.length) return toast('No tienes compras para exportar','bad');
+  const csvCell=v=>{
+    const s=String(v===null||v===undefined?'':v);
+    return '"' + s.replace(/"/g,'""') + '"';
+  };
+  const header=['Código','Producto','Cuenta (datos entregados)','Vence','Estado','Monto','Fecha compra'];
+  const lines=rows.map(o=>[
+    o.code||o.id||'',
+    o.product_name||'',
+    o.delivered_data||o.credentials||'',
+    o.expires_at?formatDate(o.expires_at):'',
+    o.status||'Entregado',
+    Number(o.amount||o.total||0),
+    o.created_at?formatDate(o.created_at):''
+  ].map(csvCell).join(';'));
+  downloadFile('mis-compras-'+new Date().toISOString().slice(0,10)+'.csv', '\ufeff' + header.map(csvCell).join(';') + '\n' + lines.join('\n'));
+  toast('✓ CSV exportado (' + rows.length + ' compras)','ok');
 }
 
 console.log('✅ Compras Premium v1 - Mis Compras Mejorado');
