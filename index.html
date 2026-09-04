@@ -3158,6 +3158,87 @@
       ];
       return [["home","Inicio",icons.home],["store","Tienda",icons.store],["orders","Compras",icons.orders],["history","Movimientos",icons.history],["reports","Soporte",icons.reports],["ads","Material",icons.ads]];
     }
+
+    // ─── NAVEGACIÓN POR CAPAS ──────────────────────────────
+    // Lo esencial SIEMPRE a la vista (máx. 4 botones + "Más"); el resto queda
+    // agrupado por categorías dentro de "Más", con la MISMA estructura en
+    // escritorio (se despliega en la barra lateral) y en móvil (hoja inferior).
+    function navPrimary(){
+      if(isAdmin()) return [["admin","Panel",icons.admin],["sales","Ventas",icons.orders],["payments","Recargas",icons.wallet],["users","Usuarios",icons.users]];
+      return [["home","Inicio",icons.home],["store","Tienda",icons.store],["orders","Compras",icons.orders],["history","Movimientos",icons.history]];
+    }
+    function navMoreGroups(){
+      if(isAdmin()) return [
+        {g:"Operación", items:[["reports","Reportes",icons.reports],["store","Inventario",icons.store],["ads","Publicidad",icons.ads]]},
+        {g:"Análisis", items:[["analytics","Estudios",icons.chart],["audit","Auditoría",icons.reports]]},
+        {g:"Configuración", items:[["settings","Datos de pago",icons.admin]]}
+      ];
+      return [
+        {g:"Ayuda", items:[["reports","Soporte",icons.reports],["ads","Material",icons.ads]]}
+      ];
+    }
+    function navMoreFlat(){
+      const out=[];
+      navMoreGroups().forEach(g=>g.items.forEach(i=>out.push(i)));
+      return out;
+    }
+    function isMoreView(v){ return navMoreFlat().some(x=>x[0]===v); }
+    function navItemBtn(it,extra){
+      const [v,t,svg]=it;
+      return `<button class="${state.view===v?"active":""}" onclick="setView('${v}')${extra||""}">${svg}<span>${t}</span></button>`;
+    }
+    function navGroupsHtml(extra){
+      return navMoreGroups().map(gr=>`
+        <div class="nav-group">
+          <div class="nav-group-title">${gr.g}</div>
+          ${gr.items.map(it=>navItemBtn(it,extra)).join("")}
+        </div>`).join("");
+    }
+    const NAV_ICON_MORE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>`;
+    const NAV_LAYER_CSS = `
+      /* ─── Navegación por capas: Más (escritorio + móvil) ─── */
+      .nav-more-box{display:none;flex-direction:column;gap:2px;margin-top:4px;padding:10px 0 0;border-top:1px solid var(--line);overflow-y:auto;max-height:calc(100vh - 340px);min-height:0}
+      .nav-more-box.open{display:flex;animation:navMoreIn .22s ease}
+      @keyframes navMoreIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+      .side .nav-more-box .nav-group{display:flex;flex-direction:column;gap:2px;margin:0 0 8px}
+      .nav-group-title{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:0 12px 4px}
+      .side .nav-more-box button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s}
+      .side .nav-more-box button:hover{background:var(--soft);color:var(--text)}
+      .side .nav-more-box button.active{color:var(--blue);font-weight:800;background:rgba(99,102,241,.08)}
+      .side .nav-more-box button svg{width:18px;height:18px;flex-shrink:0}
+      #navMoreToggle.more-open{background:var(--soft);color:var(--blue)}
+      .more-sheet-overlay{position:fixed;inset:0;z-index:10002;background:rgba(2,6,23,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center}
+      .more-sheet{width:100%;max-width:560px;background:var(--panel);border-radius:22px 22px 0 0;padding:0 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -12px 50px rgba(0,0,0,.3);transform:translateY(102%);transition:transform .28s cubic-bezier(.32,.72,0,1);max-height:76vh;overflow-y:auto}
+      .more-sheet-overlay.show .more-sheet{transform:none}
+      .more-sheet-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:16px 4px 10px;font-size:16px;font-weight:900;background:var(--panel)}
+      .more-sheet-head button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--soft);color:var(--text);font-size:13px;font-weight:800;cursor:pointer;display:grid;place-items:center}
+      .more-sheet .nav-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+      .more-sheet .nav-group-title{grid-column:1/-1;padding:8px 4px 0;font-size:10px}
+      .more-sheet .nav-group button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 8px;border:1.5px solid var(--line);border-radius:16px;background:var(--soft);color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;min-height:76px}
+      .more-sheet .nav-group button svg{width:24px;height:24px;color:var(--blue)}
+      .more-sheet .nav-group button:active{transform:scale(.96)}
+      body.dark .more-sheet, body.dark .more-sheet-head{background:#141b2d}
+      body.dark .more-sheet .nav-group button{background:rgba(255,255,255,.05);border-color:rgba(148,163,184,.2)}
+      @media (max-width:768px){ .nav-more-box{max-height:30vh} }
+    `;
+    function toggleNavMore(){
+      const box=$("#navMoreBox"), tg=$("#navMoreToggle");
+      if(!box) return;
+      const open=box.classList.toggle("open");
+      if(tg) tg.classList.toggle("more-open",open);
+    }
+    function openMoreSheet(){
+      const o=$("#moreSheetOverlay");
+      if(!o) return;
+      o.style.display="flex";
+      requestAnimationFrame(()=>o.classList.add("show"));
+    }
+    function closeMoreSheet(){
+      const o=$("#moreSheetOverlay");
+      if(!o) return;
+      o.classList.remove("show");
+      setTimeout(()=>{ if(o && !o.classList.contains("show")) o.style.display="none"; },240);
+    }
     function setView(view){
       if(!state.view || state.view===view){} // permitir repetir si se quiere
       state.view=view;
@@ -3169,10 +3250,15 @@
         main.innerHTML = stateLoading();
         requestAnimationFrame(()=>{
           main.innerHTML = renderView();
-          document.querySelectorAll(".nav button, .mobile-nav button").forEach(b=>{
+          document.querySelectorAll(".nav button, .mobile-nav button, .nav-more-box button, .more-sheet button").forEach(b=>{
             const v=b.getAttribute("onclick")?.match(/setView\('([^']+)'\)/)||null;
             b.classList.toggle("active", v && v[1]===state.view);
           });
+          // Capa "Más": si la vista actual está agrupada, resaltar el disparador
+          document.querySelectorAll("#navMoreToggle, #mobMoreBtn").forEach(b=>{
+            b.classList.toggle("active", isMoreView(state.view));
+          });
+          closeMoreSheet();
           afterRender();
         });
         return;
@@ -3198,9 +3284,12 @@
       // inferior y el menú lateral ya NO se reconstruyen (antes rebotaban).
       if($(".main-content") && $(".side") && $(".app")){
         $(".main-content").innerHTML = renderView();
-        document.querySelectorAll(".nav button, .mobile-nav button").forEach(b=>{
+        document.querySelectorAll(".nav button, .mobile-nav button, .nav-more-box button, .more-sheet button").forEach(b=>{
           const m=b.getAttribute("onclick")?.match(/setView\('([^']+)'\)/)||null;
           b.classList.toggle("active", !!(m && m[1]===state.view));
+        });
+        document.querySelectorAll("#navMoreToggle, #mobMoreBtn").forEach(b=>{
+          b.classList.toggle("active", isMoreView(state.view));
         });
         afterRender();
         return;
@@ -3215,15 +3304,31 @@
         notifCount+=state.orders.filter(o=>{const left=daysLeft(o.expires_at);return left!==null&&left>=0&&left<=3}).length;
       }
       $("#root").innerHTML = `<div class="app app-bg">
+        <style id="navLayerCss">${NAV_LAYER_CSS}</style>
         <aside class="side">
           <div class="side-brand"><img src="${ASSETS}${localStorage.dsDark==='1'?'distrito-angel-blue-v1.png':'distrito-angel-white.png'}" alt="Distrito" onerror="this.onerror=null;this.src='${ASSETS}distrito-login-hero.png';this.onerror=function(){this.style.display='none';}"><div><b>Distrito</b><em>Streaming</em></div></div>
-          <div class="nav-title">Navegacion</div>
-          <nav class="nav">${navItems().map(([v,t,svg])=>`<button class="${state.view===v?"active":""}" onclick="setView('${v}')">${svg}<span>${t}</span></button>`).join("")}</nav>
+          <div class="nav-title">Menú principal</div>
+          <nav class="nav">
+            ${navPrimary().map(it=>navItemBtn(it,"")).join("")}
+            <button id="navMoreToggle" class="${isMoreView(state.view)?"active":""}" onclick="toggleNavMore()">${NAV_ICON_MORE}<span>Más</span></button>
+          </nav>
+          <div class="nav-more-box" id="navMoreBox">${navGroupsHtml("")}</div>
         </aside>
-        <!-- Navegación Móvil -->
+        <!-- Navegación Móvil (lo esencial + botón Más) -->
         <nav class="mobile-nav">
-          ${navItems().map(([v,t,svg])=>`<button class="${state.view===v?"active":""}" onclick="setView('${v}')">${svg}<span>${t}</span></button>`).join("")}
+          ${navPrimary().map(it=>navItemBtn(it,"")).join("")}
+          <button id="mobMoreBtn" class="${isMoreView(state.view)?"active":""}" onclick="openMoreSheet()">${NAV_ICON_MORE}<span>Más</span></button>
         </nav>
+        <!-- Hoja inferior con el resto de opciones (móvil) -->
+        <div class="more-sheet-overlay" id="moreSheetOverlay" onclick="closeMoreSheet()">
+          <div class="more-sheet" onclick="event.stopPropagation()">
+            <div class="more-sheet-head">
+              <b>Más opciones</b>
+              <button onclick="closeMoreSheet()" aria-label="Cerrar">✕</button>
+            </div>
+            ${navGroupsHtml(";closeMoreSheet()")}
+          </div>
+        </div>
         <main class="main main-content app-anim">
           <header class="top">
             <div class="top-actions">
