@@ -3110,6 +3110,14 @@
         }
         if(!state.user) throw new Error("Sesion invalida");
         normalizeViewForRole();
+        // Marca de versión: al desplegar una versión nueva se avisa con un toast
+        // (evita el "no veo ningún cambio" por caché del navegador/PWA).
+        const APP_VERSION = "2026.09.04-nav-min-v2";
+        const prevVer = localStorage.getItem("dsVersion");
+        if(prevVer && prevVer !== APP_VERSION){
+          setTimeout(()=>toast("✨ Actualizado: navegación mínima (4 botones + Más)","ok"), 1200);
+        }
+        localStorage.setItem("dsVersion", APP_VERSION);
         // La app se pinta DESPUÉS de que el loader se desvanece: así su animación
         // de entrada (pageIn) ocurre a la vista y la transición es un crossfade
         // suave en lugar de un corte seco con la pantalla ya estática.

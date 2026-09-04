@@ -1,4 +1,4 @@
-const CACHE_NAME = "distrito-v11";
+const CACHE_NAME = "distrito-v12";
 const ASSETS_TO_CACHE = ["/", "/manifest.json", "/assets/distrito-angel-blue-v1.png", "/distrito-2026.css?v=5"];
 
 self.addEventListener("install", e => {
