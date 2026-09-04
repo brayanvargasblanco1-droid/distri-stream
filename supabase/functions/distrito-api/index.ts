@@ -234,16 +234,25 @@ Deno.serve(async (req) => {
     }, 200);
   }
 
-  // FORGOT-PASSWORD
+  // FORGOT-PASSWORD — recuperación ASISTIDA por el administrador (sin correo SMTP)
+  // El proyecto no tiene proveedor de email, así que aquí NO se envía ningún
+  // enlace: se registra la solicitud (audit) para que un administrador genere la
+  // clave nueva desde el panel (Usuarios -> Clave) y se la entregue al usuario
+  // por WhatsApp/teléfono. Siempre responde ok (anti-enumeración).
   if (path === "forgot-password" && method === "POST") {
     if (isRateLimited("forgot:" + getClientIp(req), 5, 15 * 60 * 1000)) return rateLimited(req);
     let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { email } = body;
     if (!email) return error(req, "email requerido");
-    const { data: existing } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-    // No revelar si el correo existe por seguridad; simpre responder ok
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(email))) return error(req, "El formato del correo es invalido. Ejemplo: nombre@dominio.com");
+    const { data: existing } = await supabase.from("profiles").select("id, email").eq("email", String(email).trim()).maybeSingle();
     if (existing) {
-      await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://distrito-streaming-vercel-ashen.vercel.app/?reset=1" });
+      await audit(supabase, existing.id, "password_reset_request", "profiles", existing.id, {
+        email: existing.email,
+        ip: getClientIp(req),
+        via: "administrador-whatsapp",
+      });
     }
     return json(req, { ok: true }, 200);
   }
