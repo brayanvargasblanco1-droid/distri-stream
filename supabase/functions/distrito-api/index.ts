@@ -20,6 +20,18 @@ function isAllowedOrigin(origin: string): boolean {
   return ALLOWED_ORIGINS.has(origin) || VERCEL_ORIGIN_RE.test(origin);
 }
 
+// Para el control CSRF de mutaciones se acepta CUALQUIER subdominio
+// *.vercel.app (el proyecto se sirve desde alias, deployments y previews que
+// cambian) + null (extensiones/privacidad) + localhost en cualquier puerto +
+// ausencia de Origin (curl/APIs). Los orígenes web ajenos (sitios maliciosos
+// NO alojados en vercel.app) siguen rechazados: con la cookie SameSite=Lax de
+// primera parte, ese rechazo es defensa adicional contra CSRF.
+function csrfOriginAllowed(origin: string): boolean {
+  if (!origin || origin === "null") return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+}
+
 function corsHeadersFor(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
   if (isAllowedOrigin(origin)) {
@@ -147,9 +159,7 @@ Deno.serve(async (req) => {
   // (ej. un sitio malicioso) siguen rechazados.
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     const origin = req.headers.get("origin") || "";
-    const esNull = origin === "null";
-    const esLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-    if (origin && !esNull && !esLocal && !isAllowedOrigin(origin)) {
+    if (!csrfOriginAllowed(origin)) {
       console.warn("[csrf] origen no permitido:", origin);
       return error(req, "Origen no permitido", 403);
     }
