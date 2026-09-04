@@ -3108,7 +3108,26 @@
       ];
       return [["home","Inicio",icons.home],["store","Tienda",icons.store],["orders","Compras",icons.orders],["history","Movimientos",icons.history],["reports","Soporte",icons.reports],["ads","Material",icons.ads]];
     }
-    function setView(view){state.view=view;renderApp()}
+    function setView(view){
+      if(!state.view || state.view===view){} // permitir repetir si se quiere
+      state.view=view;
+      // La app ya está montada: solo reemplazar el contenido y el estado activo
+      // del nav, sin reconstruir todo el shell (la barra inferior ya no rebota
+      // en cada cambio de sección).
+      if($(".main-content")){
+        $(".main-content").innerHTML = renderView();
+        document.querySelectorAll(".nav button, .mobile-nav button").forEach(b=>{
+          const v=b.getAttribute("onclick")?.match(/setView\('([^']+)'\)/)||null;
+          b.classList.toggle("active", v && v[1]===state.view);
+        });
+        afterRender();
+        return;
+      }
+      renderApp();
+    }
+    function afterRender(){
+      setTimeout(()=>{initPullToRefresh();initEffects();if(typeof Tienda!=="undefined"&&document.querySelector(".t-tab"))Tienda.render();if(state.view==="home")startCarousel()},100);
+    }
     function pageTitle(){
       return ({home:"Inicio",store:isAdmin()?"Inventario":"Tienda",orders:"Mis compras",history:"Historial de Movimientos",reports:"Reportes y soporte",ads:isAdmin()?"Publicidad":"Material de ventas",users:"Usuarios",payments:"Recarga de saldo",admin:"Panel administrador",analytics:"Estudio general",audit:"Auditoria",settings:"Datos de pago",inventory:"Cuentas",products:"Productos"}[state.view]||"Distrito");
     }
@@ -3120,6 +3139,18 @@
       document.body.className = localStorage.dsDark === "1" ? "dark" : "";
       if(!state.user) return renderLogin();
       const u=state.user;
+      // Si el shell ya está montado (cambio de sección o refresco de datos),
+      // solo se reemplaza el contenido y se marca el botón activo: la barra
+      // inferior y el menú lateral ya NO se reconstruyen (antes rebotaban).
+      if($(".main-content") && $(".side") && $(".app")){
+        $(".main-content").innerHTML = renderView();
+        document.querySelectorAll(".nav button, .mobile-nav button").forEach(b=>{
+          const m=b.getAttribute("onclick")?.match(/setView\('([^']+)'\)/)||null;
+          b.classList.toggle("active", !!(m && m[1]===state.view));
+        });
+        afterRender();
+        return;
+      }
       let notifCount=0;
       if(isAdmin()){
         notifCount+=state.topups.filter(t=>t.status==="Pendiente").length;
@@ -3181,7 +3212,7 @@
           ${renderView()}
         </main>
       </div>`;
-      setTimeout(()=>{initPullToRefresh();initEffects();if(typeof Tienda!=="undefined"&&document.querySelector(".t-tab"))Tienda.render();if(state.view==="home")startCarousel()},100);
+      afterRender();
     }
     function renderView(){
       if(state.view === "audit" && isAdmin() && !window.__auditLoading && !window.__suppressAuditLoad){
