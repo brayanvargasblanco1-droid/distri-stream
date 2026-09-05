@@ -4897,14 +4897,17 @@
             const found=products.find(p=>p.name.toLowerCase().includes(acc.product.toLowerCase().split(" ")[0].toLowerCase()));
             if(found) productId=found.id;
           }
+          // Las fechas vacías deben ir como null (PostgREST rechaza "" en columnas date)
+          const purDate=acc.purchaseDate&&acc.purchaseDate.trim()?acc.purchaseDate.trim():null;
+          const expDate=acc.expiryDate&&acc.expiryDate.trim()?acc.expiryDate.trim():null;
           await api("inventory",{method:"POST",body:JSON.stringify({
             product_id:productId,
             email:acc.email,
             password:acc.password,
             profile:acc.profile,
             pin:acc.pin,
-            purchase_date:acc.purchaseDate,
-            expiry_date:acc.expiryDate,
+            purchase_date:purDate,
+            expiry_date:expDate,
             status:"Disponible"
           })});
           imported++;
@@ -4984,13 +4987,15 @@
         </div>`);
     }
     async function updateInventoryItem(id){
+      // Fecha vacía debe ir como null (PostgREST rechaza "" en columnas date)
+      const expRaw=$("#editInvExpiry").value;
       const data={
         product_id:$("#editInvProduct").value,
         email:$("#editInvEmail").value.trim(),
         password:$("#editInvPass").value.trim(),
         profile:$("#editInvProfile").value.trim(),
         pin:$("#editInvPin").value.trim(),
-        expiry_date:$("#editInvExpiry").value
+        expiry_date:expRaw&&expRaw.trim()?expRaw.trim():null
       };
       if(!data.email||!data.password) return toast("Email y contrasena son requeridos","bad");
       try{
