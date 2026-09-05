@@ -731,6 +731,10 @@ Deno.serve(async (req) => {
   // BUY (atomico: un solo UPDATE reclama el inventario con guarda de estado)
   if (path === "buy" && method === "POST") {
     if (!authUser) return error(req, "No autorizado", 401);
+    // Rate-limit por usuario (no por IP): un comprador legítimo no hace más de
+    // 15 transacciones por minuto; frena martilleo del endpoint y scraping de
+    // stock sin depender de la IP (que viaja en headers y se puede rotar).
+    if (isRateLimited("buy:" + authUser.id, 15, 60 * 1000)) return rateLimited(req);
     let body: any; try { body = await req.json(); } catch { return error(req, "JSON invalido"); }
     const { data: profile, error: profileErr } = await supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
     if (profileErr || !profile) return error(req, "Sesion invalida");
@@ -741,6 +745,43 @@ Deno.serve(async (req) => {
     if (!product) return error(req, "Producto no encontrado");
     if (product.status !== "Activo") return error(req, "Producto no disponible");
     if (Number(product.stock || 0) < quantity) return error(req, "Stock insuficiente");
+    // TOPE DE CUENTAS ACTIVAS POR PRODUCTO (regla de negocio, ahora también en
+    // servidor). Antes vivía solo en el frontend (canBuyProduct) y un Cliente
+    // podía acaparar comprando de más por API directa. Mismo criterio que la UI:
+    //  - Compartida: máximo 2 cuentas activas simultáneas por producto
+    //  - Personal: máximo 1
+    //  - Revendedor: compra al mayor sin tope (kit mayorista)
+    //  - Administrador: operador de confianza (compras internas al costo)
+    // Cuenta como activa toda orden del producto que no esté vencida ni
+    // cancelada/reembolsada (misma lógica de operatorCount() en el frontend).
+    if (profile.role === "Cliente") {
+      const isPersonal = product.shared === false || String(product.share_type || "").toLowerCase() === "personal";
+      const maxActive = isPersonal ? 1 : 2;
+      const { data: prevOrders } = await supabase
+        .from("orders")
+        .select("expires_at, status")
+        .eq("user_id", authUser.id)
+        .eq("product_id", productId)
+        .limit(1000);
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const activeCount = (prevOrders || []).filter((o: any) => {
+        const st = String(o.status || "").toLowerCase();
+        if (st.includes("cancel") || st.includes("reembol") || st.includes("reembolso")) return false;
+        if (!o.expires_at) return true;
+        let end = /^\d{4}-\d{2}-\d{2}$/.test(String(o.expires_at))
+          ? new Date(String(o.expires_at) + "T00:00:00")
+          : new Date(o.expires_at);
+        if (isNaN(end.getTime())) return true;
+        end.setHours(0, 0, 0, 0);
+        const left = Math.ceil((end.getTime() - todayStart.getTime()) / 86400000);
+        return left >= 0 || st.includes("pend") || st.includes("proces");
+      }).length;
+      if (activeCount + quantity > maxActive) {
+        return error(req, isPersonal
+          ? "Límite alcanzado: solo puedes tener 1 cuenta personal activa de este producto. Espera a que venza para renovar."
+          : `Límite alcanzado: máximo ${maxActive} cuentas activas por producto. Espera a que venzan para renovar.`);
+      }
+    }
     // Reglas reales de precio (espejo exacto del frontend salePrice()):
     //  - Cliente final: paga el PRECIO DE VENTA publicado del producto
     //  - Revendedor: paga costo × (1 + margen%/100) al comprar inventario
