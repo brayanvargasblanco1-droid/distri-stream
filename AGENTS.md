@@ -49,16 +49,20 @@ administradores para la venta y administración de cuentas de streaming.
 - Navegación premium, dark mode, skeleton loaders, empty states
 - Premium design system, navegación con iconos
 
-### Pendiente (según QUE_FALTA_Y_QUE_MEJORAR.md)
-- Integrar con API real para persistencia (reportes)
-- Almacenamiento local (localStorage)
-- Notificaciones en tiempo real
-- Exportación a PDF
-- Sistema de chat interno
-- Soporte para archivos adjuntos / evidencia
-- Indicadores de SLA
-- Refactorizar index.html (muy grande, 640KB)
-- Desacoplar sendReport/updateReportResponse del DOM
+### Pendiente (según QUE_FALTA_Y_QUE_MEJORAR.md — actualizado 2026-09-12)
+- Notificaciones en tiempo real (Supabase Realtime sobre reports)
+- Desacoplar sendReport/updateReportResponse del DOM (leén #rpOrder, #rpReason, etc.)
+- Refactorizar index.html (640KB, ~9.959 líneas: reportes → reports-*.js, ads → ads.js)
+- Exportación a PDF (hoy solo CSV básico)
+- Chat interno sobre reportes
+- Adjuntos/evidencia en reportes (Supabase Storage ya disponible en config)
+- Indicadores de SLA (promesa "30 min - 24h" sin medición)
+- Búsqueda avanzada (rango de fechas, categoría, fuzzy)
+
+### Cuentas / servicios
+- GitHub: brayanvargasblanco1-droid/distri-stream (commits firmados como vargasblancobrayan-cyber)
+- Supabase: proyecto qbdhcnhplamatydsqkae (edge function: distrito-api)
+- Vercel: distrito-streaming-vercel-ashen (deploy automático desde main)
 
 ## Comandos útiles
 ```bash

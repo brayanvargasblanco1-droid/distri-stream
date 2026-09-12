@@ -1,392 +1,132 @@
-# 🎯 RESUMEN EJECUTIVO: QUÉ FALTA Y QUÉ MEJORAR
+# 🎯 QUÉ FALTA Y QUÉ MEJORAR — Backlog actualizado
 
-## 📊 DIAGNÓSTICO ACTUAL
+> **Última actualización: 2026-09-12** — Reemplaza la versión anterior (analítica de ~51h sobre el
+> módulo de reportes pre-refactor). Lo que ya está hecho quedó demostrado en el código; este doc
+> lista solo lo pendiente, verificado contra el código real.
+
+---
+
+## ✅ YA RESUELTO (para no volver a planificarlo)
+
+Todo el plan TIER 1/TIER 2 original está **implementado y en producción**:
+
+- ✅ **Separación Activos / Resueltos** — tabs con contadores, constantes `ACTIVE_STATES` / `RESOLVED_STATES`
+- ✅ **Validación de datos** — `ReportValidator` centralizado (`reports-security.js` + extensión en `reports-functions.js`)
+- ✅ **Confirmaciones en acciones destructivas** — resolver/rechazar exigen confirmación + motivo obligatorio
+- ✅ **Permisos y seguridad** — `ReportPermissions` (canView/canModify/canDelete/canExport), RLS endurecida por rol en todas las tablas (`20260905000000_harden_rls.sql`), tope de cuentas activas y rate-limit de `/buy` del lado del servidor
+- ✅ **Escapar HTML dinámico** — `esc()` / `ReportValidator.escapeHtml` en renders de reportes, tienda, publicidad
+- ✅ **Timeline dinámico de reportes** — basado en datos reales (no hardcodeado), con panel rojo de rechazo y cuenta afectada
+- ✅ **Búsqueda con debounce** (300ms) y filtros por estado en reportes
+- ✅ **Persistencia real vía API** — reportes, topups, perfil y avatar persisten en Supabase (POST/PATCH/DELETE); eliminado el fallback silencioso a localStorage
+- ✅ **Cliente puede responder reportes abiertos** y cambiar su propia contraseña (`20260906000000_client_reply_reports.sql`)
+- ✅ **Auditoría automática** (register, user_create/delete, report_update, topup_update) en tabla `audit_log`
+- ✅ **Reset de contraseña** (forgot/reset-password via `supabase.auth`)
+- ✅ **Sincronización stock ↔ inventario** (`20260907000000_sync_stock_with_inventory.sql`)
+- ✅ **Roles completo**: red de referidos de revendedor, kit mayorista, exportar compras a CSV, tienda con buscador/filtros/cantidad
+
+---
+
+## 🚨 PENDIENTE — Prioridad Alta
+
+### 1. ⛔ Notificaciones en tiempo real
+**Estado:** No existe. Verificado: cero uso de `supabase.realtime` / `.channel()` en el repo.
+**Impacto:** ALTO — el cliente no sabe cuándo su reporte fue respondido; debe refrescar.
 
 ```
-17 FUNCIONES ANALIZADAS:
-├─ ✅ 5 Bien diseñadas (29%)
-├─ 🟡 8 Problemas de diseño (47%)
-└─ 🔴 4 Problemas críticos (24%)
+OPCIONES:
+├─ Supabase Realtime (postgres_changes sobre tabla reports) — ya pagado, sin nuevo proveedor
+├─ Polling ligero con ETag/If-Modified-Since — más simple, más requests
+└─ Web Push API — requiere service worker + permisos (sw.js ya existe como base)
+```
+
+### 2. ⛔ Desacoplar `sendReport()` / `updateReportResponse()` del DOM
+**Estado:** Siguen leyendo directamente del DOM (`#rpOrder`, `#rpReason`, `#rpDesc`, `#rpSelect`, `#rpResponse`, `#rpStatus`) en `index.html` (~líneas 6288 y 6420). Difícil de testear.
+**Impacto:** ALTO (mantenibilidad) — bloquea tener tests unitarios del flujo de reportes.
+
+```
+PLAN:
+├─ Extraer la lógica a funciones puras que reciban {orderId, reason, description, status, response}
+├─ Los handlers del DOM solo recolectan valores y delegan
+├─ Mover a reports-functions.js (o src/) donde ya hay patrón de módulos
+└─ Cubrir con tests en src/tests/ (ya existe runner)
+```
+
+### 3. ⛔ Refactorizar `index.html` (640KB → 9.959 líneas)
+**Estado:** Sigue monolítico. `sendReport`, `updateReportResponse`, `resolveReport`, `deleteReport`, `exportReportsCsv`, `ads()`, etc. viven dentro del HTML.
+**Impacto:** ALTO — cada cambio toca un archivo enorme; riesgo de merge conflicts.
+
+```
+ESTRATEGIA SUGERIDA (incremental, sin big-bang):
+├─ Fase 1: mover reportes (sendReport, updateReportResponse, openReport, openReportDetail) a reports-*.js
+├─ Fase 2: mover publicidad (ads, adCard, createAd...) a un ads.js
+├─ Fase 3: mover tienda/órdenes restantes a los *-simple.js existentes
+└─ Regla: cada extracción va con su PR propio a main
 ```
 
 ---
 
-## 🚨 QUÉ FALTA (Lo más importante)
+## 🟡 PENDIENTE — Prioridad Media
 
-### 1. ⛔ SEPARACIÓN ACTIVOS / RESUELTOS
-**Status:** No implementado completamente
-**Impacto:** ALTO
-**Complejidad:** Baja
+### 4. 🟡 Exportación a PDF
+**Estado:** Solo CSV básico (`exportReportsCsv()`). Sin PDF, sin logo, sin filtros aplicados.
+**Complejidad:** Baja-Media · **Nota:** requeriría añadir una librería (jsPDF ~350KB o generar PDF server-side en la edge function para no inflar el frontend).
 
-Lo que pides y es urgente:
+### 5. 🟡 Chat interno sobre reportes
+**Estado:** Existe hilo de respuestas (cliente ↔ admin) pero no chat en tiempo real.
+**Depende de:** item 1 (Realtime) — sería el mismo canal.
 
-```
-FALTA:
-├─ Sección separada para "En Proceso" (Abierto, En revisión, En proceso)
-└─ Sección separada para "Completados" (Resuelto, Rechazado)
+### 6. 🟡 Adjuntos / evidencia en reportes
+**Estado:** No existe. El modal de reporte no acepta archivos.
+**Nota:** Supabase Storage ya disponible en el proyecto (`supabase/config.toml` tiene sección `[storage]`); falta bucket + política RLS de storage + UI de subida (patrón similar al dropzone de publicidad).
 
-DETALLES QUE FALTA MOSTRAR:
-├─ Fecha exacta de creación
-├─ Fecha exacta de resolución (si está resuelto)
-├─ Tiempo transcurrido claramente
-├─ Por qué fue rechazado (si es el caso)
-└─ Respuesta del admin con fecha y hora
-```
+### 7. 🟡 Indicadores de SLA
+**Estado:** No existe. Se promete "30 min - 24 horas" en la UI pero nada mide si se cumple.
+**Complejidad:** Baja — calcular `updated_at - created_at` por reporte y agregar al panel admin (tiempo medio de resolución, % dentro de SLA, alertas de vencidos).
 
-### 2. ⛔ VALIDACIÓN DE DATOS
-**Status:** No existe
-**Impacto:** CRÍTICO
-**Complejidad:** Media
-
-```
-FALTAN VALIDACIONES:
-├─ Longitud mínima/máxima de campos
-├─ Formato de datos (email, teléfono, etc.)
-├─ Campos requeridos vs opcionales
-├─ Duplicación (no permitir 2 reportes iguales en corto tiempo)
-└─ Coherencia de datos (ej: un reporte resuelto debe tener fecha de resolución)
-```
-
-### 3. ⛔ CONFIRMACIONES EN ACCIONES
-**Status:** No existe
-**Impacto:** ALTO (seguridad de datos)
-**Complejidad:** Baja
-
-```
-FALTAN CONFIRMACIONES:
-├─ Antes de ENVIAR reporte
-├─ Antes de ELIMINAR reporte
-├─ Antes de RESOLVER reporte
-└─ Antes de EXPORTAR datos
-```
-
-### 4. ⛔ PERMISOS Y SEGURIDAD
-**Status:** No validado
-**Impacto:** CRÍTICO
-**Complejidad:** Media
-
-```
-FALTAN VALIDACIONES:
-├─ ¿Quién puede ver reportes? (solo admin y propietario)
-├─ ¿Quién puede modificar reportes? (solo admin)
-├─ ¿Quién puede eliminar reportes? (solo admin)
-├─ ¿Quién puede exportar? (solo admin)
-└─ Backend debe validar esto TAMBIÉN
-```
-
-### 5. ⛔ TIMELINE COMPLETO Y DINÁMICO
-**Status:** Parcialmente implementado (fixed)
-**Impacto:** MEDIO
-**Complejidad:** Media
-
-```
-FALTA:
-├─ Timeline actual es hardcodeado (4 estados fijos)
-├─ No muestra realmente qué pasó y cuándo
-├─ No muestra cambios de admin
-├─ No muestra respuestas con timestamps
-└─ Debe ser completamente dinámico basado en datos
-```
-
-### 6. ⛔ INFORMACIÓN DE RESOLUCIÓN
-**Status:** No se muestra
-**Impacto:** ALTO
-**Complejidad:** Baja
-
-```
-FALTA MOSTRAR:
-├─ Fecha y hora exacta de resolución
-├─ Quién resolvió el reporte
-├─ Respuesta del admin/técnico
-├─ Si fue solucionado o rechazado, con razón clara
-└─ Tiempo total que tardó en resolverse
-```
-
-### 7. ⛔ BÚSQUEDA Y FILTROS AVANZADOS
-**Status:** Búsqueda simple existe, filtros incompletos
-**Impacto:** MEDIO
-**Complejidad:** Media
-
-```
-FALTAN:
-├─ Búsqueda fuzzy (tolerante a typos)
-├─ Filtrar por rango de fechas
-├─ Filtrar por tiempo de resolución
-├─ Filtrar por categoría del reporte
-├─ Búsqueda debounced (sin lag)
-└─ Guardar búsquedas frecuentes
-```
-
-### 8. ⛔ EXPORTACIÓN INTELIGENTE
-**Status:** CSV básico existe
-**Impacto:** BAJO
-**Complejidad:** Baja
-
-```
-FALTAN:
-├─ Exportar solo reportes filtrados
-├─ Seleccionar qué campos incluir
-├─ Formato PDF con logo
-├─ Fecha de export automática
-└─ Auditoría: quién exportó, cuándo
-```
+### 8. 🟡 Búsqueda avanzada en reportes
+**Estado:** Búsqueda con debounce y filtro por estado ✔; faltan rango de fechas, categoría y fuzzy.
+**Complejidad:** Media.
 
 ---
 
-## 🔧 QUÉ MEJORAR (Lo más urgente)
+## 🟢 PENDIENTE — Prioridad Baja
 
-### TIER 1: SEGURIDAD CRÍTICA (Arreglar YA)
+### 9. 🟢 Exportación avanzada
+Exportar solo lo filtrado, elegir campos, fecha de generación. El CSV actual exporta siempre todo `state.reports`.
 
-```
-1. ❌ ESCAPAR HTML DINÁMICO
-   ├─ reportTableRows()
-   ├─ reportRowsUser()
-   ├─ openReportDetail()
-   └─ Riesgo: Inyección de código JavaScript
-   
-   Impacto: CRÍTICO
-   Tiempo: 2 horas
-   
-2. ❌ VALIDAR PERMISOS
-   ├─ exportReportsCsv() - Sin validar si es admin
-   ├─ resolveReport() - Sin validar si es admin
-   ├─ deleteReport() - Sin validar permisos
-   └─ Riesgo: Usuario regular ver/modificar datos de otros
-   
-   Impacto: CRÍTICO
-   Tiempo: 3 horas
+### 10. 🟢 Cacheo de estadísticas con memoization
+`reportsAdmin()`/`reportsUser()` recalculan contadores en cada render. Bajo impacto hoy; relevante con miles de reportes.
 
-3. ❌ CONFIRMACIONES DESTRUCTIVAS
-   ├─ deleteReport() - Sin confirmar eliminación
-   ├─ resolveReport() - Sin confirmar cambio de estado
-   └─ Riesgo: Click accidental borra datos
-   
-   Impacto: ALTO
-   Tiempo: 2 horas
-
-4. ❌ VALIDAR DATOS ENTRADA
-   ├─ sendReport() - No valida campos
-   ├─ updateReportResponse() - No valida longitud
-   └─ Riesgo: Datos inválidos en base de datos
-   
-   Impacto: ALTO
-   Tiempo: 2 horas
-```
-
-### TIER 2: REFACTORIZACIÓN IMPORTANTE (Esta semana)
-
-```
-1. 🔴 DESACOPLAR DEL DOM
-   ├─ sendReport() - Lee 5+ elementos del DOM
-   ├─ updateReportResponse() - Lee 3 elementos del DOM
-   ├─ checkOrderReport() - Modifica 3 elementos del DOM
-   └─ Riesgo: Imposible de testear, frágil
-   
-   Impacto: ALTO (mantenibilidad)
-   Tiempo: 8 horas
-
-2. 🔴 CENTRALIZAR VALIDACIONES
-   ├─ Crear objeto ReportValidator
-   ├─ Evitar duplicar lógica de validación
-   └─ Riesgo: Bugs por inconsistencia
-   
-   Impacto: MEDIO
-   Tiempo: 4 horas
-
-3. 🔴 ESTADOS COMO CONSTANTES
-   ├─ No hardcodear 'Resuelto', 'Abierto', etc
-   ├─ Usar enum o REPORT_STATES
-   └─ Riesgo: Errores tipográficos, mantenimiento difícil
-   
-   Impacto: MEDIO
-   Tiempo: 2 horas
-
-4. 🔴 SEPARAR HTML COMPLEJO
-   ├─ openReport() tiene 200+ líneas de HTML
-   ├─ openReportDetail() también
-   └─ Riesgo: Imposible de leer/mantener
-   
-   Impacto: MEDIO
-   Tiempo: 6 horas
-```
-
-### TIER 3: RENDIMIENTO (Cuando crezca)
-
-```
-1. 📉 CACHEAR ESTADÍSTICAS
-   ├─ reportsAdmin() recalcula cada render
-   ├─ reportsUser() recalcula cada render
-   └─ Solución: Usar cacheo con memoization
-   
-   Impacto: BAJO (pero escalable)
-   Tiempo: 2 horas
-
-2. 📉 OPTIMIZAR BÚSQUEDAS
-   ├─ checkOrderReport() es O(n) en cada llamada
-   ├─ openReportDetail() es O(n) en cada llamada
-   └─ Solución: Crear índice de reportes por ID
-   
-   Impacto: BAJO (ahora), CRÍTICO (con 1000+ reportes)
-   Tiempo: 2 horas
-
-3. 📉 AGREGAR DEBOUNCE
-   ├─ searchReports() se ejecuta en cada keystroke
-   └─ Solución: Debounce de 300ms
-   
-   Impacto: BAJO (pero mejor UX)
-   Tiempo: 1 hora
-```
+### 11. 🟢 Limpiar docs históricos
+23 `.md` en la raíz, muchos de una sola vez (`SUMMARY.md`, `FINAL_SUMMARY.md`, `COMPLETADO.md`, etc.). Mover a `docs/historico/`.
 
 ---
 
-## 📋 CHECKLIST PRIORIZADO
+## 📋 ORDEN SUGERIDO
 
-### SEMANA 1: SEGURIDAD CRÍTICA
-- [ ] Escapar HTML en todas las funciones
-- [ ] Validar permisos en backend Y frontend
-- [ ] Pedir confirmación antes de acciones destructivas
-- [ ] Validar datos antes de enviar
-
-### SEMANA 2: SEPARACIÓN ACTIVOS/RESUELTOS
-- [ ] Replicar `reportsUser()` en dos funciones
-- [ ] Mostrar detalles claros de cada reporte
-- [ ] Agregar fechas de creación/resolución
-- [ ] Mostrar razón de resolución/rechazo
-
-### SEMANA 3: REFACTORIZACIÓN
-- [ ] Desacoplar sendReport() del DOM
-- [ ] Desacoplar updateReportResponse() del DOM
-- [ ] Centralizar validaciones
-- [ ] Convertir estados a constantes
-
-### SEMANA 4: MANTENIBILIDAD
-- [ ] Separar HTML complejo en templates
-- [ ] Crear componentes reutilizables
-- [ ] Agregar funciones utility
-- [ ] Documentar públicamente
-
-### SEMANA 5+: MEJORAS
-- [ ] Búsqueda avanzada
-- [ ] Timeline dinámico
-- [ ] Cacheo de estadísticas
-- [ ] Chat en tiempo real
+| # | Tarea | Por qué primero |
+|---|-------|-----------------|
+| 1 | Desacoplar sendReport/updateReportResponse del DOM | Habilita testear y facilita los demás items |
+| 2 | Refactor fase 1 (reportes fuera de index.html) | Mismo esfuerzo que el 1, hacer juntos |
+| 3 | Notificaciones realtime (Supabase Realtime) | Mayor valor de usuario pendiente |
+| 4 | SLA en panel admin | Barato y visible para admins |
+| 5 | Adjuntos vía Supabase Storage | Depende de UX de reportes ya estable |
+| 6 | PDF + exportación avanzada | Cuando haya demanda real |
+| 7 | Chat interno | Extensión natural del 3 |
 
 ---
 
-## 📊 MATRIZ DE IMPACTO vs COMPLEJIDAD
+## 📊 RESUMEN
 
-```
-             BAJO              MEDIO           ALTO
-FÁCIL   ├─ Confirmar      ├─ Validación  ├─ Separar
-        │  acciones       │  de datos    │  Activos/Resueltos
-        │ (2h)            │ (4h)         │ (8h)
-        │
-MEDIO   ├─ Escapar HTML   ├─ Desacoplar  ├─ Refactorizar
-        │ (2h)            │  DOM (8h)    │ completamente
-        │                 │              │ (20h)
-        │
-ALTO    ├─ Constantes     ├─ Timeline    ├─ Arquitectura
-        │ (2h)            │  dinámico    │ nueva
-        │                 │ (6h)         │ (40h+)
-```
-
-**RECOMENDACIÓN: Empieza por la esquina FÁCIL-ALTO (máximo impacto, mínimo esfuerzo)**
-
----
-
-## 🚀 PROPUESTA DE IMPLEMENTACIÓN
-
-**ORDEN RECOMENDADO:**
-
-1. **YA (Hoy-Mañana):**
-   - ✅ Escapar HTML (2h) - Seguridad crítica
-   - ✅ Validar permisos (3h) - Seguridad crítica
-   - ✅ Confirmaciones (2h) - Prevenir accidentes
-
-2. **ESTA SEMANA:**
-   - ✅ Separar Activos/Resueltos (8h) - Tu pedido
-   - ✅ Mostrar detalles de resolución (4h)
-   - ✅ Centralizar validaciones (4h)
-
-3. **PRÓXIMA SEMANA:**
-   - ✅ Desacoplar del DOM (8h)
-   - ✅ Separar HTML complejo (6h)
-   - ✅ Constantes de estados (2h)
-
-4. **LUEGO:**
-   - ✅ Búsqueda avanzada (6h)
-   - ✅ Timeline dinámico (6h)
-   - ✅ Cacheo y optimización (4h)
-
----
-
-## 💡 CÓDIGO DE EJEMPLO
-
-### Función centralizada de validación
-
-```javascript
-const ReportValidator = {
-  STATES: {
-    OPEN: 'Abierto',
-    REVIEWING: 'En revisión',
-    IN_PROGRESS: 'En proceso',
-    RESOLVED: 'Resuelto',
-    REJECTED: 'Rechazado'
-  },
-
-  validateNew(report) {
-    const errors = [];
-    
-    if (!report.reason || report.reason.trim().length < 3)
-      errors.push("Motivo debe tener al menos 3 caracteres");
-    
-    if (!report.description || report.description.trim().length < 10)
-      errors.push("Descripción debe tener al menos 10 caracteres");
-    
-    if (!report.orderId)
-      errors.push("Debe seleccionar una compra");
-    
-    if (errors.length > 0)
-      throw new Error(errors.join('\n'));
-    
-    return true;
-  },
-
-  isResolved(status) {
-    return [this.STATES.RESOLVED, this.STATES.REJECTED].includes(status);
-  },
-
-  isValid(status) {
-    return Object.values(this.STATES).includes(status);
-  }
-};
-
-// Uso:
-try {
-  ReportValidator.validateNew(reportData);
-  await sendReport(reportData);
-} catch (error) {
-  toast(error.message, "bad");
-}
-```
-
----
-
-## ✅ RESUMEN FINAL
-
-| Categoría | Estado | Prioridad | Tiempo |
-|-----------|--------|-----------|--------|
-| **Seguridad (Escapar HTML)** | ❌ | 🔴 CRÍTICA | 2h |
-| **Permisos** | ❌ | 🔴 CRÍTICA | 3h |
-| **Confirmaciones** | ❌ | 🔴 CRÍTICA | 2h |
-| **Validación datos** | ❌ | 🔴 CRÍTICA | 4h |
-| **Separar Activos/Resueltos** | ❌ | 🟠 ALTA | 8h |
-| **Detalles resolución** | ❌ | 🟠 ALTA | 4h |
-| **Desacoplar DOM** | ❌ | 🟠 ALTA | 8h |
-| **Refactorización** | ❌ | 🟡 MEDIA | 10h |
-| **Búsqueda avanzada** | ❌ | 🟡 MEDIA | 6h |
-| **Optimización** | ✅ | 🟢 BAJA | 4h |
-
-**TOTAL: ~51 horas de mejora (1-2 sprints)**
-
-**LISTO PARA EMPEZAR?** ¿Cuál de los 4 tiers quieres que haga primero? 🚀
+| Categoría | Estado |
+|-----------|--------|
+| Seguridad TIER 1 (HTML, permisos, confirmaciones, validación, RLS) | ✅ **HECHO** |
+| Reportes: separación, timeline, respuestas de cliente | ✅ **HECHO** |
+| Persistencia API real (reportes, topups, perfil) | ✅ **HECHO** |
+| Notificaciones realtime | ❌ Pendiente (Alta) |
+| Desacoplar DOM + refactor index.html | ❌ Pendiente (Alta) |
+| PDF / exportación avanzada | ❌ Pendiente (Media/Baja) |
+| Chat interno | ❌ Pendiente (Media) |
+| Adjuntos / evidencia | ❌ Pendiente (Media) |
+| SLA | ❌ Pendiente (Media) |
+| Búsqueda avanzada | ❌ Pendiente (Media) |
