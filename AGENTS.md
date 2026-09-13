@@ -65,10 +65,27 @@ administradores para la venta y administración de cuentas de streaming.
 - **Despliegue**: aplicar la migración (`supabase db push`) ANTES de desplegar frontend/edge; sin ella
   el módulo cae a polling automáticamente (no rompe nada).
 
+## Módulo "Reports Service" (desacople del DOM) — 2026-09-12
+- **`reports-service.js` (nuevo)**: capa de servicio sin DOM. Fábrica `ReportsService.create({api,
+  reports, boot, onError, onSuccess})` — `reports` se inyecta como **getter** porque `state` se
+  reasigna en cada boot(). Expone: `validateNewReport`, `validateStatusUpdate`,
+  `getActiveReportForOrder` (regla 1 activo por orden), `isTerminalStatus`, `createReport`,
+  `updateReportStatus` y los flujos `submitNewReport`/`submitStatusUpdate` (validan, mutan vía API,
+  actualización optimista del array y refresh vía boot()).
+- **Namespace, no globales sueltos**: jamás redefine sendReport/resolveReport (evita el bug
+  histórico de scripts externos pisando los globales inline — FEEDBACK_FUNCIONES.md).
+- **index.html**: `sendReport()` y `resolveReport()` ahora delegan en el servicio (solo leen el
+  form y pintan UI). `updateReportResponse()` era CÓDIGO MUERTO (#rpSelect/#rpResponse/#rpStatus no
+  existen en ninguna parte) → eliminado. `APP_VERSION = 2026.09.12-reports-service`.
+- **Tests reales en Node**: `node src/tests/reports-service.test.js` → 39 tests (validación, regla
+  de negocio, mutaciones con api mockeada, optimistic update). Primera cobertura sin navegador.
+- Cuidado al editar: el servicio no conoce el DOM; los handlers de UI son los únicos que tocan
+  inputs (`#rpOrder/#rpReason/#rpDesc`) y modales.
+
 ### Pendiente (según QUE_FALTA_Y_QUE_MEJORAR.md — actualizado 2026-09-12)
 - ~~Notificaciones en tiempo real (Supabase Realtime sobre reports)~~ ✅ 2026-09-12
-- Desacoplar sendReport/updateReportResponse del DOM (leén #rpOrder, #rpReason, etc.)
-- Refactorizar index.html (640KB, ~9.959 líneas: reportes → reports-*.js, ads → ads.js)
+- ~~Desacoplar sendReport/updateReportResponse del DOM~~ ✅ 2026-09-12 (reports-service.js)
+- Refactorizar index.html (640KB, ~9.974 líneas: reportes → reports-*.js, ads → ads.js)
 - Exportación a PDF (hoy solo CSV básico)
 - Chat interno sobre reportes
 - Adjuntos/evidencia en reportes (Supabase Storage ya disponible en config)

@@ -3151,7 +3151,7 @@
         normalizeViewForRole();
         // Marca de versión: al desplegar una versión nueva se avisa con un toast
         // (evita el "no veo ningún cambio" por caché del navegador/PWA).
-        const APP_VERSION = "2026.09.12-reports-realtime";
+        const APP_VERSION = "2026.09.12-reports-service";
         const prevVer = localStorage.getItem("dsVersion");
         if(prevVer && prevVer !== APP_VERSION){
           setTimeout(()=>toast("✨ Actualizado: navegación mínima (4 botones + Más)","ok"), 1200);
@@ -6311,19 +6311,6 @@
         </tr>`;
       }).join("");
     }
-    async function updateReportResponse(){
-      try{
-        const id=$("#rpSelect").value;
-        const response=$("#rpResponse").value.trim();
-        const status=$("#rpStatus").value;
-        if(!id) return toast("Selecciona un reporte","bad");
-        showLoading("Actualizando...");
-        await api("reports",{method:"PATCH",body:JSON.stringify({id,status,provider_response:response})});
-        toast("Reporte actualizado","ok");
-        await boot();
-      }catch(e){toast(e.message,"bad")}
-      finally{hideLoading()}
-    }
     function filterReports(filter){
       const rows=filter==="Todos"?state.reports:state.reports.filter(r=>r.status===filter||(filter==="Pendiente"&&(!r.status||r.status==="En revision")));
       const el=$("#reportList");
@@ -6444,15 +6431,22 @@
       }
     }
     async function sendReport(){
+      // Desacoplado: la lógica (validación, regla 1-activo-por-orden, API,
+      // refresh) vive en reports-service.js; aquí solo se lee el form y se
+      // pinta la confirmación.
+      if(typeof ReportsService==="undefined") return toast("Servicio de reportes no disponible","bad");
+      const S=ReportsService.autobind();
       const orderId=$("#rpOrder")?.value;
-      const existing=state.reports.find(r=>r.order_id===orderId&&r.status!=="Resuelto"&&r.status!=="Rechazado");
-      if(existing) return toast(`🚫 Límite alcanzado: Ya tienes un reporte activo (${existing.code||""}) para esta cuenta. Espera a que sea solucionado.`,"bad");
+      const active=S.getActiveReportForOrder(orderId);
+      if(active) return toast(`🚫 Límite alcanzado: Ya tienes un reporte activo (${active.code||""}) para esta cuenta. Espera a que sea solucionado.`,"bad");
       try{
         showLoading("Enviando reporte...");
-        const order_id=$("#rpOrder").value, o=state.orders.find(x=>x.id===order_id)||{};
+        const o=state.orders.find(x=>x.id===orderId)||{};
         // Asegurar que product_name siempre tenga un valor
         const productName = o.product_name || o.service || "Producto sin nombre";
-        await api("reports",{method:"POST",body:JSON.stringify({order_id,product_name:productName,account_data:o.delivered_data||"",reason:$("#rpReason").value,description:$("#rpDesc").value})});
+        const row=await S.submitNewReport({order_id:orderId,product_name:productName,account_data:o.delivered_data||"",reason:$("#rpReason").value,description:$("#rpDesc").value});
+        hideLoading();
+        if(!row) return; // el servicio ya notificó el error
         closeModal();
         // Mostrar mensaje de confirmacion con tiempo estimado
         openModal(`<div style="text-align:center;padding:24px">
@@ -6474,12 +6468,19 @@
           </div>
           <button onclick="closeModal()" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0877ff,#0057dc);color:#fff;font-size:14px;font-weight:800;cursor:pointer">Entendido</button>
         </div>`);
-        await boot();
       }catch(e){toast(e.message,"bad")}
       finally{hideLoading()}
     }
     async function deleteReport(id){try{showLoading("Eliminando...");await api("reports",{method:"DELETE",body:JSON.stringify({id})});toast("Reporte eliminado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
-    async function resolveReport(id,status,response){try{showLoading("Actualizando...");await api("reports",{method:"PATCH",body:JSON.stringify({id,status,...(response&&String(response).trim()?{provider_response:String(response).trim()}:{})})});toast("Reporte actualizado","ok");await boot()}catch(e){toast(e.message,"bad")}finally{hideLoading()}}
+    async function resolveReport(id,status,response){
+      // Desacoplado: delega en reports-service.js (validación de estado, PATCH,
+      // toast y refresh). Aquí solo el overlay de carga.
+      if(typeof ReportsService==="undefined") return toast("Servicio de reportes no disponible","bad");
+      const S=ReportsService.autobind();
+      showLoading("Actualizando...");
+      await S.submitStatusUpdate({id,status,provider_response:(response&&String(response).trim())||undefined});
+      hideLoading();
+    }
     function exportReportsCsv(){
       const rows=state.reports.map(r=>[r.code,r.product_name,r.reason,r.status,r.description,r.provider_response].map(csvCell).join(";")).join("\n");
       downloadFile("distrito-reportes.csv","\ufeffCodigo;Producto;Motivo;Estado;Descripcion;Respuesta\n"+rows);
@@ -9855,6 +9856,7 @@
 <script src="store-simple.js?v=1"></script>
 <script src="nav-simple.js?v=3"></script>
 <!-- Scripts de reportes -->
+<script src="reports-service.js?v=1"></script>
 <script src="reports-security.js"></script>
 <script src="reports-functions.js?v=6"></script>
 <script src="reports-optimizations.js"></script>

@@ -34,20 +34,21 @@ Todo el plan TIER 1/TIER 2 original está **implementado y en producción**:
 fallback a polling, toasts en la app + notificación del sistema si el permiso push ya estaba concedido.
 El flujo push Web (VAPID, backend → dispositivos) sigue disponible como complemento.
 
-### 2. ⛔ Desacoplar `sendReport()` / `updateReportResponse()` del DOM
-**Estado:** Siguen leyendo directamente del DOM (`#rpOrder`, `#rpReason`, `#rpDesc`, `#rpSelect`, `#rpResponse`, `#rpStatus`) en `index.html` (~líneas 6288 y 6420). Difícil de testear.
-**Impacto:** ALTO (mantenibilidad) — bloquea tener tests unitarios del flujo de reportes.
-
-```
-PLAN:
-├─ Extraer la lógica a funciones puras que reciban {orderId, reason, description, status, response}
-├─ Los handlers del DOM solo recolectan valores y delegan
-├─ Mover a reports-functions.js (o src/) donde ya hay patrón de módulos
-└─ Cubrir con tests en src/tests/ (ya existe runner)
-```
+### 2. ✅ Desacoplar `sendReport()` / `updateReportResponse()` del DOM — HECHO 2026-09-12
+**Implementado:** nueva capa de servicio **`reports-service.js`** sin DOM: fábrica
+`ReportsService.create({api, reports, boot, onError, onSuccess})` con `reports` inyectado como
+**getter** (state se reasigna en cada boot), validaciones puras (`validateNewReport`,
+`validateStatusUpdate`), regla de negocio 1-activo-por-orden (`getActiveReportForOrder`), mutaciones
+vía API con actualización optimista (`createReport`, `updateReportStatus`) y flujos listos
+(`submitNewReport`, `submitStatusUpdate`). `sendReport()`/`resolveReport()` en index.html ahora solo
+leen el form y delegan; `updateReportResponse()` resultó ser **código muerto** (sus inputs
+#rpSelect/#rpResponse/#rpStatus no existen) y fue eliminada. Namespace `ReportsService.*` para no
+pisar globales inline (bug histórico de scripts externos).
+**Tests:** `node src/tests/reports-service.test.js` → **39 tests** cubriendo validación, regla de
+negocio y mutaciones con api mockeada. Primera suite unitaria real del proyecto.
 
 ### 3. ⛔ Refactorizar `index.html` (640KB → 9.959 líneas)
-**Estado:** Sigue monolítico. `sendReport`, `updateReportResponse`, `resolveReport`, `deleteReport`, `exportReportsCsv`, `ads()`, etc. viven dentro del HTML.
+**Estado:** Sigue monolítico. `sendReport`, `resolveReport`, `deleteReport`, `exportReportsCsv`, `ads()`, etc. viven dentro del HTML (la lógica de negocio de reportes ya vive en `reports-service.js`).
 **Impacto:** ALTO — cada cambio toca un archivo enorme; riesgo de merge conflicts.
 
 ```
@@ -101,9 +102,9 @@ Exportar solo lo filtrado, elegir campos, fecha de generación. El CSV actual ex
 
 | # | Tarea | Por qué primero |
 |---|-------|-----------------|
-| 1 | Desacoplar sendReport/updateReportResponse del DOM | Habilita testear y facilita los demás items |
-| 2 | Refactor fase 1 (reportes fuera de index.html) | Mismo esfuerzo que el 1, hacer juntos |
-| 3 | Notificaciones realtime (Supabase Realtime) | Mayor valor de usuario pendiente |
+| 1 | ~~Desacoplar sendReport/updateReportResponse del DOM~~ ✅ | Hecho 2026-09-12 (reports-service.js + 39 tests) |
+| 2 | Refactor fase 1 (UI de reportes fuera de index.html) | El servicio ya está fuera; falta la UI |
+| 3 | ~~Notificaciones realtime (Supabase Realtime)~~ ✅ | Hecho 2026-09-12 |
 | 4 | SLA en panel admin | Barato y visible para admins |
 | 5 | Adjuntos vía Supabase Storage | Depende de UX de reportes ya estable |
 | 6 | PDF + exportación avanzada | Cuando haya demanda real |
