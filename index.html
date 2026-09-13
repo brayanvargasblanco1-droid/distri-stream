@@ -2223,7 +2223,12 @@
     const PROFIT_RATE = 0.20;
     const MAX_OPERATORS_PER_PRODUCT = 2;
     let token = ""; // sesion en cookie httpOnly ds_token (el JWT ya no vive en localStorage)
-    let state = emptyState();
+    // var (no let): un var top-level de un script clásico crea la propiedad
+    // window.state, de la que dependen los módulos externos (reports-realtime.js,
+    // reports-security.js, reports-monkey-patch.js, reports-functions.js). Con let
+    // esas lecturas recibían undefined y el realtime nunca arrancaba. Reasignar
+    // state en boot()/logout() actualiza window.state automáticamente.
+    var state = emptyState();
     let currentRole = localStorage.dsLoginRole || "Usuario";
     let deferredPrompt = null;
     let reportPage = 1, reportFilter = "all", reportSearch = "";
@@ -3151,7 +3156,7 @@
         normalizeViewForRole();
         // Marca de versión: al desplegar una versión nueva se avisa con un toast
         // (evita el "no veo ningún cambio" por caché del navegador/PWA).
-        const APP_VERSION = "2026.09.12-reports-service";
+        const APP_VERSION = "2026.09.12-window-state-fix";
         const prevVer = localStorage.getItem("dsVersion");
         if(prevVer && prevVer !== APP_VERSION){
           setTimeout(()=>toast("✨ Actualizado: navegación mínima (4 botones + Más)","ok"), 1200);

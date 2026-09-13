@@ -61,7 +61,12 @@ administradores para la venta y administración de cuentas de streaming.
   120s como red de seguridad con realtime OK). API: `startReportsRealtime()` / `stopReportsRealtime()`.
 - **index.html**: handler `window.onRealtimeReport(row, eventType)` fusiona la fila en `state.reports`
   y refresca la vista solo si `state.view==="reports"` y no hay modal abierto; boot inicia realtime,
-  logout lo detiene. `sw.js` v13; `APP_VERSION = 2026.09.12-reports-realtime`.
+  logout lo detiene. `sw.js` v13; `APP_VERSION = 2026.09.12-window-state-fix`.
+- **⚠️ `state` debe ser `var`, NUNCA `let`** (fix 2026-09-12): los módulos externos leen
+  `window.state` (reports-realtime.js, reports-security.js, reports-monkey-patch.js,
+  reports-functions.js) y un `let` top-level no crea propiedad en `window` → con `let` el realtime
+  nunca arrancaba y los permisos/validaciones de esos módulos eran inertes. Un `var` top-level de
+  script clásico SÍ crea `window.state` y queda sincronizado al reasignar en boot()/logout().
 - **Despliegue**: aplicar la migración (`supabase db push`) ANTES de desplegar frontend/edge; sin ella
   el módulo cae a polling automáticamente (no rompe nada).
 
