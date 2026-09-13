@@ -653,6 +653,16 @@ Deno.serve(async (req) => {
         }));
       }
     }
+    // REALTIME (reportes en vivo): el navegador se suscribe directo a
+    // Supabase Realtime con la anon key. Realtime respeta RLS, y la migración
+    // 20260912000000_reports_realtime.sql crea la política reports_select_own_or_admin:
+    // cada usuario solo recibe eventos de SUS reportes, los admin de todos.
+    // La anon key es pública por diseño; el endurecimiento RLS es lo que protege.
+    // sessionToken: el MISMO JWT con el que llegó la request (ya validado por
+    // supabase.auth.getUser arriba), en memoria para reconexión del socket.
+    // NUNCA se persiste; el login normal sigue viajando solo en cookie httpOnly.
+    const realtimeUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     return json(req, {
       user: profile,
       products: pRes.data || [],
@@ -667,6 +677,8 @@ Deno.serve(async (req) => {
       network,
       settings: settingsMap,
       notifications: [],
+      realtime: { url: realtimeUrl || null, anonKey: anonKey || null, table: "reports" },
+      sessionToken: token || null,
     }, 200);
   }
 

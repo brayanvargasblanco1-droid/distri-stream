@@ -49,8 +49,24 @@ administradores para la venta y administración de cuentas de streaming.
 - Navegación premium, dark mode, skeleton loaders, empty states
 - Premium design system, navegación con iconos
 
+## Notificaciones realtime (2026-09-12)
+- **Migración `20260912000000_reports_realtime.sql`**: política RLS `reports_select_own_or_admin`
+  (dueño o admin) — necesaria porque tras harden_rls la tabla tenía CERO políticas SELECT y Realtime
+  respeta RLS —, helper `is_admin()`, publicación `supabase_realtime` de reports y `replica identity full`.
+- **Edge function**: `/bootstrap` devuelve `realtime: {url, anonKey, table}` (SUPABASE_URL +
+  SUPABASE_ANON_KEY auto-inyectadas) y `sessionToken` (JWT de la request, solo en memoria).
+- **`reports-realtime.js`**: suscripción `postgres_changes` con anon key + `setAuth(jwt)`; toasts de
+  eventos (nuevo reporte, respuesta, resuelto/rechazado, reply de cliente), dedup/throttle 1.5s,
+  reconexión con backoff (3s→60s), re-check en `visibilitychange`, fallback polling (60s sin realtime,
+  120s como red de seguridad con realtime OK). API: `startReportsRealtime()` / `stopReportsRealtime()`.
+- **index.html**: handler `window.onRealtimeReport(row, eventType)` fusiona la fila en `state.reports`
+  y refresca la vista solo si `state.view==="reports"` y no hay modal abierto; boot inicia realtime,
+  logout lo detiene. `sw.js` v13; `APP_VERSION = 2026.09.12-reports-realtime`.
+- **Despliegue**: aplicar la migración (`supabase db push`) ANTES de desplegar frontend/edge; sin ella
+  el módulo cae a polling automáticamente (no rompe nada).
+
 ### Pendiente (según QUE_FALTA_Y_QUE_MEJORAR.md — actualizado 2026-09-12)
-- Notificaciones en tiempo real (Supabase Realtime sobre reports)
+- ~~Notificaciones en tiempo real (Supabase Realtime sobre reports)~~ ✅ 2026-09-12
 - Desacoplar sendReport/updateReportResponse del DOM (leén #rpOrder, #rpReason, etc.)
 - Refactorizar index.html (640KB, ~9.959 líneas: reportes → reports-*.js, ads → ads.js)
 - Exportación a PDF (hoy solo CSV básico)

@@ -28,16 +28,11 @@ Todo el plan TIER 1/TIER 2 original está **implementado y en producción**:
 
 ## 🚨 PENDIENTE — Prioridad Alta
 
-### 1. ⛔ Notificaciones en tiempo real
-**Estado:** No existe. Verificado: cero uso de `supabase.realtime` / `.channel()` en el repo.
-**Impacto:** ALTO — el cliente no sabe cuándo su reporte fue respondido; debe refrescar.
-
-```
-OPCIONES:
-├─ Supabase Realtime (postgres_changes sobre tabla reports) — ya pagado, sin nuevo proveedor
-├─ Polling ligero con ETag/If-Modified-Since — más simple, más requests
-└─ Web Push API — requiere service worker + permisos (sw.js ya existe como base)
-```
+### 1. ✅ Notificaciones en tiempo real — HECHO 2026-09-12
+**Implementado:** Supabase Realtime (postgres_changes sobre `reports`) con RLS por dueño/admin
+(migración `20260912000000_reports_realtime.sql`), módulo `reports-realtime.js` con reconexión y
+fallback a polling, toasts en la app + notificación del sistema si el permiso push ya estaba concedido.
+El flujo push Web (VAPID, backend → dispositivos) sigue disponible como complemento.
 
 ### 2. ⛔ Desacoplar `sendReport()` / `updateReportResponse()` del DOM
 **Estado:** Siguen leyendo directamente del DOM (`#rpOrder`, `#rpReason`, `#rpDesc`, `#rpSelect`, `#rpResponse`, `#rpStatus`) en `index.html` (~líneas 6288 y 6420). Difícil de testear.
@@ -123,7 +118,7 @@ Exportar solo lo filtrado, elegir campos, fecha de generación. El CSV actual ex
 | Seguridad TIER 1 (HTML, permisos, confirmaciones, validación, RLS) | ✅ **HECHO** |
 | Reportes: separación, timeline, respuestas de cliente | ✅ **HECHO** |
 | Persistencia API real (reportes, topups, perfil) | ✅ **HECHO** |
-| Notificaciones realtime | ❌ Pendiente (Alta) |
+| Notificaciones realtime | ✅ **HECHO** (2026-09-12) |
 | Desacoplar DOM + refactor index.html | ❌ Pendiente (Alta) |
 | PDF / exportación avanzada | ❌ Pendiente (Media/Baja) |
 | Chat interno | ❌ Pendiente (Media) |

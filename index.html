@@ -2700,6 +2700,29 @@
       const node=$("#toast"); node.textContent=msg; node.className="toast show " + type;
       setTimeout(()=>node.classList.remove("show"),3500);
     }
+    // ─── REALTIME: handler de eventos de reports ────────
+    // Llamado por reports-realtime.js cuando llega un INSERT/UPDATE de la tabla.
+    // Actualiza state, refresca la vista si el usuario está viendo reportes, y
+    // nunca pisa un modal abierto (solo actualiza el contenido de reportes).
+    window.onRealtimeReport = function(row, eventType){
+      try{
+        if(!row || !row.id) return;
+        const i = state.reports.findIndex(r=>r.id===row.id);
+        if(eventType==="DELETE" || (eventType==="UPDATE" && row.status==="Eliminado")){
+          if(i>=0) state.reports.splice(i,1);
+        } else if(i>=0){
+          // Fusionar: preservar campos que el payload no traiga
+          state.reports[i]={...state.reports[i],...row};
+        } else {
+          state.reports.unshift(row);
+        }
+        // Refrescar solo si el usuario está mirando la sección de reportes
+        if(state.view==="reports" && !$("#modal")?.classList.contains("show")){
+          const main=$(".main-content");
+          if(main) main.innerHTML=renderView();
+        }
+      }catch(e){console.warn("onRealtimeReport:",e)}
+    };
      function serviceClass(name=""){
        const n=name.toLowerCase();
        if(n.includes("netflix"))return"netflix"; if(n.includes("prime"))return"prime"; if(n.includes("max")||n.includes("hbo"))return"max";
@@ -3128,12 +3151,14 @@
         normalizeViewForRole();
         // Marca de versión: al desplegar una versión nueva se avisa con un toast
         // (evita el "no veo ningún cambio" por caché del navegador/PWA).
-        const APP_VERSION = "2026.09.04-nav-min-v2";
+        const APP_VERSION = "2026.09.12-reports-realtime";
         const prevVer = localStorage.getItem("dsVersion");
         if(prevVer && prevVer !== APP_VERSION){
           setTimeout(()=>toast("✨ Actualizado: navegación mínima (4 botones + Más)","ok"), 1200);
         }
         localStorage.setItem("dsVersion", APP_VERSION);
+        // REALTIME: conectar socket de reportes (config llega en el bootstrap)
+        try { if (typeof window.startReportsRealtime === "function") window.startReportsRealtime(); } catch(_){}
         // La app se pinta DESPUÉS de que el loader se desvanece: así su animación
         // de entrada (pageIn) ocurre a la vista y la transición es un crossfade
         // suave en lugar de un corte seco con la pantalla ya estática.
@@ -3150,6 +3175,7 @@
     }
     async function logout(){
       try{await api("logout",{method:"POST"})}catch(e){/* best effort: limpiar sesion local igualmente */}
+      try{ if(typeof window.stopReportsRealtime==="function") window.stopReportsRealtime(); }catch(_){}
       localStorage.removeItem("dsAuthed");
       token="";state=emptyState();renderLogin();
     }
@@ -9833,6 +9859,8 @@
 <script src="reports-functions.js?v=6"></script>
 <script src="reports-optimizations.js"></script>
 <script src="reports-monkey-patch.js?v=6"></script>
+<!-- Realtime: notificaciones en vivo de reportes (Supabase Realtime + fallback polling) -->
+<script src="reports-realtime.js?v=1"></script>
 
 <script>
 // ══════════════════════════════════════════════════════════════
