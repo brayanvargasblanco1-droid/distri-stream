@@ -70,6 +70,15 @@ administradores para la venta y administración de cuentas de streaming.
 - **Despliegue**: aplicar la migración (`supabase db push`) ANTES de desplegar frontend/edge; sin ella
   el módulo cae a polling automáticamente (no rompe nada).
 
+## Constantes de estado de reportes — UNA sola fuente (2026-09-12)
+- **Fuente canónica: `ReportsService.STATUS`** (reports-service.js, el primero en cargar).
+- `ReportValidator.STATES` (reports-security.js) y `ReportStates` (reports-functions.js) son
+  **ALIAS por referencia** del canónico, con fallback inline por si el orden de carga cambia.
+- NO duplicar la lista de estados en otros archivos. Los mapas de emoji/color (index.html,
+  reports-monkey-patch.js, STATUS_META en reports-functions.js) son presentación, no identidad.
+- Guardián: `node src/tests/status-consistency.test.js` (10 tests — falla si los alias dejan de
+  ser la misma referencia o los valores divergen).
+
 ## Módulo "Reports Service" (desacople del DOM) — 2026-09-12
 - **`reports-service.js` (nuevo)**: capa de servicio sin DOM. Fábrica `ReportsService.create({api,
   reports, boot, onError, onSuccess})` — `reports` se inyecta como **getter** porque `state` se

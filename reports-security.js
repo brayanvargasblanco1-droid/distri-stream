@@ -141,7 +141,9 @@ function checkReportPermission(action, reportId = null) {
  * Validador centralizado de reportes
  */
 const ReportValidator = {
-  STATES: {
+  // ALIAS de la fuente canónica (ReportsService.STATUS en reports-service.js,
+  // que carga antes). No redefinir: mantener un solo origen de verdad.
+  STATES: (typeof ReportsService !== 'undefined' && ReportsService.STATUS) || {
     OPEN: 'Abierto',
     REVIEWING: 'En revisión',
     IN_PROGRESS: 'En proceso',

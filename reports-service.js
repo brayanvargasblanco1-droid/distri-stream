@@ -24,8 +24,12 @@
 (function (global) {
   'use strict';
 
-  // Estados válidos — espejo de ReportValidator.STATES (reports-security.js)
-  // y de los flujos reales de index.html (Resolver/Rechazar).
+  // ── FUENTE CANÓNICA de estados de reportes ─────────────────────────
+  // Única definición en todo el repo. ReportValidator.STATES
+  // (reports-security.js) y ReportStates (reports-functions.js) son ALIAS de
+  // este objeto — NO duplicar la lista en otros archivos.
+  // (Los mapas de emoji/color de index.html y reports-monkey-patch.js son
+  // mapas de PRESENTACIÓN, no identidad: no cuentan como duplicados.)
   var STATUS = {
     OPEN: 'Abierto',
     REVIEWING: 'En revisión',

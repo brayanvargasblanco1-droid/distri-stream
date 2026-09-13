@@ -9,7 +9,9 @@
 // ══════════════════════════════════════════════════════════════════════════════
 //  CONSTANTES Y ENUMS - Estados centralizados
 // ══════════════════════════════════════════════════════════════════════════════
-const ReportStates = {
+// ALIAS de la fuente canónica (ReportsService.STATUS en reports-service.js,
+// que carga antes). No redefinir: mantener un solo origen de verdad.
+const ReportStates = (typeof ReportsService !== 'undefined' && ReportsService.STATUS) || {
   OPEN: 'Abierto',
   REVIEWING: 'En revisión',
   IN_PROGRESS: 'En proceso',
